@@ -2,7 +2,10 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
   "name": "Mega Tera Corp",
-  "redirects": [{ "source": "/", "destination": "/docs" }],
+  "redirects": [
+    { "source": "/", "destination": "/docs/introduction/what-is-browser-cash" },
+    { "source": "/docs", "destination": "/docs/introduction/what-is-browser-cash" }
+  ],
   "colors": {
     "primary": "#F0B15C",
     "light": "#FFD38A",
