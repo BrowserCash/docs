@@ -1,0 +1,92 @@
+---
+title: "Proxies"
+description: "Route browser traffic through your own proxy servers"
+---
+
+Route your browser session traffic through a custom SOCKS5 proxy.
+
+## Using a Proxy
+
+Pass a SOCKS5 proxy URL when creating a session:
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  proxyUrl: "socks5://user:pass@proxy.example.com:1080",
+});
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={"proxyUrl": "socks5://user:pass@proxy.example.com:1080"}
+)
+session = resp.json()
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"proxyUrl": "socks5://user:pass@proxy.example.com:1080"}'
+```
+
+</CodeGroup>
+
+## Proxy URL Format
+
+```
+socks5://username:password@host:port
+```
+
+| Component            | Required | Description                      |
+| -------------------- | -------- | -------------------------------- |
+| `socks5://`          | Yes      | Protocol (only SOCKS5 supported) |
+| `username:password@` | No       | Authentication credentials       |
+| `host`               | Yes      | Proxy server hostname or IP      |
+| `port`               | Yes      | Proxy server port                |
+
+## Examples
+
+<CodeGroup>
+
+```typescript TypeScript
+// Without authentication
+proxyUrl: "socks5://proxy.example.com:1080";
+
+// With authentication
+proxyUrl: "socks5://myuser:mypass@proxy.example.com:1080";
+
+// With IP address
+proxyUrl: "socks5://user:pass@192.168.1.100:1080";
+```
+
+```python Python
+# Without authentication
+proxy_url = "socks5://proxy.example.com:1080"
+
+# With authentication
+proxy_url = "socks5://myuser:mypass@proxy.example.com:1080"
+
+# With IP address
+proxy_url = "socks5://user:pass@192.168.1.100:1080"
+```
+
+</CodeGroup>
+
+## Notes
+
+- Only SOCKS5 proxies are supported
+- HTTP/HTTPS proxies are not supported
+- UDP enabled proxies are greatly encouraged
+- Proxy must be accessible from Browser Cash infrastructure
+- Proxy errors will cause the session to fail
+
+<Warning>
+  Ensure your proxy server allows connections from Browser Cash.
+</Warning>

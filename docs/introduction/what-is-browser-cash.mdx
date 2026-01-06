@@ -1,0 +1,112 @@
+---
+title: "What is Browser Cash?"
+description: "Browser Cash is a cloud platform for running managed browser sessions at scale"
+---
+
+It provides a simple API for controlling fleets of browsers that you can connect to via CDP and automate.
+
+## Why Browser Cash?
+
+Running headless browsers at scale is hard. You need to manage:
+
+- Browser instances and resource allocation
+- Proxy rotation and IP reputation
+- Fingerprinting and detection evasion
+- Geographic distribution
+
+## Core Features
+
+- **Managed Sessions** — Spin up Chrome instances on demand via API or SDK
+- **CDP Access** — Connect with Playwright, Puppeteer, Selenium, or any CDP-compatible tool
+- **Stealth Browsers** — Sessions run on real consumer devices, reducing detection
+- **Persistent Profiles** — Save and restore browser state across sessions
+
+## How It Works
+
+1. **Create a session** via REST API or TypeScript SDK
+2. **Connect** using the returned CDP URL
+3. **Automate** with your preferred framework
+4. **Stop** the session when done
+
+<CodeGroup>
+
+```typescript TypeScript
+import BrowsercashSDK from "@browsercash/sdk";
+import { chromium } from "playwright";
+
+const client = new BrowsercashSDK({ apiKey: process.env.BROWSER_API_KEY });
+const session = await client.browser.session.create();
+
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+// ... automate
+await client.browser.session.stop({ sessionId: session.sessionId });
+```
+
+```python Python
+import os
+import requests
+from playwright.sync_api import sync_playwright
+
+# Create session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={}
+)
+session = resp.json()
+
+# Connect and automate
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    # ... automate
+    browser.close()
+
+# Stop session
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session["sessionId"]}
+)
+```
+
+```bash cURL
+# Create session
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Response: { "sessionId": "...", "cdpUrl": "wss://..." }
+# Connect using cdpUrl with any CDP client
+```
+
+</CodeGroup>
+
+## Use Cases
+
+- **Web Scraping** — Extract data from sites with anti-bot protection
+- **AI Agents** — Power autonomous browser agents with real browsers
+- **Testing** — Run E2E tests on managed infrastructure
+- **Automation** — Build workflows that interact with any website
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Getting Started"
+    href="/docs/introduction/getting-started"
+    icon="rocket"
+  >
+    Create your first browser session in minutes.
+  </Card>
+  <Card
+    title="Session API"
+    href="/docs/fundamentals/creating-a-browser-session"
+    icon="code"
+  >
+    Learn how to create and manage sessions programmatically.
+  </Card>
+</CardGroup>

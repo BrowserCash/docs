@@ -1,0 +1,123 @@
+---
+title: "Getting Started"
+description: "Create your first Browser Cash session in under 3 minutes"
+---
+
+## Prerequisites
+
+- A Browser Cash account - [Sign up here](https://dash.browser.cash)
+- Your API key from the Dashboard
+
+## Install the SDK
+
+<CodeGroup>
+
+```bash npm
+npm install @browsercash/sdk
+```
+
+```bash yarn
+yarn add @browsercash/sdk
+```
+
+```bash pnpm
+pnpm add @browsercash/sdk
+```
+
+</CodeGroup>
+
+<Note>
+  The SDK is available for TypeScript/JavaScript. Python and other languages can use the REST API directly with any HTTP client.
+</Note>
+
+## Quick Start
+
+Get started with our SDK or REST API:
+
+<CodeGroup>
+
+```typescript TypeScript
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.BROWSER_API_KEY,
+});
+
+// Create a session
+const session = await client.browser.session.create();
+console.log("CDP URL:", session.cdpUrl);
+
+// Use the CDP URL with Playwright, Puppeteer, etc.
+// ...
+
+// Stop the session when done
+await client.browser.session.stop({ sessionId: session.sessionId });
+```
+
+```python Python
+import os
+import requests
+
+# Create a session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={}
+)
+session = resp.json()
+print("CDP URL:", session["cdpUrl"])
+
+# Use the CDP URL with Playwright, Selenium, etc.
+# ...
+
+# Stop the session when done
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session["sessionId"]}
+)
+```
+
+```bash cURL
+# Create a session
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Response includes cdpUrl - connect with any CDP client
+
+# Stop the session when done
+curl -X DELETE "https://api.browser.cash/v1/browser/session?sessionId=SESSION_ID" \
+  -H "Authorization: Bearer $BROWSER_API_KEY"
+```
+
+</CodeGroup>
+
+## Choose Your Integration
+
+<CardGroup cols={2}>
+  <Card
+    title="Playwright"
+    href="/docs/integrations/playwright"
+    icon="masks-theater"
+  >
+    Modern, auto-waiting browser automation.
+  </Card>
+  <Card title="Puppeteer" href="/docs/integrations/puppeteer" icon="chrome">
+    Google's Node.js browser control library.
+  </Card>
+  <Card title="Selenium" href="/docs/integrations/selenium" icon="grid">
+    Cross-browser, multi-language automation.
+  </Card>
+  <Card title="Browser-Use" href="/docs/integrations/browser-use" icon="robot">
+    AI agent framework integration.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Creating a Browser Session](/docs/fundamentals/creating-a-browser-session) — Full API reference

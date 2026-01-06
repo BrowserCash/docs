@@ -1,101 +1,102 @@
 {
-    "$schema": "https://mintlify.com/docs.json",
-    "theme": "mint",
-    "name": "Mega Tera Corp",
-    "redirects": [
-        { "source": "/", "destination": "/docs" }
-    ],
-    "colors": {
-        "primary": "#F0B15C",
-        "light": "#FFD38A",
-        "dark": "#C27C2C"
-    },
-    "favicon": "/favicon.svg",
-    "navigation": {
-        "tabs": [
-            {
-                "tab": "Docs",
-                "groups": [
-                    {
-                        "group": "Getting Started",
-                        "pages": [
-                            "/docs/index",
-                            "/docs/pricing"
-                        ]
-                    },
-                    {
-                        "group": "Browser API",
-                        "pages": [
-                            "docs/browser-api/quickstart",
-                            "docs/browser-api/using-quickconnect",
-                            "docs/browser-api/using-session-api",
-                            {
-                                "group": "Integrations",
-                                "pages": [
-                                    "/docs/browser-api/integrations/browser-use",
-                                    "/docs/browser-api/integrations/crawl4ai"
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "group": "Agent API",
-                        "pages": [
-                            "/docs/agent-api/quickstart",
-                            "/docs/agent-api/agents"
-                        ]
-                    },
-                    {
-                        "group": "Account",
-                        "pages": [
-                            "https://dash.browser.cash/billing"
-                        ]
-                    }
-                ]
-            },
-            {
-                "tab": "API Reference",
-                "href": "https://api.browser.cash/scalar"
-            }
-        ],
-        "global": {
-            "anchors": []
-        }
-    },
-    "logo": {
-        "light": "/logo/light.svg",
-        "dark": "/logo/dark.svg"
-    },
-    "navbar": {
-        "links": [
-            {
-                "label": "Support",
-                "href": "mailto:hello@browser.cash"
-            }
-        ],
-        "primary": {
-            "type": "button",
-            "label": "Dashboard",
-            "href": "https://dash.browser.cash"
-        }
-    },
-    "contextual": {
-        "options": [
-            "copy",
-            "view",
-            "chatgpt",
-            "claude",
-            "perplexity",
-            "mcp",
-            "cursor",
-            "vscode"
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Mega Tera Corp",
+  "redirects": [{ "source": "/", "destination": "/docs" }],
+  "colors": {
+    "primary": "#F0B15C",
+    "light": "#FFD38A",
+    "dark": "#C27C2C"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": [
+              "docs/introduction/what-is-browser-cash",
+              "docs/introduction/getting-started"
+            ]
+          },
+          {
+            "group": "Fundamentals",
+            "pages": [
+              "docs/fundamentals/creating-a-browser-session",
+              "docs/fundamentals/using-a-browser-session",
+              "docs/fundamentals/viewing-a-browser-session",
+              "docs/fundamentals/managing-a-browser-session",
+              "docs/fundamentals/concurrent-browser-sessions"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "docs/features/browser-profiles",
+              "docs/features/geolocation",
+              "docs/features/node-selection",
+              "docs/features/proxies",
+              "docs/features/window-size"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "docs/integrations/playwright",
+              "docs/integrations/puppeteer",
+              "docs/integrations/selenium",
+              "docs/integrations/browser-use",
+              "docs/integrations/crawl4ai",
+              "docs/integrations/stagehand"
+            ]
+          }
         ]
-    },
-    "footer": {
-        "socials": {
-            "x": "https://x.com/aibrowsers",
-            "github": "https://github.com/Mega-Tera",
-            "linkedin": "https://linkedin.com/company/megatera"
-        }
+      },
+      {
+        "tab": "API Reference",
+        "href": "https://api.browser.cash/scalar"
+      }
+    ],
+    "global": {
+      "anchors": []
     }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:hello@browser.cash"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://dash.browser.cash"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/aibrowsers",
+      "github": "https://github.com/Mega-Tera",
+      "linkedin": "https://linkedin.com/company/megatera"
+    }
+  }
 }

@@ -1,0 +1,123 @@
+---
+title: "Managing a Browser Session"
+description: "Stop sessions and clean up resources"
+---
+
+## Stopping a Session
+
+Always stop sessions when your automation completes to avoid unnecessary billing.
+
+<CodeGroup>
+
+```typescript TypeScript
+const result = await client.browser.session.stop({
+  sessionId: "sess_abc123xyz",
+});
+
+console.log(result);
+```
+
+```python Python
+import os
+import requests
+
+resp = requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": "sess_abc123xyz"}
+)
+print(resp.json())
+```
+
+```bash cURL
+curl -X DELETE "https://api.browser.cash/v1/browser/session?sessionId=sess_abc123xyz" \
+  -H "Authorization: Bearer $BROWSER_API_KEY"
+```
+
+</CodeGroup>
+
+## Session Lifecycle
+
+<Steps>
+  <Step title="Create">
+    Call `create()` to start a new browser session. The session becomes **active** immediately.
+  </Step>
+  <Step title="Active">
+    Session is running and consuming billing time. Connect via CDP to automate the browser.
+  </Step>
+  <Step title="Stop">
+    Call `stop()` when finished, or the session auto-stops after **1 hour** of inactivity.
+  </Step>
+  <Step title="Stopped">
+    Session ends. Logs are retained temporarily before cleanup.
+  </Step>
+</Steps>
+
+<Note>
+  Always explicitly stop sessions when done to avoid unnecessary billing from the 1-hour timeout.
+</Note>
+
+## Cleanup Best Practices
+
+<CodeGroup>
+
+```typescript TypeScript
+async function withSession<T>(
+  fn: (session: Session) => Promise<T>
+): Promise<T> {
+  const session = await client.browser.session.create();
+
+  try {
+    return await fn(session);
+  } finally {
+    await client.browser.session.stop({ sessionId: session.sessionId });
+  }
+}
+
+// Usage
+await withSession(async (session) => {
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
+  // ... automation
+  await browser.close();
+});
+```
+
+```python Python
+from contextlib import contextmanager
+
+@contextmanager
+def browser_session(**opts):
+    api_key = os.getenv("BROWSER_API_KEY")
+
+    resp = requests.post(
+        "https://api.browser.cash/v1/browser/session",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json=opts
+    )
+    session = resp.json()
+
+    try:
+        yield session
+    finally:
+        requests.delete(
+            "https://api.browser.cash/v1/browser/session",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"sessionId": session["sessionId"]}
+        )
+
+# Usage
+with browser_session() as session:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    # ... automation
+    browser.close()
+```
+
+</CodeGroup>
+
+## Next Steps
+
+- [Browser Profiles](/docs/features/browser-profiles) — Persist browser state across sessions
+- [Geolocation](/docs/features/geolocation) — Target specific regions

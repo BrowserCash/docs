@@ -1,0 +1,134 @@
+---
+title: "Crawl4AI"
+description: "Combine Browser Cash's stealth browsers with Crawl4AI, an open-source web crawling framework"
+---
+
+[Crawl4AI](https://crawl4ai.com/) turns the web into clean, LLM-ready Markdown for RAG, agents, and data pipelines. Combine it with Browser Cash for stealth browsing capabilities that let you crawl challenging websites without getting blocked.
+
+## Installation
+
+```bash
+# Create environment with uv (Python >= 3.11)
+uv init
+uv add crawl4ai requests
+uv sync
+```
+
+## Setup
+
+Get your API key from the [Browser Cash dashboard](https://dash.browser.cash):
+
+```bash
+# .env
+BROWSER_CASH_API_KEY=your-browser-cash-key
+```
+
+## Quick Start
+
+```python Python
+import os
+import asyncio
+import requests
+from crawl4ai import AsyncWebCrawler, BrowserConfig
+
+
+async def main():
+    # Create Browser Cash session
+    resp = requests.post(
+        "https://api.browser.cash/v1/browser/session",
+        headers={
+            "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
+            "Content-Type": "application/json",
+        },
+        json={},
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    # Configure Crawl4AI to use the Browser Cash browser
+    browser_config = BrowserConfig(
+        cdp_url=data["cdpUrl"],
+        use_managed_browser=True,
+    )
+
+    # Run the crawler
+    async with AsyncWebCrawler(config=browser_config) as crawler:
+        result = await crawler.arun(
+            url="https://www.nbcnews.com/business",
+        )
+        print(result.markdown)
+
+    # Cleanup
+    requests.delete(
+        "https://api.browser.cash/v1/browser/session",
+        headers={"Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}"},
+        params={"sessionId": data["sessionId"]},
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+```bash
+uv run main.py
+```
+
+## With Session Options
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "country": "US",
+        "type": "consumer_distributed",  # Maximum stealth
+        "windowSize": "1920x1080",
+    },
+)
+```
+
+## With Persistent Profiles
+
+Keep cookies and session data across crawl runs:
+
+```python Python
+import os
+import requests
+
+headers = {
+    "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
+    "Content-Type": "application/json",
+}
+
+# First run — establish session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    json={
+        "profile": {"name": "my-crawler-profile", "persist": True}
+    },
+)
+
+# Crawler runs and stores cookies...
+
+# Later runs — cookies and data preserved
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    json={
+        "profile": {"name": "my-crawler-profile", "persist": True}
+    },
+)
+```
+
+## Why Browser Cash + Crawl4AI?
+
+- **Stealth browsing** — Consumer distributed nodes avoid detection
+- **LLM-ready output** — Clean Markdown for RAG and AI pipelines
+- **Global reach** — Crawl from different countries
+- **Persistent state** — Maintain sessions across crawl runs
+- **Scalability** — No local browser management

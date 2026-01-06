@@ -1,0 +1,237 @@
+---
+title: "Viewing a Browser Session"
+description: "Watch and interact with your browser sessions live"
+---
+
+View your browser sessions in real-time and perform manual actions directly in your browser.
+
+## Live Session Viewer
+
+Browser Cash provides a live viewer where you can watch and interact with your browser session in real-time.
+
+To view a session, construct the viewer URL using your session's `cdpUrl`:
+
+```
+https://dash.browser.cash/cdp_tabs?ws=<encoded-cdp-url>&theme=light
+```
+
+<Steps>
+  <Step title="Create a session">
+    Start a browser session and retrieve the `cdpUrl` from the response.
+  </Step>
+  <Step title="URL-encode the cdpUrl">
+    Encode the WebSocket URL so it can be passed as a query parameter.
+  </Step>
+  <Step title="Open the viewer">
+    Navigate to the constructed URL in your browser to view the session live.
+  </Step>
+</Steps>
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create();
+
+// URL-encode the CDP WebSocket URL
+const encodedWs = encodeURIComponent(session.cdpUrl);
+const viewerUrl = `https://dash.browser.cash/cdp_tabs?ws=${encodedWs}&theme=light`;
+
+console.log("View your session live:", viewerUrl);
+```
+
+```python Python
+import os
+import requests
+from urllib.parse import quote
+
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={}
+)
+session = resp.json()
+
+# URL-encode the CDP WebSocket URL
+encoded_ws = quote(session["cdpUrl"], safe="")
+viewer_url = f"https://dash.browser.cash/cdp_tabs?ws={encoded_ws}&theme=light"
+
+print("View your session live:", viewer_url)
+```
+
+</CodeGroup>
+
+<Note>
+  The live viewer allows you to see exactly what your automation is doing and
+  manually interact with the browser — click elements, type text, or navigate to
+  different pages.
+</Note>
+
+### Viewer Parameters
+
+| Parameter | Values          | Description                             |
+| --------- | --------------- | --------------------------------------- |
+| `ws`      | URL-encoded WSS | The CDP WebSocket URL from your session |
+| `theme`   | `light`, `dark` | Viewer color theme                      |
+
+---
+
+## Get Session Details
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.get({
+  sessionId: "sess_abc123xyz",
+});
+
+console.log(session);
+```
+
+```python Python
+import os
+import requests
+
+resp = requests.get(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": "sess_abc123xyz"}
+)
+session = resp.json()
+print(session)
+```
+
+```bash cURL
+curl -X GET "https://api.browser.cash/v1/browser/session?sessionId=sess_abc123xyz" \
+  -H "Authorization: Bearer $BROWSER_API_KEY"
+```
+
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "sessionId": "sess_abc123xyz",
+  "status": "active",
+  "servedBy": "node-us-east-1",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "stoppedAt": null,
+  "cdpUrl": "wss://cdp.browser.cash/sess_abc123xyz"
+}
+```
+
+## Session Status Values
+
+| Status    | Description                                  |
+| --------- | -------------------------------------------- |
+| `active`  | Session is running and accepting connections |
+| `stopped` | Session has been terminated                  |
+| `failed`  | Session failed to start                      |
+
+## List All Sessions
+
+Retrieve paginated list of all your sessions:
+
+<CodeGroup>
+
+```typescript TypeScript
+const sessions = await client.browser.sessions.list({
+  page: 1,
+  pageSize: 20,
+});
+
+console.log(sessions);
+```
+
+```python Python
+import os
+import requests
+
+resp = requests.get(
+    "https://api.browser.cash/v1/browser/sessions",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"page": 1, "pageSize": 20}
+)
+sessions = resp.json()
+print(sessions)
+```
+
+```bash cURL
+curl -X GET "https://api.browser.cash/v1/browser/sessions?page=1&pageSize=20" \
+  -H "Authorization: Bearer $BROWSER_API_KEY"
+```
+
+</CodeGroup>
+
+## Pagination Parameters
+
+| Parameter  | Type   | Default | Description      |
+| ---------- | ------ | ------- | ---------------- |
+| `page`     | number | 1       | Page number      |
+| `pageSize` | number | 20      | Results per page |
+
+## Monitoring Sessions
+
+Poll session status to monitor long-running tasks:
+
+<CodeGroup>
+
+```typescript TypeScript
+async function waitForSession(sessionId: string, timeout = 30000) {
+  const start = Date.now();
+
+  while (Date.now() - start < timeout) {
+    const session = await client.browser.session.get({ sessionId });
+
+    if (session.status === "active" && session.cdpUrl) {
+      return session;
+    }
+
+    if (session.status === "failed") {
+      throw new Error("Session failed to start");
+    }
+
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+
+  throw new Error("Session startup timeout");
+}
+```
+
+```python Python
+import time
+import requests
+import os
+
+def wait_for_session(session_id: str, timeout: int = 30):
+    start = time.time()
+    api_key = os.getenv("BROWSER_API_KEY")
+
+    while time.time() - start < timeout:
+        resp = requests.get(
+            "https://api.browser.cash/v1/browser/session",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"sessionId": session_id}
+        )
+        session = resp.json()
+
+        if session["status"] == "active" and session.get("cdpUrl"):
+            return session
+
+        if session["status"] == "failed":
+            raise Exception("Session failed to start")
+
+        time.sleep(1)
+
+    raise Exception("Session startup timeout")
+```
+
+</CodeGroup>
+
+## Next Steps
+
+- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — Stop sessions and clean up resources
+- [Browser Profiles](/docs/features/browser-profiles) — Persist browser state across sessions

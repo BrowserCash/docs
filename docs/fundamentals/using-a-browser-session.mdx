@@ -1,0 +1,187 @@
+---
+title: "Using a Browser Session"
+description: "Connect to your browser session and run automations"
+---
+
+Once you've created a session, use the CDP URL to connect your automation framework.
+
+## Connect to a Session
+
+<CodeGroup>
+
+```typescript Playwright
+import { chromium } from "playwright";
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.BROWSER_API_KEY,
+});
+
+const session = await client.browser.session.create();
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+
+// Get existing context or create new one
+const context = browser.contexts()[0] || (await browser.newContext());
+const page = context.pages()[0] || (await context.newPage());
+
+// Automate
+await page.goto("https://example.com");
+console.log(await page.title());
+
+// Cleanup
+await browser.close();
+await client.browser.session.stop({ sessionId: session.sessionId });
+```
+
+```typescript Puppeteer
+import puppeteer from "puppeteer-core";
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.BROWSER_API_KEY,
+});
+
+const session = await client.browser.session.create();
+const browser = await puppeteer.connect({
+  browserWSEndpoint: session.cdpUrl,
+});
+
+const page = await browser.newPage();
+await page.goto("https://example.com");
+console.log(await page.title());
+
+await browser.disconnect();
+await client.browser.session.stop({ sessionId: session.sessionId });
+```
+
+```python Selenium
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import requests
+import os
+
+# Create session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    json={}
+)
+cdp_url = resp.json()["cdpUrl"]
+session_id = resp.json()["sessionId"]
+
+# Connect via CDP
+options = Options()
+options.add_experimental_option(
+    "debuggerAddress",
+    cdp_url.replace("wss://", "").replace("ws://", "")
+)
+
+driver = webdriver.Chrome(options=options)
+driver.get("https://example.com")
+print(driver.title)
+
+# Cleanup
+driver.quit()
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session_id}
+)
+```
+
+```python Playwright (Python)
+import os
+import requests
+from playwright.sync_api import sync_playwright
+
+# Create session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    json={}
+)
+session = resp.json()
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    context = browser.contexts[0] if browser.contexts else browser.new_context()
+    page = context.pages[0] if context.pages else context.new_page()
+
+    page.goto("https://example.com")
+    print(page.title())
+
+    browser.close()
+
+# Cleanup
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session["sessionId"]}
+)
+```
+
+</CodeGroup>
+
+## Best Practices
+
+- **Handle reconnections** — If your connection drops, the browser keeps running. Reconnect using the same CDP URL.
+- **Set timeouts** — Sessions terminate after 1 hour. For long tasks, monitor and create new sessions as needed.
+- **Close gracefully** — Always stop sessions when done to avoid billing for idle time.
+- **Use contexts** — Browser Cash sessions may have an existing context. Always check `browser.contexts()` before creating a new one.
+
+## Error Handling
+
+<CodeGroup>
+
+```typescript TypeScript
+try {
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
+  // ... automation
+} catch (error) {
+  if (error.message.includes("connection refused")) {
+    // Session may have expired — create a new one
+    const newSession = await client.browser.session.create();
+    // Retry with new session
+  }
+} finally {
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+```
+
+```python Python
+api_key = os.getenv("BROWSER_API_KEY")
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json",
+}
+
+try:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    # ... automation
+except Exception as e:
+    if "connection refused" in str(e).lower():
+        # Session may have expired — create a new one
+        new_resp = requests.post(
+            "https://api.browser.cash/v1/browser/session",
+            headers=headers,
+            json={}
+        )
+        new_session = new_resp.json()
+        browser = p.chromium.connect_over_cdp(new_session["cdpUrl"])
+        # Retry automation with new session
+    else:
+        raise
+finally:
+    requests.delete(
+        "https://api.browser.cash/v1/browser/session",
+        headers={"Authorization": f"Bearer {api_key}"},
+        params={"sessionId": session["sessionId"]}
+    )
+```
+
+</CodeGroup>
+
+## Next Steps
+
+- [Viewing a Browser Session](/docs/fundamentals/viewing-a-browser-session) — Monitor session status
+- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — List and stop sessions

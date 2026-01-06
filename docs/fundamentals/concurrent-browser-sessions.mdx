@@ -1,0 +1,183 @@
+---
+title: "Concurrent Browser Sessions"
+description: "Run multiple pooled browser sessions with automatic management"
+---
+
+Scale your browser automation with pooled sessions that handle concurrency, health checks, and automatic recovery.
+
+## Installation
+
+```bash
+npm install @browsercash/pool playwright-core
+```
+
+<Note>
+  The `@browsercash/pool` package requires `playwright-core` as a peer
+  dependency.
+</Note>
+
+## Quick Start
+
+```typescript TypeScript
+import { chromium } from "playwright-core";
+import { SessionPool } from "@browsercash/pool";
+
+const pool = new SessionPool({
+  apiKey: process.env.BROWSER_API_KEY!,
+  chromium: chromium,
+  size: 3, // Maintain 3 concurrent sessions
+});
+
+await pool.init();
+
+// Acquire a session from the pool
+const session = await pool.acquire();
+
+// Use standard Playwright operations
+const page = await session.browser.newPage();
+await page.goto("https://example.com");
+console.log(await page.title());
+await page.close();
+
+// Return session to the pool
+pool.release(session);
+
+// Cleanup when done
+await pool.shutdown();
+```
+
+## Pool Options
+
+Configure the pool behavior with these options:
+
+| Option                  | Type           | Default  | Description                                      |
+| ----------------------- | -------------- | -------- | ------------------------------------------------ |
+| `apiKey`                | string         | Required | Your Browser Cash API key                        |
+| `chromium`              | ChromiumModule | Required | Playwright chromium instance                     |
+| `size`                  | number         | `1`      | Number of concurrent sessions to maintain        |
+| `maxUses`               | number         | `50`     | Maximum requests per session before recycling    |
+| `maxAgeMs`              | number         | `300000` | Maximum session lifetime in milliseconds (5 min) |
+| `enableHealthCheck`     | boolean        | `false`  | Enable background health monitoring              |
+| `healthCheckIntervalMs` | number         | `30000`  | Health check frequency in milliseconds           |
+| `enableWaitQueue`       | boolean        | `true`   | Queue requests when all sessions are busy        |
+| `debug`                 | boolean        | `false`  | Enable verbose logging                           |
+
+## Configuration Examples
+
+### High-Throughput Pool
+
+```typescript TypeScript
+const pool = new SessionPool({
+  apiKey: process.env.BROWSER_API_KEY!,
+  chromium: chromium,
+  size: 10, // 10 concurrent browsers
+  maxUses: 100, // Recycle after 100 uses
+  maxAgeMs: 600000, // 10 minute max lifetime
+  enableWaitQueue: true, // Queue when pool is full
+});
+```
+
+### Long-Running Pool with Health Checks
+
+```typescript TypeScript
+const pool = new SessionPool({
+  apiKey: process.env.BROWSER_API_KEY!,
+  chromium: chromium,
+  size: 5,
+  enableHealthCheck: true, // Monitor session health
+  healthCheckIntervalMs: 15000, // Check every 15 seconds
+  maxAgeMs: 1800000, // 30 minute max lifetime
+});
+```
+
+## Pool Methods
+
+### init()
+
+Initialize the pool and create the initial sessions:
+
+```typescript TypeScript
+const pool = new SessionPool({
+  /* options */
+});
+await pool.init();
+```
+
+### acquire()
+
+Get an available session from the pool. If all sessions are busy and `enableWaitQueue` is true, the request will wait:
+
+```typescript TypeScript
+const session = await pool.acquire();
+// session.browser is a Playwright Browser instance
+```
+
+### release(session)
+
+Return a session to the pool for reuse:
+
+```typescript TypeScript
+pool.release(session);
+```
+
+<Warning>
+  Always release sessions back to the pool. Failing to release sessions will
+  exhaust the pool and block subsequent requests.
+</Warning>
+
+### shutdown()
+
+Gracefully close all sessions and clean up resources:
+
+```typescript TypeScript
+await pool.shutdown();
+```
+
+## Parallel Processing Example
+
+Process multiple URLs concurrently using the pool:
+
+```typescript TypeScript
+import { chromium } from "playwright-core";
+import { SessionPool } from "@browsercash/pool";
+
+const pool = new SessionPool({
+  apiKey: process.env.BROWSER_API_KEY!,
+  chromium: chromium,
+  size: 5,
+});
+
+await pool.init();
+
+const urls = [
+  "https://example.com",
+  "https://example.org",
+  "https://example.net",
+  // ... more URLs
+];
+
+async function scrapeUrl(url: string) {
+  const session = await pool.acquire();
+  try {
+    const page = await session.browser.newPage();
+    await page.goto(url);
+    const title = await page.title();
+    await page.close();
+    return { url, title };
+  } finally {
+    pool.release(session);
+  }
+}
+
+// Process all URLs with controlled concurrency
+const results = await Promise.all(urls.map(scrapeUrl));
+console.log(results);
+
+await pool.shutdown();
+```
+
+## Next Steps
+
+- [Creating a Browser Session](/docs/fundamentals/creating-a-browser-session) — Single session API reference
+- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — Session lifecycle and cleanup
+- [Playwright Integration](/docs/integrations/playwright) — Framework-specific examples

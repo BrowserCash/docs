@@ -1,0 +1,153 @@
+---
+title: "Stagehand"
+description: "Build AI-native browser automations with Stagehand"
+---
+
+[Stagehand](https://github.com/browserbase/stagehand) is an AI-native browser automation framework that uses natural language to interact with web pages.
+
+## Installation
+
+```bash
+npm install @browserbasehq/stagehand @browsercash/sdk
+```
+
+## Quick Start
+
+```typescript TypeScript
+import { Stagehand } from '@browserbasehq/stagehand';
+import BrowsercashSDK from '@browsercash/sdk';
+
+async function run() {
+  const client = new BrowsercashSDK({
+    apiKey: process.env.BROWSER_API_KEY!,
+  });
+
+  // Create Browser Cash session
+  const session = await client.browser.session.create();
+
+  // Initialize Stagehand with Browser Cash CDP URL
+  const stagehand = new Stagehand({
+    env: 'LOCAL',
+    localBrowserLaunchOptions: {
+      cdpUrl: session.cdpUrl,
+    },
+  });
+
+  await stagehand.init();
+
+  // Use natural language to interact with pages
+  await stagehand.page.goto('https://example.com');
+
+  await stagehand.act({ action: 'click on the login button' });
+  await stagehand.act({ action: 'type "user@example.com" in the email field' });
+  await stagehand.act({ action: 'type "password123" in the password field' });
+  await stagehand.act({ action: 'click submit' });
+
+  // Extract data using natural language
+  const data = await stagehand.extract({
+    instruction: 'Extract the user profile information',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        email: { type: 'string' },
+      },
+    },
+  });
+
+  console.log(data);
+
+  // Cleanup
+  await stagehand.close();
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+
+run().catch(console.error);
+```
+
+## Key Features
+
+### Natural Language Actions
+
+```typescript TypeScript
+// Click elements
+await stagehand.act({ action: 'click the sign up button' });
+
+// Fill forms
+await stagehand.act({ action: 'enter "John Doe" in the name field' });
+
+// Navigate
+await stagehand.act({ action: 'scroll down to the pricing section' });
+```
+
+### Structured Data Extraction
+
+```typescript TypeScript
+const products = await stagehand.extract({
+  instruction: 'Extract all products with their prices',
+  schema: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        price: { type: 'number' },
+        inStock: { type: 'boolean' },
+      },
+    },
+  },
+});
+```
+
+### Observe Page State
+
+```typescript TypeScript
+const observations = await stagehand.observe({
+  instruction: 'What actions can I take on this page?',
+});
+```
+
+## With Session Options
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  country: 'US',
+  type: 'consumer_distributed',
+  windowSize: '1920x1080',
+  profile: { name: 'stagehand-session', persist: true },
+});
+```
+
+## Complex Workflows
+
+```typescript TypeScript
+// Multi-step workflow with error handling
+async function checkoutFlow(stagehand: Stagehand) {
+  await stagehand.page.goto('https://shop.example.com');
+
+  await stagehand.act({ action: 'search for "laptop"' });
+  await stagehand.act({ action: 'click on the first product' });
+  await stagehand.act({ action: 'add to cart' });
+  await stagehand.act({ action: 'go to checkout' });
+
+  const cartSummary = await stagehand.extract({
+    instruction: 'Extract the cart total and item count',
+    schema: {
+      type: 'object',
+      properties: {
+        total: { type: 'string' },
+        itemCount: { type: 'number' },
+      },
+    },
+  });
+
+  return cartSummary;
+}
+```
+
+## Why Stagehand + Browser Cash?
+
+- **AI-native** — Use natural language instead of brittle selectors
+- **Self-healing** — Adapts to UI changes automatically
+- **Stealth** — Browser Cash's consumer nodes avoid detection
+- **Scalable** — No local browser management needed

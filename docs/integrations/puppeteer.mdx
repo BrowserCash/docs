@@ -1,0 +1,117 @@
+---
+title: "Puppeteer"
+description: "Connect Browser Cash sessions to Puppeteer"
+---
+
+[Puppeteer](https://pptr.dev) is Google's Node.js library for controlling Chrome/Chromium via the DevTools Protocol.
+
+## Installation
+
+```bash
+npm install puppeteer-core @browsercash/sdk
+```
+
+<Note>
+Use `puppeteer-core` instead of `puppeteer` — Browser Cash provides the browser, so you don't need Puppeteer to download one.
+</Note>
+
+## Quick Start
+
+```typescript TypeScript
+import puppeteer from 'puppeteer-core';
+import BrowsercashSDK from '@browsercash/sdk';
+
+async function run() {
+  const client = new BrowsercashSDK({
+    apiKey: process.env.BROWSER_API_KEY!,
+  });
+
+  // Create a Browser Cash session
+  const session = await client.browser.session.create();
+
+  // Connect Puppeteer via CDP
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: session.cdpUrl,
+  });
+
+  // Automate
+  const page = await browser.newPage();
+  await page.goto('https://example.com');
+  console.log(await page.title());
+
+  // Cleanup
+  await browser.disconnect();
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+
+run().catch(console.error);
+```
+
+## With Session Options
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  country: 'GB',
+  type: 'hosted',
+  windowSize: '1366x768',
+});
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: session.cdpUrl,
+});
+```
+
+## Taking Screenshots
+
+```typescript TypeScript
+const page = await browser.newPage();
+await page.goto('https://example.com');
+await page.screenshot({ path: 'screenshot.png', fullPage: true });
+```
+
+## Generating PDFs
+
+```typescript TypeScript
+const page = await browser.newPage();
+await page.goto('https://example.com');
+await page.pdf({ path: 'page.pdf', format: 'A4' });
+```
+
+## With Persistent Profiles
+
+```typescript TypeScript
+// Create session with profile
+const session = await client.browser.session.create({
+  profile: { name: 'logged-in-user', persist: true },
+});
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: session.cdpUrl,
+});
+
+// Cookies and localStorage persist across sessions
+```
+
+## Error Handling
+
+```typescript TypeScript
+try {
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: session.cdpUrl,
+  });
+  // ... automation
+} catch (error) {
+  if (error.message.includes('Connection closed')) {
+    console.log('Session disconnected');
+  }
+  throw error;
+} finally {
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+```
+
+## Tips
+
+- Use `browser.disconnect()` instead of `browser.close()` to keep the remote session running
+- For stealth, use `consumer_distributed` session type
+- Browser Cash handles anti-detection — no need for stealth plugins

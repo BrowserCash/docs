@@ -1,0 +1,142 @@
+---
+title: "Creating a Browser Session"
+description: "Start a new managed browser session via API or SDK"
+---
+
+Create a browser session to get a CDP URL for connecting your automation framework.
+
+## Create a Session
+
+<CodeGroup>
+
+```typescript TypeScript
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.BROWSER_API_KEY,
+});
+
+const session = await client.browser.session.create();
+console.log(session);
+```
+
+```python Python
+import os
+import requests
+
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={}
+)
+session = resp.json()
+print(session)
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+</CodeGroup>
+
+## Session Options
+
+Customize your session with these parameters:
+
+| Parameter    | Type   | Description                                                  |
+| ------------ | ------ | ------------------------------------------------------------ |
+| `country`    | string | 2-letter ISO country code (e.g. `US`, `CA`)                  |
+| `nodeId`     | string | Target a specific node you've used before                    |
+| `type`       | string | `consumer_distributed`, `hosted`                             |
+| `proxyUrl`   | string | SOCKS5 proxy URL, UDP support encouraged                     |
+| `windowSize` | string | Browser dimensions as `WIDTHxHEIGHT`                         |
+| `profile`    | object | `{ name: string, persist: boolean }` for persistent profiles |
+
+### Example with Options
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  country: "US",
+  type: "hosted",
+  windowSize: "1920x1080",
+  profile: {
+    name: "my-profile",
+    persist: true,
+  },
+});
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "country": "US",
+        "type": "hosted",
+        "windowSize": "1920x1080",
+        "profile": {
+            "name": "my-profile",
+            "persist": True
+        }
+    }
+)
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "type": "hosted",
+    "windowSize": "1920x1080",
+    "profile": {
+      "name": "my-profile",
+      "persist": true
+    }
+  }'
+```
+
+</CodeGroup>
+
+## Session Types
+
+| Type                   | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| `consumer_distributed` | Runs on real consumer devices for maximum stealth   |
+| `hosted`               | Runs in our data centers for consistent performance |
+
+## Response
+
+```json
+{
+  "sessionId": "sess_abc123xyz",
+  "status": "active",
+  "servedBy": "node-us-east-1",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "cdpUrl": "wss://cdp.browser.cash/sess_abc123xyz"
+}
+```
+
+## Notes
+
+- Sessions may take up to 3 seconds to start
+- Sessions automatically terminate after 1 hour
+- CDP URLs are valid only while the session is active
+- Always stop sessions when done to avoid unnecessary billing
+
+## Next Steps
+
+- [Using a Browser Session](/docs/fundamentals/using-a-browser-session) — Connect and automate
+- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — Stop and list sessions

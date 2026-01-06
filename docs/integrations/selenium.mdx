@@ -1,0 +1,165 @@
+---
+title: "Selenium"
+description: "Connect Browser Cash sessions to Selenium"
+---
+
+[Selenium](https://www.selenium.dev) is a widely-used browser automation framework with support for multiple languages and browsers.
+
+## Installation
+
+<CodeGroup>
+
+```bash Python
+pip install selenium requests
+```
+
+```bash JavaScript
+npm install selenium-webdriver
+```
+
+</CodeGroup>
+
+## Python Quick Start
+
+```python Python
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+import requests
+import os
+
+# Create Browser Cash session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={}
+)
+resp.raise_for_status()
+data = resp.json()
+cdp_url = data["cdpUrl"]
+session_id = data["sessionId"]
+
+# Connect Selenium via CDP
+options = Options()
+options.add_experimental_option(
+    "debuggerAddress",
+    cdp_url.replace("wss://", "").replace("ws://", "").split("/")[0]
+)
+
+driver = webdriver.Chrome(options=options)
+
+# Automate
+driver.get("https://example.com")
+print(driver.title)
+
+# Cleanup
+driver.quit()
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session_id}
+)
+```
+
+## With Session Options
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "country": "US",
+        "type": "hosted",
+        "windowSize": "1920x1080"
+    }
+)
+```
+
+## Finding Elements
+
+```python Python
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# Wait for element
+element = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.ID, "myElement"))
+)
+
+# Find by CSS selector
+buttons = driver.find_elements(By.CSS_SELECTOR, "button.primary")
+
+# Find by XPath
+link = driver.find_element(By.XPATH, "//a[@href='/login']")
+```
+
+## Taking Screenshots
+
+```python Python
+driver.save_screenshot("screenshot.png")
+
+# Screenshot specific element
+element = driver.find_element(By.ID, "content")
+element.screenshot("element.png")
+```
+
+## Helper Function
+
+```python Python
+import requests
+import os
+from contextlib import contextmanager
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+@contextmanager
+def browser_cash_session(**session_opts):
+    """Context manager for Browser Cash sessions."""
+    api_key = os.getenv("BROWSER_API_KEY")
+
+    # Create session
+    resp = requests.post(
+        "https://api.browser.cash/v1/browser/session",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json=session_opts
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    # Connect Selenium
+    options = Options()
+    cdp_address = data["cdpUrl"].replace("wss://", "").replace("ws://", "").split("/")[0]
+    options.add_experimental_option("debuggerAddress", cdp_address)
+    driver = webdriver.Chrome(options=options)
+
+    try:
+        yield driver
+    finally:
+        driver.quit()
+        requests.delete(
+            "https://api.browser.cash/v1/browser/session",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"sessionId": data["sessionId"]}
+        )
+
+# Usage
+with browser_cash_session(country="US") as driver:
+    driver.get("https://example.com")
+    print(driver.title)
+```
+
+## Tips
+
+- Selenium connects via CDP debugger address, not WebSocket URL directly
+- Use explicit waits (`WebDriverWait`) instead of `time.sleep()`
+- Browser Cash handles browser management — focus on your automation logic

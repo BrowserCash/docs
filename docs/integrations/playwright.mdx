@@ -1,0 +1,275 @@
+---
+title: "Playwright"
+description: "Connect Browser Cash sessions to Playwright"
+---
+
+[Playwright](https://playwright.dev) is a modern browser automation framework with auto-waiting, powerful selectors, and multi-browser support.
+
+## Installation
+
+<CodeGroup>
+
+```bash npm
+npm install playwright @browsercash/sdk
+```
+
+```bash pip
+pip install playwright requests
+playwright install chromium
+```
+
+</CodeGroup>
+
+## Quick Start
+
+<CodeGroup>
+
+```typescript TypeScript
+import { chromium } from "playwright";
+import BrowsercashSDK from "@browsercash/sdk";
+
+async function run() {
+  const client = new BrowsercashSDK({
+    apiKey: process.env.BROWSER_API_KEY!,
+  });
+
+  // Create a Browser Cash session
+  const session = await client.browser.session.create();
+
+  // Connect Playwright via CDP
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
+
+  // Get existing context or create new one
+  const context = browser.contexts()[0] || (await browser.newContext());
+  const page = context.pages()[0] || (await context.newPage());
+
+  // Automate
+  await page.goto("https://example.com");
+  console.log(await page.title());
+
+  // Cleanup
+  await browser.close();
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+
+run().catch(console.error);
+```
+
+```python Python
+import os
+import requests
+from playwright.sync_api import sync_playwright
+
+# Create a Browser Cash session
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={}
+)
+session = resp.json()
+
+# Connect Playwright via CDP
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+
+    # Get existing context or create new one
+    context = browser.contexts[0] if browser.contexts else browser.new_context()
+    page = context.pages[0] if context.pages else context.new_page()
+
+    # Automate
+    page.goto("https://example.com")
+    print(page.title())
+
+    browser.close()
+
+# Cleanup
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session["sessionId"]}
+)
+```
+
+</CodeGroup>
+
+## With Session Options
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  country: "US",
+  type: "consumer_distributed",
+  windowSize: "1920x1080",
+});
+
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "country": "US",
+        "type": "consumer_distributed",
+        "windowSize": "1920x1080"
+    }
+)
+session = resp.json()
+
+browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+```
+
+</CodeGroup>
+
+## Using Existing Contexts
+
+Browser Cash sessions may have a pre-existing browser context. Always check before creating a new one:
+
+<CodeGroup>
+
+```typescript TypeScript
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+
+// Use existing context if available
+const context = browser.contexts()[0] || (await browser.newContext());
+const page = context.pages()[0] || (await context.newPage());
+```
+
+```python Python
+browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+
+# Use existing context if available
+context = browser.contexts[0] if browser.contexts else browser.new_context()
+page = context.pages[0] if context.pages else context.new_page()
+```
+
+</CodeGroup>
+
+## With Persistent Profiles
+
+<CodeGroup>
+
+```typescript TypeScript
+// First run — login and save profile
+const session1 = await client.browser.session.create({
+  profile: { name: "my-account", persist: true },
+});
+
+const browser1 = await chromium.connectOverCDP(session1.cdpUrl);
+const page1 = await browser1.newPage();
+
+// Login flow...
+await page1.goto("https://example.com/login");
+await page1.fill("#email", "user@example.com");
+await page1.fill("#password", "password");
+await page1.click('button[type="submit"]');
+
+await browser1.close();
+await client.browser.session.stop({ sessionId: session1.sessionId });
+
+// Later — session starts already logged in
+const session2 = await client.browser.session.create({
+  profile: { name: "my-account", persist: true },
+});
+```
+
+```python Python
+import os
+import requests
+from playwright.sync_api import sync_playwright
+
+headers = {
+    "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+    "Content-Type": "application/json",
+}
+
+# First run — login and save profile
+resp1 = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    json={"profile": {"name": "my-account", "persist": True}}
+)
+session1 = resp1.json()
+
+with sync_playwright() as p:
+    browser1 = p.chromium.connect_over_cdp(session1["cdpUrl"])
+    page1 = browser1.new_page()
+
+    # Login flow...
+    page1.goto("https://example.com/login")
+    page1.fill("#email", "user@example.com")
+    page1.fill("#password", "password")
+    page1.click('button[type="submit"]')
+
+    browser1.close()
+
+# Stop session1
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"sessionId": session1["sessionId"]}
+)
+
+# Later — session starts already logged in
+resp2 = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    json={"profile": {"name": "my-account", "persist": True}}
+)
+session2 = resp2.json()
+```
+
+</CodeGroup>
+
+## Error Handling
+
+<CodeGroup>
+
+```typescript TypeScript
+try {
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
+  // ... automation
+} catch (error) {
+  if (error.message.includes("Target closed")) {
+    // Session may have timed out
+    console.log("Session closed, creating new one...");
+  }
+  throw error;
+} finally {
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+```
+
+```python Python
+try:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    # ... automation
+except Exception as e:
+    if "Target closed" in str(e):
+        # Session may have timed out
+        print("Session closed, creating new one...")
+    raise
+finally:
+    requests.delete(
+        "https://api.browser.cash/v1/browser/session",
+        headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+        params={"sessionId": session["sessionId"]}
+    )
+```
+
+</CodeGroup>
+
+## Tips
+
+- Use `page.waitForLoadState('networkidle')` for pages with dynamic content
+- Browser Cash sessions support all Playwright features including screenshots, PDFs, and tracing
+- For long-running tasks, monitor session status and handle reconnection
+- Use `browser.close()` to end your Playwright connection. Unlike Puppeteer's `browser.disconnect()`, this properly closes the CDP connection while the Browser Cash session can still be stopped separately via the API

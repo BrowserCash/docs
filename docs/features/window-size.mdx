@@ -1,0 +1,78 @@
+---
+title: "Window Size"
+description: "Configure browser viewport dimensions"
+---
+
+Set custom browser window dimensions for your sessions.
+
+## Setting Window Size
+
+Specify dimensions as `WIDTHxHEIGHT`:
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  windowSize: "1920x1080",
+});
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={"windowSize": "1920x1080"}
+)
+session = resp.json()
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"windowSize": "1920x1080"}'
+```
+
+</CodeGroup>
+
+## Common Resolutions
+
+| Resolution  | Aspect Ratio | Use Case        |
+| ----------- | ------------ | --------------- |
+| `1920x1080` | 16:9         | Desktop Full HD |
+| `1366x768`  | 16:9         | Common laptop   |
+| `1536x864`  | 16:9         | Scaled laptop   |
+| `1440x900`  | 16:10        | MacBook         |
+| `1280x720`  | 16:9         | HD              |
+| `390x844`   | ~9:19.5      | iPhone 14       |
+| `360x800`   | 9:20         | Android mobile  |
+
+## Dynamic Resizing
+
+You can also resize the viewport after connecting:
+
+<CodeGroup>
+
+```typescript Playwright (TypeScript)
+await page.setViewportSize({ width: 1920, height: 1080 });
+```
+
+```typescript Puppeteer (TypeScript)
+await page.setViewport({ width: 1920, height: 1080 });
+```
+
+```python Playwright (Python)
+page.set_viewport_size({"width": 1920, "height": 1080})
+```
+
+</CodeGroup>
+
+## Notes
+
+- Window size affects the initial browser window dimensions
+- Some sites detect and respond to viewport size
+- For responsive testing, combine with framework viewport controls
+- Default size varies by node if not specified

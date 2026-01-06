@@ -1,0 +1,148 @@
+---
+title: "Browser Profiles"
+description: "Persist browser state across sessions with named profiles"
+---
+
+Browser profiles let you save and restore browser state (cookies, localStorage, login sessions) across multiple sessions.
+
+## How Profiles Work
+
+1. Create a session with a named profile
+2. Browser state is saved when the session stops
+3. Create a new session with the same profile name
+4. Browser loads with previous state intact
+
+## Creating a Session with a Profile
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  profile: {
+    name: "my-profile",
+    persist: true,
+  },
+});
+
+// Do your automation...
+// Browser state will be saved when session stops
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "profile": {
+            "name": "my-profile",
+            "persist": True
+        }
+    }
+)
+session = resp.json()
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"profile": {"name": "my-profile", "persist": true}}'
+```
+
+</CodeGroup>
+
+## List All Profiles
+
+Retrieve all saved browser profiles:
+
+<CodeGroup>
+
+```typescript TypeScript
+const profiles = await client.browser.profiles.list();
+
+console.log(profiles);
+```
+
+```python Python
+resp = requests.get(
+    "https://api.browser.cash/v1/browser/profiles",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"}
+)
+profiles = resp.json()
+print(profiles)
+```
+
+```bash cURL
+curl https://api.browser.cash/v1/browser/profiles \
+  -H "Authorization: Bearer $BROWSER_API_KEY"
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "profiles": [
+    {
+      "profileId": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "name": "my-profile",
+      "createdAt": "2025-12-19T18:58:03.000Z"
+    }
+  ]
+}
+```
+
+## Delete a Profile
+
+Remove a browser profile by name:
+
+<CodeGroup>
+
+```typescript TypeScript
+const result = await client.browser.profile.delete({
+  profileName: "my-profile",
+});
+
+console.log(result);
+```
+
+```python Python
+resp = requests.delete(
+    "https://api.browser.cash/v1/browser/profile",
+    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    params={"profileName": "my-profile"}
+)
+print(resp.json())
+```
+
+```bash cURL
+curl -X DELETE "https://api.browser.cash/v1/browser/profile?profileName=my-profile" \
+  -H "Authorization: Bearer $BROWSER_API_KEY"
+```
+
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "success": true
+}
+```
+
+## Profile Parameters
+
+| Parameter | Type    | Description                                    |
+| --------- | ------- | ---------------------------------------------- |
+| `name`    | string  | Unique identifier for the profile              |
+| `persist` | boolean | Set to `true` to save state when session stops |
+
+## Notes
+
+- Profile names must be unique per account
+- Deleting a profile permanently removes all saved state
+- Sessions with `persist: false` don't save state changes

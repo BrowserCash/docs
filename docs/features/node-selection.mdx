@@ -1,0 +1,151 @@
+---
+title: "Node Selection"
+description: "Choose where your browser sessions run"
+---
+
+Control which nodes serve your browser sessions using node IDs and session types.
+
+## Session Types
+
+Specify the type of infrastructure for your session:
+
+| Type                   | Description                   | Best For                            |
+| ---------------------- | ----------------------------- | ----------------------------------- |
+| `consumer_distributed` | Runs on real consumer devices | Maximum stealth, anti-detection     |
+| `hosted`               | Runs in our data centers      | Consistent performance, reliability |
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  type: "hosted",
+});
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={"type": "hosted"}
+)
+session = resp.json()
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "hosted"}'
+```
+
+</CodeGroup>
+
+## Targeting Specific Nodes
+
+Every session response includes a `servedBy` field with the node ID. Reuse this to target the same node:
+
+<CodeGroup>
+
+```typescript TypeScript
+// Create first session
+const session1 = await client.browser.session.create();
+console.log("Node:", session1.servedBy); // "node-us-east-abc123"
+
+// Stop when done
+await client.browser.session.stop({ sessionId: session1.sessionId });
+
+// Later — target the same node
+const session2 = await client.browser.session.create({
+  nodeId: session1.servedBy,
+});
+```
+
+```python Python
+import os
+import requests
+
+headers = {
+    "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+    "Content-Type": "application/json",
+}
+
+# Create first session
+resp1 = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    json={}
+)
+session1 = resp1.json()
+print("Node:", session1["servedBy"])  # "node-us-east-abc123"
+
+# Stop when done
+requests.delete(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    params={"sessionId": session1["sessionId"]}
+)
+
+# Later — target the same node
+resp2 = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers=headers,
+    json={"nodeId": session1["servedBy"]}
+)
+session2 = resp2.json()
+```
+
+</CodeGroup>
+
+## Combining Filters
+
+Use multiple parameters together:
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await client.browser.session.create({
+  country: "US", // Geographic filter
+  type: "hosted", // Infrastructure type
+  nodeId: "node-123", // Specific node (overrides country)
+});
+```
+
+```python Python
+resp = requests.post(
+    "https://api.browser.cash/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "country": "US",      # Geographic filter
+        "type": "hosted",     # Infrastructure type
+        "nodeId": "node-123"  # Specific node (overrides country)
+    }
+)
+session = resp.json()
+```
+
+```bash cURL
+curl -X POST https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $BROWSER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"country": "US", "type": "hosted", "nodeId": "node-123"}'
+```
+
+</CodeGroup>
+
+<Warning>
+  If you specify a `nodeId`, that takes precedence over `country`. If the node
+  is offline or unavailable, the request will fail rather than fall back to
+  another node.
+</Warning>
+
+## Node Availability
+
+- Nodes may go offline temporarily
+- Distributed nodes have variable availability
+- Hosted nodes offer high uptime guarantees
