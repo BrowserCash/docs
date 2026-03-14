@@ -1,11 +1,11 @@
 ---
 title: "Getting Started"
-description: "Create your first Browser Cash session in under 3 minutes"
+description: "Create your first Driver session in under 3 minutes"
 ---
 
 ## Prerequisites
 
-- A Browser Cash account - [Sign up here](https://dash.browser.cash)
+- A Driver account - [Sign up here](https://app.driver.dev)
 - Your API key from the Dashboard
 
 ## Install the SDK
@@ -40,7 +40,7 @@ Get started with our SDK or REST API:
 import BrowsercashSDK from "@browsercash/sdk";
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY,
+  apiKey: process.env.DRIVER_API_KEY,
 });
 
 // Create a session
@@ -60,9 +60,9 @@ import requests
 
 # Create a session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={}
@@ -75,24 +75,24 @@ print("CDP URL:", session["cdpUrl"])
 
 # Stop the session when done
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session["sessionId"]}
 )
 ```
 
 ```bash cURL
 # Create a session
-curl -X POST https://api.browser.cash/v1/browser/session \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+curl -X POST https://api.driver.dev/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{}'
 
 # Response includes cdpUrl - connect with any CDP client
 
 # Stop the session when done
-curl -X DELETE "https://api.browser.cash/v1/browser/session?sessionId=SESSION_ID" \
-  -H "Authorization: Bearer $BROWSER_API_KEY"
+curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
 </CodeGroup>

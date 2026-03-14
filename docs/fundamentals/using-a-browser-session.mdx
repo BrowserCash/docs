@@ -14,7 +14,7 @@ import { chromium } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY,
+  apiKey: process.env.DRIVER_API_KEY,
 });
 
 const session = await client.browser.session.create();
@@ -38,7 +38,7 @@ import puppeteer from "puppeteer-core";
 import BrowsercashSDK from "@browsercash/sdk";
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY,
+  apiKey: process.env.DRIVER_API_KEY,
 });
 
 const session = await client.browser.session.create();
@@ -62,8 +62,8 @@ import os
 
 # Create session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     json={}
 )
 cdp_url = resp.json()["cdpUrl"]
@@ -83,8 +83,8 @@ print(driver.title)
 # Cleanup
 driver.quit()
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session_id}
 )
 ```
@@ -96,8 +96,8 @@ from playwright.sync_api import sync_playwright
 
 # Create session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     json={}
 )
 session = resp.json()
@@ -114,8 +114,8 @@ with sync_playwright() as p:
 
 # Cleanup
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session["sessionId"]}
 )
 ```
@@ -127,7 +127,7 @@ requests.delete(
 - **Handle reconnections** — If your connection drops, the browser keeps running. Reconnect using the same CDP URL.
 - **Set timeouts** — Sessions terminate after 1 hour. For long tasks, monitor and create new sessions as needed.
 - **Close gracefully** — Always stop sessions when done to avoid billing for idle time.
-- **Use contexts** — Browser Cash sessions may have an existing context. Always check `browser.contexts()` before creating a new one.
+- **Use contexts** — Driver sessions may have an existing context. Always check `browser.contexts()` before creating a new one.
 
 ## Error Handling
 
@@ -149,7 +149,7 @@ try {
 ```
 
 ```python Python
-api_key = os.getenv("BROWSER_API_KEY")
+api_key = os.getenv("DRIVER_API_KEY")
 headers = {
     "Authorization": f"Bearer {api_key}",
     "Content-Type": "application/json",
@@ -162,7 +162,7 @@ except Exception as e:
     if "connection refused" in str(e).lower():
         # Session may have expired — create a new one
         new_resp = requests.post(
-            "https://api.browser.cash/v1/browser/session",
+            "https://api.driver.dev/v1/browser/session",
             headers=headers,
             json={}
         )
@@ -173,7 +173,7 @@ except Exception as e:
         raise
 finally:
     requests.delete(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={"Authorization": f"Bearer {api_key}"},
         params={"sessionId": session["sessionId"]}
     )

@@ -7,12 +7,12 @@ View your browser sessions in real-time and perform manual actions directly in y
 
 ## Live Session Viewer
 
-Browser Cash provides a live viewer where you can watch and interact with your browser session in real-time.
+Driver provides a live viewer where you can watch and interact with your browser session in real-time.
 
 To view a session, construct the viewer URL using your session's `cdpUrl`:
 
 ```
-https://dash.browser.cash/cdp_tabs?ws=<encoded-cdp-url>&theme=light
+https://viewer.driver.dev?ws=<encoded-cdp-url>
 ```
 
 <Steps>
@@ -34,7 +34,7 @@ const session = await client.browser.session.create();
 
 // URL-encode the CDP WebSocket URL
 const encodedWs = encodeURIComponent(session.cdpUrl);
-const viewerUrl = `https://dash.browser.cash/cdp_tabs?ws=${encodedWs}&theme=light`;
+const viewerUrl = `https://viewer.driver.dev?ws=${encodedWs}`;
 
 console.log("View your session live:", viewerUrl);
 ```
@@ -45,9 +45,9 @@ import requests
 from urllib.parse import quote
 
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={}
@@ -56,7 +56,7 @@ session = resp.json()
 
 # URL-encode the CDP WebSocket URL
 encoded_ws = quote(session["cdpUrl"], safe="")
-viewer_url = f"https://dash.browser.cash/cdp_tabs?ws={encoded_ws}&theme=light"
+viewer_url = f"https://viewer.driver.dev?ws={encoded_ws}"
 
 print("View your session live:", viewer_url)
 ```
@@ -95,8 +95,8 @@ import os
 import requests
 
 resp = requests.get(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": "sess_abc123xyz"}
 )
 session = resp.json()
@@ -104,8 +104,8 @@ print(session)
 ```
 
 ```bash cURL
-curl -X GET "https://api.browser.cash/v1/browser/session?sessionId=sess_abc123xyz" \
-  -H "Authorization: Bearer $BROWSER_API_KEY"
+curl -X GET "https://api.driver.dev/v1/browser/session?sessionId=sess_abc123xyz" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
 </CodeGroup>
@@ -119,7 +119,7 @@ curl -X GET "https://api.browser.cash/v1/browser/session?sessionId=sess_abc123xy
   "servedBy": "node-us-east-1",
   "createdAt": "2024-01-15T10:30:00.000Z",
   "stoppedAt": null,
-  "cdpUrl": "wss://cdp.browser.cash/sess_abc123xyz"
+  "cdpUrl": "<returned-cdp-url>"
 }
 ```
 
@@ -151,8 +151,8 @@ import os
 import requests
 
 resp = requests.get(
-    "https://api.browser.cash/v1/browser/sessions",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/sessions",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"page": 1, "pageSize": 20}
 )
 sessions = resp.json()
@@ -160,8 +160,8 @@ print(sessions)
 ```
 
 ```bash cURL
-curl -X GET "https://api.browser.cash/v1/browser/sessions?page=1&pageSize=20" \
-  -H "Authorization: Bearer $BROWSER_API_KEY"
+curl -X GET "https://api.driver.dev/v1/browser/sessions?page=1&pageSize=20" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
 </CodeGroup>
@@ -208,11 +208,11 @@ import os
 
 def wait_for_session(session_id: str, timeout: int = 30):
     start = time.time()
-    api_key = os.getenv("BROWSER_API_KEY")
+    api_key = os.getenv("DRIVER_API_KEY")
 
     while time.time() - start < timeout:
         resp = requests.get(
-            "https://api.browser.cash/v1/browser/session",
+            "https://api.driver.dev/v1/browser/session",
             headers={"Authorization": f"Bearer {api_key}"},
             params={"sessionId": session_id}
         )

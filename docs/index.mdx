@@ -9,8 +9,8 @@ description: "Get started with our hosted browsers and browser agents."
     <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.browser.cash/v1/browser/session" \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+curl -X POST "https://api.driver.dev/v1/browser/session" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "content-type: application/json" \
   -d '{}'
 ```
@@ -19,12 +19,12 @@ curl -X POST "https://api.browser.cash/v1/browser/session" \
 import os
 import requests
 
-BROWSER_API_KEY = os.getenv("BROWSER_API_KEY")
+DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
 
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {BROWSER_API_KEY}",
+        "Authorization": f"Bearer {DRIVER_API_KEY}",
         "content-type": "application/json",
     },
     json={},
@@ -37,7 +37,7 @@ print("cdpUrl:", data.get("cdpUrl"))
 import BrowsercashSDK from '@browsercash/sdk';
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
 });
 
 const session = await client.browser.session.create();
@@ -54,7 +54,7 @@ console.log(session.cdpUrl);
     {/* <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
       <button
         className="run-request-btn run-icon"
-        data-url="https://api.browser.cash/v1/browser/session"
+        data-url="https://api.driver.dev/v1/browser/session"
         data-method="POST"
         data-body="{}"
         aria-label="Test Request"
@@ -82,8 +82,8 @@ console.log(session.cdpUrl);
     <CodeGroup>
 
 ```bash cURL
-curl -X POST "https://api.browser.cash/v1/agent/task" \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+curl -X POST "https://api.driver.dev/v1/agent/task" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "content-type: application/json" \
   -d '{"agent":"gemini","prompt":"What text does the homepage of example.com say?","mode":"text","stepLimit":10}'
 ```
@@ -92,12 +92,12 @@ curl -X POST "https://api.browser.cash/v1/agent/task" \
 import os
 import requests
 
-BROWSER_API_KEY = os.getenv("BROWSER_API_KEY")
+DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
 
 resp = requests.post(
-    "https://api.browser.cash/v1/agent/task",
+    "https://api.driver.dev/v1/agent/task",
     headers={
-        "Authorization": f"Bearer {BROWSER_API_KEY}",
+        "Authorization": f"Bearer {DRIVER_API_KEY}",
         "content-type": "application/json",
     },
     json={"agent": "gemini", "prompt": "What text does the homepage of example.com say?", "mode": "text", "stepLimit": 10},
@@ -110,7 +110,7 @@ print("taskId:", data.get("taskId"))
 import BrowsercashSDK from '@browsercash/sdk';
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
 });
 
 const agent = await client.agent.task.create({
@@ -128,7 +128,7 @@ console.log(agent.taskId);
     {/* <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
       <button
         className="run-request-btn run-icon"
-        data-url="https://api.browser.cash/v1/agent/task"
+        data-url="https://api.driver.dev/v1/agent/task"
         data-method="POST"
         data-body={`{"agent":"gemini","prompt":"What text does the homepage of example.com say?","mode":"text","stepLimit":10}`}
         style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
@@ -153,20 +153,20 @@ console.log(agent.taskId);
     <CodeGroup>
 
 ```bash cURL
-curl "https://api.browser.cash/v1/browser/session?sessionId=$SESSION_ID" \
-  -H "Authorization: Bearer $BROWSER_API_KEY"
+curl "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
 ```python Python
 import os
 import requests
 
-BROWSER_API_KEY = os.getenv("BROWSER_API_KEY")
+DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
 SESSION_ID = os.getenv("SESSION_ID")
 
 resp = requests.get(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {BROWSER_API_KEY}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {DRIVER_API_KEY}"},
     params={"sessionId": SESSION_ID},
 )
 print(resp.json())
@@ -176,7 +176,7 @@ print(resp.json())
 import BrowsercashSDK from '@browsercash/sdk';
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
 });
 
 const session = await client.browser.session.get({ sessionId: process.env.SESSION_ID! });
@@ -205,7 +205,7 @@ console.log(session);
     <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
       <button
         className="run-request-btn run-icon"
-        data-url="https://api.browser.cash/v1/browser/session?sessionId={sessionId}"
+        data-url="https://api.driver.dev/v1/browser/session?sessionId={sessionId}"
         data-method="GET"
         data-vars='{"sessionId":"#session-id-input-get"}'
         style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
@@ -227,20 +227,20 @@ console.log(session);
     <CodeGroup>
 
 ```bash cURL
-curl -X DELETE "https://api.browser.cash/v1/browser/session?sessionId=$SESSION_ID" \
-  -H "Authorization: Bearer $BROWSER_API_KEY"
+curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
 ```python Python
 import os
 import requests
 
-BROWSER_API_KEY = os.getenv("BROWSER_API_KEY")
+DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
 SESSION_ID = os.getenv("SESSION_ID")
 
 resp = requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {BROWSER_API_KEY}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {DRIVER_API_KEY}"},
     params={"sessionId": SESSION_ID},
 )
 print("stopped:", resp.status_code)
@@ -250,7 +250,7 @@ print("stopped:", resp.status_code)
 import BrowsercashSDK from '@browsercash/sdk';
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
 });
 
 const session = await client.browser.session.stop({ sessionId: process.env.SESSION_ID! });
@@ -279,7 +279,7 @@ console.log(session);
     <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
       <button
         className="run-request-btn run-icon"
-        data-url="https://api.browser.cash/v1/browser/session?sessionId={sessionId}"
+        data-url="https://api.driver.dev/v1/browser/session?sessionId={sessionId}"
         data-method="DELETE"
         data-vars='{"sessionId":"#session-id-input-stop"}'
         style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
@@ -301,20 +301,20 @@ console.log(session);
     <CodeGroup>
 
 ```bash cURL
-curl -H "Authorization: Bearer $BROWSER_API_KEY" \
-  "https://api.browser.cash/v1/agent/task?taskId=$TASK_ID"
+curl -H "Authorization: Bearer $DRIVER_API_KEY" \
+  "https://api.driver.dev/v1/agent/task?taskId=$TASK_ID"
 ```
 
 ```python Python
 import os
 import requests
 
-BROWSER_API_KEY = os.getenv("BROWSER_API_KEY")
+DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
 TASK_ID = os.getenv("TASK_ID")
 
 resp = requests.get(
-    "https://api.browser.cash/v1/agent/task",
-    headers={"Authorization": f"Bearer {BROWSER_API_KEY}"},
+    "https://api.driver.dev/v1/agent/task",
+    headers={"Authorization": f"Bearer {DRIVER_API_KEY}"},
     params={"taskId": TASK_ID},
 )
 print(resp.json())
@@ -324,7 +324,7 @@ print(resp.json())
 import BrowsercashSDK from '@browsercash/sdk';
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
 });
 
 const agent = await client.agent.task.get({ taskId: process.env.TASK_ID! });
@@ -354,7 +354,7 @@ console.log(agent);
    {/* <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
       <button
         className="run-request-btn run-btn"
-        data-url="https://api.browser.cash/v1/agent/task?taskId={taskId}"
+        data-url="https://api.driver.dev/v1/agent/task?taskId={taskId}"
         data-method="GET"
         data-vars='{"taskId":"#task-id-input"}'
         style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}

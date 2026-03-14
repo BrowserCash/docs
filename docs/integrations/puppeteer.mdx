@@ -1,6 +1,6 @@
 ---
 title: "Puppeteer"
-description: "Connect Browser Cash sessions to Puppeteer"
+description: "Connect Driver sessions to Puppeteer"
 ---
 
 [Puppeteer](https://pptr.dev) is Google's Node.js library for controlling Chrome/Chromium via the DevTools Protocol.
@@ -12,7 +12,7 @@ npm install puppeteer-core @browsercash/sdk
 ```
 
 <Note>
-Use `puppeteer-core` instead of `puppeteer` — Browser Cash provides the browser, so you don't need Puppeteer to download one.
+Use `puppeteer-core` instead of `puppeteer` — Driver provides the browser, so you don't need Puppeteer to download one.
 </Note>
 
 ## Quick Start
@@ -23,10 +23,10 @@ import BrowsercashSDK from '@browsercash/sdk';
 
 async function run() {
   const client = new BrowsercashSDK({
-    apiKey: process.env.BROWSER_API_KEY!,
+    apiKey: process.env.DRIVER_API_KEY!,
   });
 
-  // Create a Browser Cash session
+  // Create a Driver session
   const session = await client.browser.session.create();
 
   // Connect Puppeteer via CDP
@@ -114,4 +114,4 @@ try {
 
 - Use `browser.disconnect()` instead of `browser.close()` to keep the remote session running
 - For stealth, use `consumer_distributed` session type
-- Browser Cash handles anti-detection — no need for stealth plugins
+- Driver handles anti-detection — no need for stealth plugins

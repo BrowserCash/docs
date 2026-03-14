@@ -1,6 +1,6 @@
 ---
 title: "Selenium"
-description: "Connect Browser Cash sessions to Selenium"
+description: "Connect Driver sessions to Selenium"
 ---
 
 [Selenium](https://www.selenium.dev) is a widely-used browser automation framework with support for multiple languages and browsers.
@@ -28,11 +28,11 @@ from selenium.webdriver.common.by import By
 import requests
 import os
 
-# Create Browser Cash session
+# Create Driver session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={}
@@ -58,8 +58,8 @@ print(driver.title)
 # Cleanup
 driver.quit()
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session_id}
 )
 ```
@@ -68,9 +68,9 @@ requests.delete(
 
 ```python Python
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={
@@ -121,12 +121,12 @@ from selenium.webdriver.chrome.options import Options
 
 @contextmanager
 def browser_cash_session(**session_opts):
-    """Context manager for Browser Cash sessions."""
-    api_key = os.getenv("BROWSER_API_KEY")
+    """Context manager for Driver sessions."""
+    api_key = os.getenv("DRIVER_API_KEY")
 
     # Create session
     resp = requests.post(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -147,7 +147,7 @@ def browser_cash_session(**session_opts):
     finally:
         driver.quit()
         requests.delete(
-            "https://api.browser.cash/v1/browser/session",
+            "https://api.driver.dev/v1/browser/session",
             headers={"Authorization": f"Bearer {api_key}"},
             params={"sessionId": data["sessionId"]}
         )
@@ -162,4 +162,4 @@ with browser_cash_session(country="US") as driver:
 
 - Selenium connects via CDP debugger address, not WebSocket URL directly
 - Use explicit waits (`WebDriverWait`) instead of `time.sleep()`
-- Browser Cash handles browser management — focus on your automation logic
+- Driver handles browser management — focus on your automation logic

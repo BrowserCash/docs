@@ -19,13 +19,13 @@ import BrowsercashSDK from '@browsercash/sdk';
 
 async function run() {
   const client = new BrowsercashSDK({
-    apiKey: process.env.BROWSER_API_KEY!,
+    apiKey: process.env.DRIVER_API_KEY!,
   });
 
-  // Create Browser Cash session
+  // Create Driver session
   const session = await client.browser.session.create();
 
-  // Initialize Stagehand with Browser Cash CDP URL
+  // Initialize Stagehand with Driver CDP URL
   const stagehand = new Stagehand({
     env: 'LOCAL',
     localBrowserLaunchOptions: {
@@ -145,9 +145,9 @@ async function checkoutFlow(stagehand: Stagehand) {
 }
 ```
 
-## Why Stagehand + Browser Cash?
+## Why Stagehand + Driver?
 
 - **AI-native** — Use natural language instead of brittle selectors
 - **Self-healing** — Adapts to UI changes automatically
-- **Stealth** — Browser Cash's consumer nodes avoid detection
+- **Stealth** — Driver's consumer nodes avoid detection
 - **Scalable** — No local browser management needed

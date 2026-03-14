@@ -1,6 +1,6 @@
-# Browser Cash Docs
+# Driver Docs
 
-This folder contains documentation for the Browser Cash platform: Dashboard, Lisa (Cloudflare Worker), Tron (Agents), and the Billing Worker.
+This folder contains documentation for the Driver platform: Dashboard, Lisa (Cloudflare Worker), Tron (Agents), and the Billing Worker.
 
 - Start at `docs/index.mdx` for an overview
 - See `docs/quickstart.mdx` to configure env, deploy Workers, and run Tron

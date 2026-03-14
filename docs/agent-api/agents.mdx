@@ -24,7 +24,7 @@ Gemini Computer Use provides fast, high-quality responses through our API. This 
 import BrowsercashSDK from '@browsercash/sdk';
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
 });
 
 const agent = await client.agent.task.create({

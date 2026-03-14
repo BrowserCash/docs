@@ -1,9 +1,9 @@
 ---
 title: "Crawl4AI"
-description: "Combine Browser Cash's stealth browsers with Crawl4AI, an open-source web crawling framework"
+description: "Combine Driver's stealth browsers with Crawl4AI, an open-source web crawling framework"
 ---
 
-[Crawl4AI](https://crawl4ai.com/) turns the web into clean, LLM-ready Markdown for RAG, agents, and data pipelines. Combine it with Browser Cash for stealth browsing capabilities that let you crawl challenging websites without getting blocked.
+[Crawl4AI](https://crawl4ai.com/) turns the web into clean, LLM-ready Markdown for RAG, agents, and data pipelines. Combine it with Driver for stealth browsing capabilities that let you crawl challenging websites without getting blocked.
 
 ## Installation
 
@@ -16,7 +16,7 @@ uv sync
 
 ## Setup
 
-Get your API key from the [Browser Cash dashboard](https://dash.browser.cash):
+Get your API key from the [Driver dashboard](https://app.driver.dev):
 
 ```bash
 # .env
@@ -33,9 +33,9 @@ from crawl4ai import AsyncWebCrawler, BrowserConfig
 
 
 async def main():
-    # Create Browser Cash session
+    # Create Driver session
     resp = requests.post(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={
             "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
             "Content-Type": "application/json",
@@ -45,7 +45,7 @@ async def main():
     resp.raise_for_status()
     data = resp.json()
 
-    # Configure Crawl4AI to use the Browser Cash browser
+    # Configure Crawl4AI to use the Driver browser
     browser_config = BrowserConfig(
         cdp_url=data["cdpUrl"],
         use_managed_browser=True,
@@ -60,7 +60,7 @@ async def main():
 
     # Cleanup
     requests.delete(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={"Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}"},
         params={"sessionId": data["sessionId"]},
     )
@@ -78,7 +78,7 @@ uv run main.py
 
 ```python Python
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
         "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
         "Content-Type": "application/json",
@@ -106,7 +106,7 @@ headers = {
 
 # First run — establish session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
         "profile": {"name": "my-crawler-profile", "persist": True}
@@ -117,7 +117,7 @@ resp = requests.post(
 
 # Later runs — cookies and data preserved
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
         "profile": {"name": "my-crawler-profile", "persist": True}
@@ -125,7 +125,7 @@ resp = requests.post(
 )
 ```
 
-## Why Browser Cash + Crawl4AI?
+## Why Driver + Crawl4AI?
 
 - **Stealth browsing** — Consumer distributed nodes avoid detection
 - **LLM-ready output** — Clean Markdown for RAG and AI pipelines

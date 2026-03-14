@@ -23,7 +23,7 @@ import { chromium } from "playwright-core";
 import { SessionPool } from "@browsercash/pool";
 
 const pool = new SessionPool({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
   chromium: chromium,
   size: 3, // Maintain 3 concurrent sessions
 });
@@ -52,7 +52,7 @@ Configure the pool behavior with these options:
 
 | Option                  | Type           | Default  | Description                                      |
 | ----------------------- | -------------- | -------- | ------------------------------------------------ |
-| `apiKey`                | string         | Required | Your Browser Cash API key                        |
+| `apiKey`                | string         | Required | Your Driver API key                        |
 | `chromium`              | ChromiumModule | Required | Playwright chromium instance                     |
 | `size`                  | number         | `1`      | Number of concurrent sessions to maintain        |
 | `maxUses`               | number         | `50`     | Maximum requests per session before recycling    |
@@ -68,7 +68,7 @@ Configure the pool behavior with these options:
 
 ```typescript TypeScript
 const pool = new SessionPool({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
   chromium: chromium,
   size: 10, // 10 concurrent browsers
   maxUses: 100, // Recycle after 100 uses
@@ -81,7 +81,7 @@ const pool = new SessionPool({
 
 ```typescript TypeScript
 const pool = new SessionPool({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
   chromium: chromium,
   size: 5,
   enableHealthCheck: true, // Monitor session health
@@ -142,7 +142,7 @@ import { chromium } from "playwright-core";
 import { SessionPool } from "@browsercash/pool";
 
 const pool = new SessionPool({
-  apiKey: process.env.BROWSER_API_KEY!,
+  apiKey: process.env.DRIVER_API_KEY!,
   chromium: chromium,
   size: 5,
 });

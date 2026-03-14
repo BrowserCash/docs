@@ -1,9 +1,9 @@
 ---
 title: "Browser-Use"
-description: "Build AI agents with Browser Cash and Browser-Use"
+description: "Build AI agents with Driver and Browser-Use"
 ---
 
-[Browser-Use](https://browser-use.com/) is an open-source framework for building autonomous AI agents that browse the web. Combine it with Browser Cash for stealth browsing capabilities.
+[Browser-Use](https://browser-use.com/) is an open-source framework for building autonomous AI agents that browse the web. Combine it with Driver for stealth browsing capabilities.
 
 ## Installation
 
@@ -18,12 +18,12 @@ uv sync
 
 Get your API keys:
 1. [Browser-Use Cloud API key](https://cloud.browser-use.com/new-api-key)
-2. [Browser Cash API key](https://dash.browser.cash)
+2. [Driver API key](https://app.driver.dev)
 
 ```bash
 # .env
 BROWSER_USE_API_KEY=your-browser-use-key
-BROWSER_API_KEY=your-browser-cash-key
+DRIVER_API_KEY=your-browser-cash-key
 ```
 
 ## Quick Start
@@ -36,11 +36,11 @@ from browser_use import Agent, Browser, ChatBrowserUse
 
 
 async def run_agent():
-    # Create Browser Cash session
+    # Create Driver session
     resp = requests.post(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={
-            "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+            "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
             "Content-Type": "application/json",
         },
         json={},
@@ -48,7 +48,7 @@ async def run_agent():
     resp.raise_for_status()
     data = resp.json()
 
-    # Create Browser-Use browser with Browser Cash CDP URL
+    # Create Browser-Use browser with Driver CDP URL
     browser = Browser(cdp_url=data["cdpUrl"])
     llm = ChatBrowserUse()
 
@@ -63,8 +63,8 @@ async def run_agent():
 
     # Cleanup
     requests.delete(
-        "https://api.browser.cash/v1/browser/session",
-        headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+        "https://api.driver.dev/v1/browser/session",
+        headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
         params={"sessionId": data["sessionId"]},
     )
 
@@ -80,9 +80,9 @@ if __name__ == "__main__":
 
 ```python Python
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={
@@ -117,13 +117,13 @@ import os
 import requests
 
 headers = {
-    "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+    "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
     "Content-Type": "application/json",
 }
 
 # First run — login
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
         "profile": {"name": "my-agent-profile", "persist": True}
@@ -134,7 +134,7 @@ resp = requests.post(
 
 # Later runs — already logged in
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
         "profile": {"name": "my-agent-profile", "persist": True}
@@ -142,7 +142,7 @@ resp = requests.post(
 )
 ```
 
-## Why Browser Cash + Browser-Use?
+## Why Driver + Browser-Use?
 
 - **Stealth browsing** — Consumer distributed nodes avoid detection
 - **Global reach** — Run agents from different countries

@@ -36,7 +36,7 @@ import BrowsercashSDK from '@browsercash/sdk';
 
 async function main() {
   const client = new BrowsercashSDK({
-    apiKey: process.env.BROWSER_API_KEY!,
+    apiKey: process.env.DRIVER_API_KEY!,
   });
 
   // 1) Create a session
@@ -56,7 +56,7 @@ import BrowsercashSDK from '@browsercash/sdk';
 
 async function run() {
   const client = new BrowsercashSDK({
-    apiKey: process.env.BROWSER_API_KEY!,
+    apiKey: process.env.DRIVER_API_KEY!,
   });
 
   const session = await client.browser.session.create();
@@ -82,7 +82,7 @@ import BrowsercashSDK from '@browsercash/sdk';
 
 async function run() {
   const client = new BrowsercashSDK({
-    apiKey: process.env.BROWSER_API_KEY!,
+    apiKey: process.env.DRIVER_API_KEY!,
   });
 
   const session = await client.browser.session.create();
@@ -124,8 +124,8 @@ You can call the REST endpoints directly if you prefer no SDK.
 ```bash cURL
 curl -s -X POST \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
-  https://api.browser.cash/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  https://api.driver.dev/v1/browser/session \
   -d '{}'
 ```
 
@@ -147,8 +147,8 @@ Once you're done with the session, be sure to stop it to avoid unnecessary billi
 
 ```bash cURL
 curl -X DELETE \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
-  "https://api.browser.cash/v1/browser/session?sessionId=<SESSION_ID>"
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  "https://api.driver.dev/v1/browser/session?sessionId=<SESSION_ID>"
 ```
 
 </CodeGroup>

@@ -3,8 +3,8 @@
   "theme": "maple",
   "name": "Mega Tera Corp",
   "redirects": [
-    { "source": "/", "destination": "/docs/introduction/what-is-browser-cash" },
-    { "source": "/docs", "destination": "/docs/introduction/what-is-browser-cash" }
+    { "source": "/", "destination": "/docs/introduction/what-is-driver" },
+    { "source": "/docs", "destination": "/docs/introduction/what-is-driver" }
   ],
   "colors": {
     "primary": "#F0B15C",
@@ -20,7 +20,7 @@
           {
             "group": "Introduction",
             "pages": [
-              "docs/introduction/what-is-browser-cash",
+              "docs/introduction/what-is-driver",
               "docs/introduction/getting-started"
             ]
           },
@@ -59,7 +59,7 @@
       },
       {
         "tab": "API Reference",
-        "href": "https://api.browser.cash/scalar"
+        "href": "https://api.driver.dev/scalar"
       }
     ],
     "global": {
@@ -74,13 +74,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hello@browser.cash"
+        "href": "mailto:alex@driver.dev"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dash.browser.cash"
+      "href": "https://app.driver.dev"
     }
   },
   "contextual": {

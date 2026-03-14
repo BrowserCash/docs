@@ -1,10 +1,10 @@
 ---
 title: "Browser Use"
-description: "Combine Browser Cash's stealth browsers with Browser Use's agent framework"
+description: "Combine Driver's stealth browsers with Browser Use's agent framework"
 ---
 
 ## What is Browser Use?
-[Browser Use](https://browser-use.com/) is an open-source framework for building and managing autonomous agents that can interact with the web. By integrating Browser Cash's stealth browsers with Browser Use, you can create powerful agents that can perform complex web tasks while avoiding detection.
+[Browser Use](https://browser-use.com/) is an open-source framework for building and managing autonomous agents that can interact with the web. By integrating Driver's stealth browsers with Browser Use, you can create powerful agents that can perform complex web tasks while avoiding detection.
 
 ## Setting up the integration
 
@@ -19,14 +19,14 @@ uv add browser-use requests
 uv sync
 ```
 
-**3. Get an API key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key) and add it to your `.env` file, along with your [Browser Cash API key](https://dash.browser.cash/):**
+**3. Get an API key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key) and add it to your `.env` file, along with your [Driver API key](https://app.driver.dev):**
 ```
 # .env
 BROWSER_USE_API_KEY=your-key
 BROWSER_CASH_API_KEY=your-key
 ```
 
-**5. Run your Browser Use agent, powered by Browser Cash:**
+**5. Run your Browser Use agent, powered by Driver:**
 ```python
 # main.py
 import os
@@ -36,9 +36,9 @@ from browser_use import Agent, Browser, ChatBrowserUse
 
 
 async def example():
-    # 1) Create a Browser Cash session and get its CDP URL
+    # 1) Create a Driver session and get its CDP URL
     resp = requests.post(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={
             "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
             "content-type": "application/json",
@@ -48,7 +48,7 @@ async def example():
     resp.raise_for_status()
     cdp_url = resp.json()["cdpUrl"]
 
-    # 2) Create a Browser Use Browser object with the Browser Cash browser URL
+    # 2) Create a Browser Use Browser object with the Driver browser URL
     browser = Browser(cdp_url=cdp_url)
     llm = ChatBrowserUse()
 
@@ -61,9 +61,9 @@ async def example():
 
     history = await agent.run()
 
-    # 4) Stop the Browser Cash session
+    # 4) Stop the Driver session
     requests.delete(
-        "https://api.browser.cash/v1/browser/session",
+        "https://api.driver.dev/v1/browser/session",
         headers={
             "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
         },
@@ -82,4 +82,4 @@ if __name__ == "__main__":
 uv run main.py
 ```
 
-Congratulations! You have successfully integrated Browser Cash with Browser Use. You can combine the power of Browser Cash's stealth browsers with Browser Use's agent framework to build powerful web automations, even on the most challenging websites.
+Congratulations! You have successfully integrated Driver with Browser Use. You can combine the power of Driver's stealth browsers with Browser Use's agent framework to build powerful web automations, even on the most challenging websites.

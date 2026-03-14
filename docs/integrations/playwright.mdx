@@ -1,6 +1,6 @@
 ---
 title: "Playwright"
-description: "Connect Browser Cash sessions to Playwright"
+description: "Connect Driver sessions to Playwright"
 ---
 
 [Playwright](https://playwright.dev) is a modern browser automation framework with auto-waiting, powerful selectors, and multi-browser support.
@@ -30,10 +30,10 @@ import BrowsercashSDK from "@browsercash/sdk";
 
 async function run() {
   const client = new BrowsercashSDK({
-    apiKey: process.env.BROWSER_API_KEY!,
+    apiKey: process.env.DRIVER_API_KEY!,
   });
 
-  // Create a Browser Cash session
+  // Create a Driver session
   const session = await client.browser.session.create();
 
   // Connect Playwright via CDP
@@ -60,11 +60,11 @@ import os
 import requests
 from playwright.sync_api import sync_playwright
 
-# Create a Browser Cash session
+# Create a Driver session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={}
@@ -87,8 +87,8 @@ with sync_playwright() as p:
 
 # Cleanup
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session["sessionId"]}
 )
 ```
@@ -111,9 +111,9 @@ const browser = await chromium.connectOverCDP(session.cdpUrl);
 
 ```python Python
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={
@@ -131,7 +131,7 @@ browser = p.chromium.connect_over_cdp(session["cdpUrl"])
 
 ## Using Existing Contexts
 
-Browser Cash sessions may have a pre-existing browser context. Always check before creating a new one:
+Driver sessions may have a pre-existing browser context. Always check before creating a new one:
 
 <CodeGroup>
 
@@ -187,13 +187,13 @@ import requests
 from playwright.sync_api import sync_playwright
 
 headers = {
-    "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+    "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
     "Content-Type": "application/json",
 }
 
 # First run — login and save profile
 resp1 = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={"profile": {"name": "my-account", "persist": True}}
 )
@@ -213,14 +213,14 @@ with sync_playwright() as p:
 
 # Stop session1
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session1["sessionId"]}
 )
 
 # Later — session starts already logged in
 resp2 = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={"profile": {"name": "my-account", "persist": True}}
 )
@@ -259,8 +259,8 @@ except Exception as e:
     raise
 finally:
     requests.delete(
-        "https://api.browser.cash/v1/browser/session",
-        headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+        "https://api.driver.dev/v1/browser/session",
+        headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
         params={"sessionId": session["sessionId"]}
     )
 ```
@@ -270,6 +270,6 @@ finally:
 ## Tips
 
 - Use `page.waitForLoadState('networkidle')` for pages with dynamic content
-- Browser Cash sessions support all Playwright features including screenshots, PDFs, and tracing
+- Driver sessions support all Playwright features including screenshots, PDFs, and tracing
 - For long-running tasks, monitor session status and handle reconnection
-- Use `browser.close()` to end your Playwright connection. Unlike Puppeteer's `browser.disconnect()`, this properly closes the CDP connection while the Browser Cash session can still be stopped separately via the API
+- Use `browser.close()` to end your Playwright connection. Unlike Puppeteer's `browser.disconnect()`, this properly closes the CDP connection while the Driver session can still be stopped separately via the API

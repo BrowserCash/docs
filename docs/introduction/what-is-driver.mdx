@@ -1,6 +1,6 @@
 ---
-title: "What is Browser Cash?"
-description: "Browser Cash is a cloud platform for running managed browser sessions at scale"
+title: "What is Driver?"
+description: "Driver is a cloud platform for running managed browser sessions at scale"
 ---
 
 It provides a simple API for controlling fleets of browsers that you can connect to via CDP and automate.
@@ -18,7 +18,7 @@ It provides a simple API for controlling fleets of browsers that you can connect
 import BrowsercashSDK from "@browsercash/sdk";
 import { chromium } from "playwright";
 
-const client = new BrowsercashSDK({ apiKey: process.env.BROWSER_API_KEY });
+const client = new BrowsercashSDK({ apiKey: process.env.DRIVER_API_KEY });
 const session = await client.browser.session.create();
 
 const browser = await chromium.connectOverCDP(session.cdpUrl);
@@ -33,9 +33,9 @@ from playwright.sync_api import sync_playwright
 
 # Create session
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={}
@@ -50,16 +50,16 @@ with sync_playwright() as p:
 
 # Stop session
 requests.delete(
-    "https://api.browser.cash/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}"},
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
     params={"sessionId": session["sessionId"]}
 )
 ```
 
 ```bash cURL
 # Create session
-curl -X POST https://api.browser.cash/v1/browser/session \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+curl -X POST https://api.driver.dev/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{}'
 

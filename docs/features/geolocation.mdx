@@ -19,9 +19,9 @@ const session = await client.browser.session.create({
 
 ```python Python
 resp = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={"country": "US"}
@@ -30,8 +30,8 @@ session = resp.json()
 ```
 
 ```bash cURL
-curl -X POST https://api.browser.cash/v1/browser/session \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+curl -X POST https://api.driver.dev/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"country": "US"}'
 ```
@@ -40,7 +40,7 @@ curl -X POST https://api.browser.cash/v1/browser/session \
 
 ## Supported Countries
 
-Browser Cash supports sessions from multiple countries. Common options include:
+Driver supports sessions from multiple countries. Common options include:
 
 | Code | Country       |
 | ---- | ------------- |
@@ -59,7 +59,7 @@ For maximum control, combine country filtering with specific node selection:
 <CodeGroup>
 
 ```typescript TypeScript
-// First session — let Browser Cash pick a US node
+// First session — let Driver pick a US node
 const session1 = await client.browser.session.create({
   country: "US",
 });
@@ -78,13 +78,13 @@ import os
 import requests
 
 headers = {
-    "Authorization": f"Bearer {os.getenv('BROWSER_API_KEY')}",
+    "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
     "Content-Type": "application/json",
 }
 
-# First session — let Browser Cash pick a US node
+# First session — let Driver pick a US node
 resp1 = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={"country": "US"}
 )
@@ -95,7 +95,7 @@ node_id = session1["servedBy"]
 
 # Later — target the exact same node
 resp2 = requests.post(
-    "https://api.browser.cash/v1/browser/session",
+    "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={"nodeId": node_id}
 )
@@ -103,17 +103,17 @@ session2 = resp2.json()
 ```
 
 ```bash cURL
-# First session — let Browser Cash pick a US node
-curl -X POST https://api.browser.cash/v1/browser/session \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+# First session — let Driver pick a US node
+curl -X POST https://api.driver.dev/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"country": "US"}'
 
 # Response includes servedBy field with the node ID
 # Use it to target the same node later
 
-curl -X POST https://api.browser.cash/v1/browser/session \
-  -H "Authorization: Bearer $BROWSER_API_KEY" \
+curl -X POST https://api.driver.dev/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"nodeId": "node-us-east-abc123"}'
 ```
