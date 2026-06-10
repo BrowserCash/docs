@@ -1,47 +1,72 @@
 ---
-title: "Using a Browser Session"
-description: "Connect to your browser session and run automations"
+title: "Use a Browser Session"
+description: "Connect to Driver with Playwright or Puppeteer."
 ---
 
-Once you've created a session, use the CDP URL to connect your automation framework.
+After creating a hosted session, connect to the returned `cdpUrl` with a CDP-compatible automation client.
 
-## Connect to a Session
+## Playwright
 
 <CodeGroup>
 
-```typescript Playwright
+```typescript TypeScript
 import { chromium } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 
 const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY,
+  apiKey: process.env.DRIVER_API_KEY!,
+  baseURL: "https://api.driver.dev",
 });
 
-const session = await client.browser.session.create();
+const session = await client.browser.session.create({ type: "hosted" });
 const browser = await chromium.connectOverCDP(session.cdpUrl);
 
-// Get existing context or create new one
 const context = browser.contexts()[0] || (await browser.newContext());
 const page = context.pages()[0] || (await context.newPage());
 
-// Automate
 await page.goto("https://example.com");
 console.log(await page.title());
 
-// Cleanup
 await browser.close();
 await client.browser.session.stop({ sessionId: session.sessionId });
 ```
 
-```typescript Puppeteer
+```python Python
+import os
+import requests
+from playwright.sync_api import sync_playwright
+
+resp = requests.post(
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
+    json={"type": "hosted"},
+)
+resp.raise_for_status()
+session = resp.json()
+
+try:
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+        context = browser.contexts[0] if browser.contexts else browser.new_context()
+        page = context.pages[0] if context.pages else context.new_page()
+        page.goto("https://example.com")
+        print(page.title())
+        browser.close()
+finally:
+    requests.delete(
+        "https://api.driver.dev/v1/browser/session",
+        headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
+        params={"sessionId": session["sessionId"]},
+    )
+```
+
+</CodeGroup>
+
+## Puppeteer
+
+```typescript
 import puppeteer from "puppeteer-core";
-import BrowsercashSDK from "@browsercash/sdk";
 
-const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY,
-});
-
-const session = await client.browser.session.create();
 const browser = await puppeteer.connect({
   browserWSEndpoint: session.cdpUrl,
 });
@@ -51,137 +76,13 @@ await page.goto("https://example.com");
 console.log(await page.title());
 
 await browser.disconnect();
-await client.browser.session.stop({ sessionId: session.sessionId });
 ```
 
-```python Selenium
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import requests
-import os
+## Cleanup
 
-# Create session
-resp = requests.post(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    json={}
-)
-cdp_url = resp.json()["cdpUrl"]
-session_id = resp.json()["sessionId"]
+Close or disconnect your automation client, then stop the Driver session through the API. Stopping the session is what releases the browser and ends billing.
 
-# Connect via CDP
-options = Options()
-options.add_experimental_option(
-    "debuggerAddress",
-    cdp_url.replace("wss://", "").replace("ws://", "")
-)
-
-driver = webdriver.Chrome(options=options)
-driver.get("https://example.com")
-print(driver.title)
-
-# Cleanup
-driver.quit()
-requests.delete(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    params={"sessionId": session_id}
-)
+```bash
+curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
-
-```python Playwright (Python)
-import os
-import requests
-from playwright.sync_api import sync_playwright
-
-# Create session
-resp = requests.post(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    json={}
-)
-session = resp.json()
-
-with sync_playwright() as p:
-    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
-    context = browser.contexts[0] if browser.contexts else browser.new_context()
-    page = context.pages[0] if context.pages else context.new_page()
-
-    page.goto("https://example.com")
-    print(page.title())
-
-    browser.close()
-
-# Cleanup
-requests.delete(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    params={"sessionId": session["sessionId"]}
-)
-```
-
-</CodeGroup>
-
-## Best Practices
-
-- **Handle reconnections** — If your connection drops, the browser keeps running. Reconnect using the same CDP URL.
-- **Set timeouts** — Sessions terminate after 1 hour. For long tasks, monitor and create new sessions as needed.
-- **Close gracefully** — Always stop sessions when done to avoid billing for idle time.
-- **Use contexts** — Driver sessions may have an existing context. Always check `browser.contexts()` before creating a new one.
-
-## Error Handling
-
-<CodeGroup>
-
-```typescript TypeScript
-try {
-  const browser = await chromium.connectOverCDP(session.cdpUrl);
-  // ... automation
-} catch (error) {
-  if (error.message.includes("connection refused")) {
-    // Session may have expired — create a new one
-    const newSession = await client.browser.session.create();
-    // Retry with new session
-  }
-} finally {
-  await client.browser.session.stop({ sessionId: session.sessionId });
-}
-```
-
-```python Python
-api_key = os.getenv("DRIVER_API_KEY")
-headers = {
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json",
-}
-
-try:
-    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
-    # ... automation
-except Exception as e:
-    if "connection refused" in str(e).lower():
-        # Session may have expired — create a new one
-        new_resp = requests.post(
-            "https://api.driver.dev/v1/browser/session",
-            headers=headers,
-            json={}
-        )
-        new_session = new_resp.json()
-        browser = p.chromium.connect_over_cdp(new_session["cdpUrl"])
-        # Retry automation with new session
-    else:
-        raise
-finally:
-    requests.delete(
-        "https://api.driver.dev/v1/browser/session",
-        headers={"Authorization": f"Bearer {api_key}"},
-        params={"sessionId": session["sessionId"]}
-    )
-```
-
-</CodeGroup>
-
-## Next Steps
-
-- [Viewing a Browser Session](/docs/fundamentals/viewing-a-browser-session) — Monitor session status
-- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — List and stop sessions

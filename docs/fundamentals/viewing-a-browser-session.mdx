@@ -1,237 +1,104 @@
 ---
-title: "Viewing a Browser Session"
-description: "Watch and interact with your browser sessions live"
+title: "View a Browser Session"
+description: "Watch and interact with a running Driver browser session."
 ---
 
-View your browser sessions in real-time and perform manual actions directly in your browser.
+The live viewer lets you inspect a running browser and manually interact with it during development or debugging.
 
-## Live Session Viewer
+## Open the Viewer
 
-Driver provides a live viewer where you can watch and interact with your browser session in real-time.
+Create a viewer URL from the session `cdpUrl`:
 
-To view a session, construct the viewer URL using your session's `cdpUrl`:
-
+```text
+https://viewer.driver.dev?ws=<cdp-url>
 ```
-https://viewer.driver.dev?ws=<encoded-cdp-url>
-```
-
-<Steps>
-  <Step title="Create a session">
-    Start a browser session and retrieve the `cdpUrl` from the response.
-  </Step>
-  <Step title="URL-encode the cdpUrl">
-    Encode the WebSocket URL so it can be passed as a query parameter.
-  </Step>
-  <Step title="Open the viewer">
-    Navigate to the constructed URL in your browser to view the session live.
-  </Step>
-</Steps>
 
 <CodeGroup>
 
 ```typescript TypeScript
-const session = await client.browser.session.create();
+const session = await client.browser.session.create({ type: "hosted" });
+const viewerUrl = `https://viewer.driver.dev?ws=${session.cdpUrl}`;
 
-// URL-encode the CDP WebSocket URL
-const encodedWs = encodeURIComponent(session.cdpUrl);
-const viewerUrl = `https://viewer.driver.dev?ws=${encodedWs}`;
-
-console.log("View your session live:", viewerUrl);
+console.log(viewerUrl);
 ```
 
 ```python Python
-import os
-import requests
-from urllib.parse import quote
-
-resp = requests.post(
-    "https://api.driver.dev/v1/browser/session",
-    headers={
-        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
-        "Content-Type": "application/json",
-    },
-    json={}
-)
-session = resp.json()
-
-# URL-encode the CDP WebSocket URL
-encoded_ws = quote(session["cdpUrl"], safe="")
-viewer_url = f"https://viewer.driver.dev?ws={encoded_ws}"
-
-print("View your session live:", viewer_url)
+viewer_url = f"https://viewer.driver.dev?ws={session['cdpUrl']}"
+print(viewer_url)
 ```
 
 </CodeGroup>
 
 <Note>
-  The live viewer allows you to see exactly what your automation is doing and
-  manually interact with the browser — click elements, type text, or navigate to
-  different pages.
+  Keep the Driver session active while the viewer is connected. Stop the session when you are finished debugging.
 </Note>
 
-### Viewer Parameters
+## Viewer Parameters
 
-| Parameter | Values          | Description                             |
-| --------- | --------------- | --------------------------------------- |
-| `ws`      | URL-encoded WSS | The CDP WebSocket URL from your session |
-| `theme`   | `light`, `dark` | Viewer color theme                      |
+| Parameter | Description |
+| --- | --- |
+| `ws` | CDP WebSocket URL from the session response. |
+| `theme` | Optional viewer theme: `light` or `dark`. |
 
----
+## Poll Session Status
 
-## Get Session Details
-
-<CodeGroup>
-
-```typescript TypeScript
-const session = await client.browser.session.get({
-  sessionId: "sess_abc123xyz",
-});
-
-console.log(session);
-```
-
-```python Python
-import os
-import requests
-
-resp = requests.get(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    params={"sessionId": "sess_abc123xyz"}
-)
-session = resp.json()
-print(session)
-```
-
-```bash cURL
-curl -X GET "https://api.driver.dev/v1/browser/session?sessionId=sess_abc123xyz" \
-  -H "Authorization: Bearer $DRIVER_API_KEY"
-```
-
-</CodeGroup>
-
-## Response
-
-```json
-{
-  "sessionId": "sess_abc123xyz",
-  "status": "active",
-  "servedBy": "node-us-east-1",
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "stoppedAt": null,
-  "cdpUrl": "<returned-cdp-url>"
-}
-```
-
-## Session Status Values
-
-| Status    | Description                                  |
-| --------- | -------------------------------------------- |
-| `active`  | Session is running and accepting connections |
-| `stopped` | Session has been terminated                  |
-| `failed`  | Session failed to start                      |
-
-## List All Sessions
-
-Retrieve paginated list of all your sessions:
+Use the session status to wait for a browser to become available or to detect that it has ended.
 
 <CodeGroup>
 
 ```typescript TypeScript
-const sessions = await client.browser.sessions.list({
-  page: 1,
-  pageSize: 20,
-});
+async function waitForActiveSession(sessionId: string, timeoutMs = 30000) {
+  const startedAt = Date.now();
 
-console.log(sessions);
-```
-
-```python Python
-import os
-import requests
-
-resp = requests.get(
-    "https://api.driver.dev/v1/browser/sessions",
-    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    params={"page": 1, "pageSize": 20}
-)
-sessions = resp.json()
-print(sessions)
-```
-
-```bash cURL
-curl -X GET "https://api.driver.dev/v1/browser/sessions?page=1&pageSize=20" \
-  -H "Authorization: Bearer $DRIVER_API_KEY"
-```
-
-</CodeGroup>
-
-## Pagination Parameters
-
-| Parameter  | Type   | Default | Description      |
-| ---------- | ------ | ------- | ---------------- |
-| `page`     | number | 1       | Page number      |
-| `pageSize` | number | 20      | Results per page |
-
-## Monitoring Sessions
-
-Poll session status to monitor long-running tasks:
-
-<CodeGroup>
-
-```typescript TypeScript
-async function waitForSession(sessionId: string, timeout = 30000) {
-  const start = Date.now();
-
-  while (Date.now() - start < timeout) {
+  while (Date.now() - startedAt < timeoutMs) {
     const session = await client.browser.session.get({ sessionId });
 
-    if (session.status === "active" && session.cdpUrl) {
-      return session;
+    if (session.status === "active" && session.cdpUrl) return session;
+    if (session.status === "completed" || session.status === "error") {
+      throw new Error(`Session ended with status: ${session.status}`);
     }
 
-    if (session.status === "failed") {
-      throw new Error("Session failed to start");
-    }
-
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  throw new Error("Session startup timeout");
+  throw new Error("Timed out waiting for session");
 }
 ```
 
 ```python Python
+import os
 import time
 import requests
-import os
 
-def wait_for_session(session_id: str, timeout: int = 30):
-    start = time.time()
-    api_key = os.getenv("DRIVER_API_KEY")
+def wait_for_active_session(session_id: str, timeout_seconds: int = 30):
+    started_at = time.time()
 
-    while time.time() - start < timeout:
+    while time.time() - started_at < timeout_seconds:
         resp = requests.get(
             "https://api.driver.dev/v1/browser/session",
-            headers={"Authorization": f"Bearer {api_key}"},
-            params={"sessionId": session_id}
+            headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
+            params={"sessionId": session_id},
         )
+        resp.raise_for_status()
         session = resp.json()
 
         if session["status"] == "active" and session.get("cdpUrl"):
             return session
-
-        if session["status"] == "failed":
-            raise Exception("Session failed to start")
+        if session["status"] in ("completed", "error"):
+            raise RuntimeError(f"Session ended with status: {session['status']}")
 
         time.sleep(1)
 
-    raise Exception("Session startup timeout")
+    raise TimeoutError("Timed out waiting for session")
 ```
 
 </CodeGroup>
 
-## Next Steps
+## Status Values
 
-- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — Stop sessions and clean up resources
-- [Browser Profiles](/docs/features/browser-profiles) — Persist browser state across sessions
+| Status | Meaning |
+| --- | --- |
+| `starting` | Session is being created. |
+| `active` | Session is running and can accept CDP connections. |
+| `completed` | Session has stopped successfully. |
+| `error` | Session failed or ended with an error. |

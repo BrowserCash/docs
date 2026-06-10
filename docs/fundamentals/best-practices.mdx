@@ -1,0 +1,81 @@
+---
+title: "Best Practices"
+description: "Use Driver with minimal CDP noise and reliable cleanup."
+---
+
+These practices keep Driver examples simple, reduce unnecessary browser instrumentation, and avoid CDP event patterns that can make automation more fragile or easier to classify.
+
+## Prefer the Remote Browser Defaults
+
+Do not change browser settings unless the task requires it.
+
+- Reuse `browser.contexts()[0]` if it exists.
+- Reuse `context.pages()[0]` if it exists.
+- Keep the default viewport, user agent, locale, permissions, and browser flags.
+- Avoid extra timeouts and navigation settings until a specific target needs them.
+
+## Avoid Local Browser Launches
+
+Driver provides the browser. Connect to the returned `cdpUrl` instead of launching a local browser.
+
+Avoid these APIs in Driver quickstarts:
+
+- `chromium.launch()`
+- `chromium.launchPersistentContext()`
+- `puppeteer.launch()`
+- invented localhost CDP ports
+- custom CDP hosts not returned by Driver
+
+You also do not need `playwright install` for the minimal Driver quickstart, because the browser runs remotely.
+
+## Minimize Detection-Prone CDP Hooks
+
+CDP clients can create noisy or unusual browser behavior when they install broad event listeners, route all network traffic, or inject scripts into every page. Use these only when the task genuinely requires them.
+
+Avoid by default:
+
+- `page.on(...)`
+- `context.on(...)`
+- `browser.on(...)`
+- `page.route(...)`
+- `context.route(...)`
+- `page.exposeBinding(...)`
+- `page.exposeFunction(...)`
+- `page.addInitScript(...)`
+- `context.addInitScript(...)`
+
+Prefer direct page actions and reads:
+
+- `page.goto(...)`
+- `page.click(...)`
+- `page.fill(...)`
+- `page.locator(...)`
+- `page.title()`
+- `page.textContent(...)`
+
+## Debug with the Viewer First
+
+When a page behaves differently than expected, inspect the live session with the [browser viewer](/docs/fundamentals/viewing-a-browser-session) before adding broad CDP hooks. The viewer lets you see the remote browser state without routing network requests, injecting scripts, or subscribing to every browser event.
+
+## Keep Required Hooks Narrow
+
+Some workflows need request interception, event listeners, or initialization scripts. When they do, keep them scoped to the smallest surface possible.
+
+- Listen for one event type instead of every event on the browser.
+- Route one URL pattern instead of all requests.
+- Remove listeners and routes when the specific step is finished.
+- Avoid fingerprint patches such as overriding `navigator`, user agent, WebGL, canvas, timezone, or locale unless the target task explicitly requires it.
+
+## Always Stop Sessions
+
+Use `try` / `finally` around browser work so sessions are stopped even when navigation or automation fails.
+
+```typescript TypeScript
+const session = await client.browser.session.create({ type: "hosted" });
+
+try {
+  // Connect and automate.
+} finally {
+  await client.browser.session.stop({ sessionId: session.sessionId });
+}
+```

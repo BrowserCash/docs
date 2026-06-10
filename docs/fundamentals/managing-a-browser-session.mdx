@@ -1,123 +1,125 @@
 ---
-title: "Managing a Browser Session"
-description: "Stop sessions and clean up resources"
+title: "Manage Browser Sessions"
+description: "List, fetch, update, and stop Driver browser sessions."
 ---
 
-## Stopping a Session
+Use session management endpoints to inspect active sessions, update notes, and stop browsers when automation completes.
 
-Always stop sessions when your automation completes to avoid unnecessary billing.
+## Get a Session
 
 <CodeGroup>
 
-```typescript TypeScript
-const result = await client.browser.session.stop({
-  sessionId: "sess_abc123xyz",
-});
-
-console.log(result);
+```bash cURL
+curl "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
 ```python Python
-import os
-import requests
-
-resp = requests.delete(
+resp = requests.get(
     "https://api.driver.dev/v1/browser/session",
     headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
-    params={"sessionId": "sess_abc123xyz"}
+    params={"sessionId": os.getenv("SESSION_ID")},
 )
 print(resp.json())
 ```
 
-```bash cURL
-curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=sess_abc123xyz" \
-  -H "Authorization: Bearer $DRIVER_API_KEY"
-```
-
-</CodeGroup>
-
-## Session Lifecycle
-
-<Steps>
-  <Step title="Create">
-    Call `create()` to start a new browser session. The session becomes **active** immediately.
-  </Step>
-  <Step title="Active">
-    Session is running and consuming billing time. Connect via CDP to automate the browser.
-  </Step>
-  <Step title="Stop">
-    Call `stop()` when finished, or the session auto-stops after **1 hour** of inactivity.
-  </Step>
-  <Step title="Stopped">
-    Session ends. Logs are retained temporarily before cleanup.
-  </Step>
-</Steps>
-
-<Note>
-  Always explicitly stop sessions when done to avoid unnecessary billing from the 1-hour timeout.
-</Note>
-
-## Cleanup Best Practices
-
-<CodeGroup>
-
 ```typescript TypeScript
-async function withSession<T>(
-  fn: (session: Session) => Promise<T>
-): Promise<T> {
-  const session = await client.browser.session.create();
-
-  try {
-    return await fn(session);
-  } finally {
-    await client.browser.session.stop({ sessionId: session.sessionId });
-  }
-}
-
-// Usage
-await withSession(async (session) => {
-  const browser = await chromium.connectOverCDP(session.cdpUrl);
-  // ... automation
-  await browser.close();
+const session = await client.browser.session.get({
+  sessionId: process.env.SESSION_ID!,
 });
 ```
 
+</CodeGroup>
+
+## List Sessions
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.driver.dev/v1/browser/sessions?page=1&pageSize=20&status=active" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+
 ```python Python
-from contextlib import contextmanager
+resp = requests.get(
+    "https://api.driver.dev/v1/browser/sessions",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
+    params={"page": 1, "pageSize": 20, "status": "active"},
+)
+print(resp.json())
+```
 
-@contextmanager
-def browser_session(**opts):
-    api_key = os.getenv("DRIVER_API_KEY")
-
-    resp = requests.post(
-        "https://api.driver.dev/v1/browser/session",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json=opts
-    )
-    session = resp.json()
-
-    try:
-        yield session
-    finally:
-        requests.delete(
-            "https://api.driver.dev/v1/browser/session",
-            headers={"Authorization": f"Bearer {api_key}"},
-            params={"sessionId": session["sessionId"]}
-        )
-
-# Usage
-with browser_session() as session:
-    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
-    # ... automation
-    browser.close()
+```typescript TypeScript
+const sessions = await client.browser.session.list({
+  page: 1,
+  pageSize: 20,
+  status: "active",
+});
 ```
 
 </CodeGroup>
 
-## Next Steps
+## Update a Session Note
 
-- [Browser Profiles](/docs/features/browser-profiles) — Persist browser state across sessions
-- [Geolocation](/docs/features/geolocation) — Target specific regions
+Notes are updated after session creation.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"note":"Scraping product pages"}'
+```
+
+```python Python
+resp = requests.patch(
+    "https://api.driver.dev/v1/browser/session",
+    headers={
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
+        "Content-Type": "application/json",
+    },
+    params={"sessionId": os.getenv("SESSION_ID")},
+    json={"note": "Scraping product pages"},
+)
+print(resp.json())
+```
+
+</CodeGroup>
+
+## Stop a Session
+
+Always stop sessions when your automation completes.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+
+```python Python
+resp = requests.delete(
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
+    params={"sessionId": os.getenv("SESSION_ID")},
+)
+print(resp.json())
+```
+
+```typescript TypeScript
+const result = await client.browser.session.stop({
+  sessionId: process.env.SESSION_ID!,
+});
+```
+
+</CodeGroup>
+
+## Session Statuses
+
+| Status | Meaning |
+| --- | --- |
+| `starting` | Session is being created. |
+| `active` | Session is running and can accept CDP connections. |
+| `completed` | Session has stopped successfully. |
+| `error` | Session failed or ended with an error. |

@@ -1,10 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "Mega Tera Corp",
+  "name": "Driver",
   "redirects": [
-    { "source": "/", "destination": "/docs/introduction/what-is-driver" },
-    { "source": "/docs", "destination": "/docs/introduction/what-is-driver" }
+    { "source": "/", "destination": "/docs" }
   ],
   "colors": {
     "primary": "#F0B15C",
@@ -18,24 +17,24 @@
         "tab": "Docs",
         "groups": [
           {
-            "group": "Introduction",
+            "group": "Start",
             "pages": [
-              "docs/introduction/what-is-driver",
+              "docs/index",
               "docs/introduction/getting-started"
             ]
           },
           {
-            "group": "Fundamentals",
+            "group": "Browser Sessions",
             "pages": [
               "docs/fundamentals/creating-a-browser-session",
               "docs/fundamentals/using-a-browser-session",
+              "docs/fundamentals/best-practices",
               "docs/fundamentals/viewing-a-browser-session",
-              "docs/fundamentals/managing-a-browser-session",
-              "docs/fundamentals/concurrent-browser-sessions"
+              "docs/fundamentals/managing-a-browser-session"
             ]
           },
           {
-            "group": "Features",
+            "group": "Session Options",
             "pages": [
               "docs/features/browser-profiles",
               "docs/features/geolocation",
@@ -49,7 +48,6 @@
             "pages": [
               "docs/integrations/playwright",
               "docs/integrations/puppeteer",
-              "docs/integrations/selenium",
               "docs/integrations/browser-use",
               "docs/integrations/crawl4ai",
               "docs/integrations/stagehand"
@@ -59,7 +57,41 @@
       },
       {
         "tab": "API Reference",
-        "href": "https://api.driver.dev/scalar"
+        "groups": [
+          {
+            "group": "Browser Sessions",
+            "openapi": "api-reference/openapi.json",
+            "pages": [
+              "POST /v1/browser/session",
+              "GET /v1/browser/session",
+              "PATCH /v1/browser/session",
+              "DELETE /v1/browser/session",
+              "GET /v1/browser/sessions"
+            ]
+          },
+          {
+            "group": "Profiles",
+            "openapi": "api-reference/openapi.json",
+            "pages": [
+              "GET /v1/browser/profiles",
+              "DELETE /v1/browser/profile"
+            ]
+          },
+          {
+            "group": "Account",
+            "openapi": "api-reference/openapi.json",
+            "pages": [
+              "GET /v1/account/balance"
+            ]
+          },
+          {
+            "group": "Scrape",
+            "openapi": "api-reference/openapi.json",
+            "pages": [
+              "POST /v1/scrape"
+            ]
+          }
+        ]
       }
     ],
     "global": {
@@ -97,9 +129,7 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/aibrowsers",
-      "github": "https://github.com/Mega-Tera",
-      "linkedin": "https://linkedin.com/company/megatera"
+      "github": "https://github.com/BrowserCash/docs"
     }
   }
 }

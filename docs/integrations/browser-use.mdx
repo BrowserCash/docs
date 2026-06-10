@@ -1,9 +1,9 @@
 ---
 title: "Browser-Use"
-description: "Build AI agents with Driver and Browser-Use"
+description: "Build browser agents with Driver and Browser-Use"
 ---
 
-[Browser-Use](https://browser-use.com/) is an open-source framework for building autonomous AI agents that browse the web. Combine it with Driver for stealth browsing capabilities.
+[Browser-Use](https://browser-use.com/) is an open-source framework for building autonomous browser agents. Combine it with Driver hosted sessions to run Browser-Use on managed Chrome infrastructure.
 
 ## Installation
 
@@ -23,7 +23,7 @@ Get your API keys:
 ```bash
 # .env
 BROWSER_USE_API_KEY=your-browser-use-key
-DRIVER_API_KEY=your-browser-cash-key
+DRIVER_API_KEY=your-driver-key
 ```
 
 ## Quick Start
@@ -43,7 +43,7 @@ async def run_agent():
             "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
             "Content-Type": "application/json",
         },
-        json={},
+        json={"type": "hosted"},
     )
     resp.raise_for_status()
     data = resp.json()
@@ -87,7 +87,7 @@ resp = requests.post(
     },
     json={
         "country": "US",
-        "type": "consumer_distributed",  # Maximum stealth
+        "type": "hosted",
         "windowSize": "1920x1080",
     },
 )
@@ -126,6 +126,7 @@ resp = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
+        "type": "hosted",
         "profile": {"name": "my-agent-profile", "persist": True}
     },
 )
@@ -137,6 +138,7 @@ resp = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
+        "type": "hosted",
         "profile": {"name": "my-agent-profile", "persist": True}
     },
 )
@@ -144,7 +146,7 @@ resp = requests.post(
 
 ## Why Driver + Browser-Use?
 
-- **Stealth browsing** — Consumer distributed nodes avoid detection
+- **Hosted browsers** — Run agents on managed Chrome sessions
 - **Global reach** — Run agents from different countries
 - **Persistent state** — Maintain logins across agent sessions
 - **Scalability** — No local browser management

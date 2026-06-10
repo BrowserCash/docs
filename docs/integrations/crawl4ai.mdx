@@ -1,9 +1,9 @@
 ---
 title: "Crawl4AI"
-description: "Combine Driver's stealth browsers with Crawl4AI, an open-source web crawling framework"
+description: "Combine Driver hosted sessions with Crawl4AI."
 ---
 
-[Crawl4AI](https://crawl4ai.com/) turns the web into clean, LLM-ready Markdown for RAG, agents, and data pipelines. Combine it with Driver for stealth browsing capabilities that let you crawl challenging websites without getting blocked.
+[Crawl4AI](https://crawl4ai.com/) turns the web into clean, LLM-ready Markdown for RAG, agents, and data pipelines. Combine it with Driver hosted sessions to crawl from managed Chrome infrastructure.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Get your API key from the [Driver dashboard](https://app.driver.dev):
 
 ```bash
 # .env
-BROWSER_CASH_API_KEY=your-browser-cash-key
+DRIVER_API_KEY=your-driver-key
 ```
 
 ## Quick Start
@@ -37,10 +37,10 @@ async def main():
     resp = requests.post(
         "https://api.driver.dev/v1/browser/session",
         headers={
-            "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
+            "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
             "Content-Type": "application/json",
         },
-        json={},
+        json={"type": "hosted"},
     )
     resp.raise_for_status()
     data = resp.json()
@@ -61,7 +61,7 @@ async def main():
     # Cleanup
     requests.delete(
         "https://api.driver.dev/v1/browser/session",
-        headers={"Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}"},
+        headers={"Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}"},
         params={"sessionId": data["sessionId"]},
     )
 
@@ -80,12 +80,12 @@ uv run main.py
 resp = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
     json={
         "country": "US",
-        "type": "consumer_distributed",  # Maximum stealth
+        "type": "hosted",
         "windowSize": "1920x1080",
     },
 )
@@ -100,7 +100,7 @@ import os
 import requests
 
 headers = {
-    "Authorization": f"Bearer {os.getenv('BROWSER_CASH_API_KEY')}",
+    "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
     "Content-Type": "application/json",
 }
 
@@ -109,6 +109,7 @@ resp = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
+        "type": "hosted",
         "profile": {"name": "my-crawler-profile", "persist": True}
     },
 )
@@ -120,6 +121,7 @@ resp = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers=headers,
     json={
+        "type": "hosted",
         "profile": {"name": "my-crawler-profile", "persist": True}
     },
 )
@@ -127,7 +129,7 @@ resp = requests.post(
 
 ## Why Driver + Crawl4AI?
 
-- **Stealth browsing** — Consumer distributed nodes avoid detection
+- **Hosted browsers** — Crawl with managed Chrome sessions
 - **LLM-ready output** — Clean Markdown for RAG and AI pipelines
 - **Global reach** — Crawl from different countries
 - **Persistent state** — Maintain sessions across crawl runs

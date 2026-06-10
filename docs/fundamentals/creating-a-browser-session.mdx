@@ -1,23 +1,19 @@
 ---
-title: "Creating a Browser Session"
-description: "Start a new managed browser session via API or SDK"
+title: "Create a Browser Session"
+description: "Start a managed Chrome session and receive a CDP URL."
 ---
 
-Create a browser session to get a CDP URL for connecting your automation framework.
+Create a browser session when you need explicit lifecycle control, session options, session history, or reconnect support.
 
 ## Create a Session
 
 <CodeGroup>
 
-```typescript TypeScript
-import BrowsercashSDK from "@browsercash/sdk";
-
-const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY,
-});
-
-const session = await client.browser.session.create();
-console.log(session);
+```bash cURL
+curl -X POST "https://api.driver.dev/v1/browser/session" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"hosted"}'
 ```
 
 ```python Python
@@ -30,48 +26,78 @@ resp = requests.post(
         "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
-    json={}
+    json={"type": "hosted"},
 )
+resp.raise_for_status()
 session = resp.json()
-print(session)
+print(session["sessionId"], session["cdpUrl"])
 ```
 
-```bash cURL
-curl -X POST https://api.driver.dev/v1/browser/session \
-  -H "Authorization: Bearer $DRIVER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{}'
+```typescript TypeScript
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.DRIVER_API_KEY!,
+  baseURL: "https://api.driver.dev",
+});
+
+const session = await client.browser.session.create({ type: "hosted" });
+console.log(session.sessionId, session.cdpUrl);
 ```
 
 </CodeGroup>
 
+## Response
+
+```json
+{
+  "sessionId": "example-session-id",
+  "status": "active",
+  "servedBy": "node-id",
+  "createdAt": "2026-06-10T01:15:17.157Z",
+  "stoppedAt": null,
+  "cdpUrl": "wss://...",
+  "note": null
+}
+```
+
 ## Session Options
 
-Customize your session with these parameters:
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `type` | string | Use `hosted`. |
+| `country` | string | Two-letter ISO country code, such as `US`. |
+| `nodeId` | string | Create the session on a specific previously used hosted node. Overrides `country`. |
+| `duration` | integer | Session duration in seconds. Must be greater than 60 and no more than 3600. |
+| `windowSize` | string | Initial browser dimensions as `WIDTHxHEIGHT`, such as `1920x1080`. |
+| `proxyUrl` | string | SOCKS5 proxy URL for the session. Cannot be used with `nodeId`. |
+| `profile` | object | Browser profile: `{ "name": "...", "persist": true }`. |
+| `fast` | boolean | Attempts faster startup when the request is eligible. |
+| `captchaSolver` | boolean | Enables the built-in CAPTCHA solver for the session. |
+| `extensionIds` | string[] | Chrome extension IDs to load. Requires extension access for your account. |
 
-| Parameter    | Type   | Description                                                  |
-| ------------ | ------ | ------------------------------------------------------------ |
-| `country`    | string | 2-letter ISO country code (e.g. `US`, `CA`)                  |
-| `nodeId`     | string | Target a specific node you've used before                    |
-| `type`       | string | `consumer_distributed`, `hosted`                             |
-| `proxyUrl`   | string | SOCKS5 proxy URL, UDP support encouraged                     |
-| `windowSize` | string | Browser dimensions as `WIDTHxHEIGHT`                         |
-| `profile`    | object | `{ name: string, persist: boolean }` for persistent profiles |
+<Note>
+  Session notes are updated with `PATCH /v1/browser/session?sessionId=...`. Do not rely on `note` during create; current create responses return `note: null`.
+</Note>
 
-### Example with Options
+## Example with Options
 
 <CodeGroup>
 
-```typescript TypeScript
-const session = await client.browser.session.create({
-  country: "US",
-  type: "hosted",
-  windowSize: "1920x1080",
-  profile: {
-    name: "my-profile",
-    persist: true,
-  },
-});
+```bash cURL
+curl -X POST "https://api.driver.dev/v1/browser/session" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "type": "hosted",
+    "duration": 600,
+    "windowSize": "1920x1080",
+    "profile": {
+      "name": "my-profile",
+      "persist": true
+    }
+  }'
 ```
 
 ```python Python
@@ -84,59 +110,32 @@ resp = requests.post(
     json={
         "country": "US",
         "type": "hosted",
+        "duration": 600,
         "windowSize": "1920x1080",
         "profile": {
             "name": "my-profile",
-            "persist": True
-        }
-    }
+            "persist": True,
+        },
+    },
 )
 ```
 
-```bash cURL
-curl -X POST https://api.driver.dev/v1/browser/session \
-  -H "Authorization: Bearer $DRIVER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "US",
-    "type": "hosted",
-    "windowSize": "1920x1080",
-    "profile": {
-      "name": "my-profile",
-      "persist": true
-    }
-  }'
+```typescript TypeScript
+const session = await client.browser.session.create({
+  country: "US",
+  type: "hosted",
+  duration: 600,
+  windowSize: "1920x1080",
+  profile: {
+    name: "my-profile",
+    persist: true,
+  },
+});
 ```
 
 </CodeGroup>
 
-## Session Types
-
-| Type                   | Description                                         |
-| ---------------------- | --------------------------------------------------- |
-| `consumer_distributed` | Runs on real consumer devices for maximum stealth   |
-| `hosted`               | Runs in our data centers for consistent performance |
-
-## Response
-
-```json
-{
-  "sessionId": "sess_abc123xyz",
-  "status": "active",
-  "servedBy": "node-us-east-1",
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "cdpUrl": "<returned-cdp-url>"
-}
-```
-
-## Notes
-
-- Sessions may take up to 3 seconds to start
-- Sessions automatically terminate after 1 hour
-- CDP URLs are valid only while the session is active
-- Always stop sessions when done to avoid unnecessary billing
-
 ## Next Steps
 
-- [Using a Browser Session](/docs/fundamentals/using-a-browser-session) — Connect and automate
-- [Managing Sessions](/docs/fundamentals/managing-a-browser-session) — Stop and list sessions
+- [Use a Browser Session](/docs/fundamentals/using-a-browser-session)
+- [Manage Browser Sessions](/docs/fundamentals/managing-a-browser-session)

@@ -15,7 +15,6 @@ npm install playwright @browsercash/sdk
 
 ```bash pip
 pip install playwright requests
-playwright install chromium
 ```
 
 </CodeGroup>
@@ -31,10 +30,11 @@ import BrowsercashSDK from "@browsercash/sdk";
 async function run() {
   const client = new BrowsercashSDK({
     apiKey: process.env.DRIVER_API_KEY!,
+    baseURL: "https://api.driver.dev",
   });
 
   // Create a Driver session
-  const session = await client.browser.session.create();
+  const session = await client.browser.session.create({ type: "hosted" });
 
   // Connect Playwright via CDP
   const browser = await chromium.connectOverCDP(session.cdpUrl);
@@ -67,7 +67,7 @@ resp = requests.post(
         "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
-    json={}
+    json={"type": "hosted"}
 )
 session = resp.json()
 
@@ -102,7 +102,7 @@ requests.delete(
 ```typescript TypeScript
 const session = await client.browser.session.create({
   country: "US",
-  type: "consumer_distributed",
+  type: "hosted",
   windowSize: "1920x1080",
 });
 
@@ -118,7 +118,7 @@ resp = requests.post(
     },
     json={
         "country": "US",
-        "type": "consumer_distributed",
+        "type": "hosted",
         "windowSize": "1920x1080"
     }
 )
@@ -160,6 +160,7 @@ page = context.pages[0] if context.pages else context.new_page()
 ```typescript TypeScript
 // First run — login and save profile
 const session1 = await client.browser.session.create({
+  type: "hosted",
   profile: { name: "my-account", persist: true },
 });
 
@@ -177,6 +178,7 @@ await client.browser.session.stop({ sessionId: session1.sessionId });
 
 // Later — session starts already logged in
 const session2 = await client.browser.session.create({
+  type: "hosted",
   profile: { name: "my-account", persist: true },
 });
 ```
@@ -195,7 +197,7 @@ headers = {
 resp1 = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers=headers,
-    json={"profile": {"name": "my-account", "persist": True}}
+    json={"type": "hosted", "profile": {"name": "my-account", "persist": True}}
 )
 session1 = resp1.json()
 
@@ -222,7 +224,7 @@ requests.delete(
 resp2 = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers=headers,
-    json={"profile": {"name": "my-account", "persist": True}}
+    json={"type": "hosted", "profile": {"name": "my-account", "persist": True}}
 )
 session2 = resp2.json()
 ```

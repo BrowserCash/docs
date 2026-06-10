@@ -1,0 +1,1346 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Driver API",
+    "description": "API for creating Driver browser sessions and scraping pages.",
+    "contact": {
+      "name": "Contact Us",
+      "email": "hello@driver.dev",
+      "url": "https://driver.dev"
+    }
+  },
+  "externalDocs": {
+    "description": "Learn more",
+    "url": "https://docs.driver.dev"
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Your Driver API key. Get one at https://app.driver.dev"
+      }
+    },
+    "schemas": {},
+    "parameters": {}
+  },
+  "paths": {
+    "/v1/browser/session": {
+      "post": {
+        "description": "Create a new hosted browser session.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "hosted"
+                    ],
+                    "description": "Use hosted Driver infrastructure for the session.",
+                    "example": "hosted"
+                  },
+                  "country": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "description": "Start a session in a specific country using its 2-letter ISO code. Optional.",
+                    "example": "US"
+                  },
+                  "nodeId": {
+                    "type": "string",
+                    "description": "Create the hosted session on a specific previously used hosted node. Optional. Overrides country.",
+                    "example": "node-id-from-servedBy"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "minimum": 60,
+                    "exclusiveMinimum": true,
+                    "maximum": 3600,
+                    "description": "The duration of the browser session in seconds. Optional. Default is 3600 seconds (1 hour). Cannot be greater than 3600 seconds (1 hour). Cannot be less than 60 seconds (1 minute).",
+                    "example": 600
+                  },
+                  "windowSize": {
+                    "type": "string",
+                    "description": "The window size for the browser session in the format WIDTHxHEIGHT (e.g., 1920x1080). Optional.",
+                    "example": "1920x1080"
+                  },
+                  "proxyUrl": {
+                    "type": "string",
+                    "description": "SOCKS5 proxy URL for the session. Optional. Requires hosted sessions and cannot be used with nodeId.",
+                    "example": "socks5://user:pass@proxy.example.com:1080"
+                  },
+                  "profile": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "example": "example-session-1",
+                        "description": "The name of the browser profile."
+                      },
+                      "persist": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Whether to save browser state for reuse after the session stops."
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "description": "The browser profile to use for the session. Optional."
+                  },
+                  "fast": {
+                    "type": "boolean",
+                    "description": "Attempt faster startup when the request is eligible. Optional.",
+                    "example": true
+                  },
+                  "captchaSolver": {
+                    "type": "boolean",
+                    "description": "Enable the built-in CAPTCHA solver for the session. Optional. Default is false.",
+                    "example": true
+                  },
+                  "extensionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Chrome extension IDs to load into the browser session. Optional. Requires extension access for your account.",
+                    "example": [
+                      "abc123def456"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created a browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string",
+                      "description": "The ID of the created browser session."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "starting",
+                        "active",
+                        "completed",
+                        "error"
+                      ],
+                      "description": "The status of the session."
+                    },
+                    "servedBy": {
+                      "type": "string",
+                      "description": "The node ID that is serving this session."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "The ISO 8601 timestamp when the session was created."
+                    },
+                    "stoppedAt": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The ISO 8601 timestamp when the session was stopped, or null if it is still active."
+                    },
+                    "cdpUrl": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "uri",
+                      "description": "The URL to access the Chrome DevTools Protocol for this session, or null if not available."
+                    },
+                    "note": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "An optional note attached to the session, or null if not set."
+                    }
+                  },
+                  "required": [
+                    "sessionId",
+                    "status",
+                    "servedBy",
+                    "createdAt",
+                    "stoppedAt",
+                    "cdpUrl",
+                    "note"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to create a browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create Browser Session",
+        "operationId": "createBrowserSession"
+      },
+      "get": {
+        "description": "Retrieve an existing browser session.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "example-session-id",
+              "description": "The ID of the browser session to retrieve."
+            },
+            "required": true,
+            "description": "The ID of the browser session to retrieve.",
+            "name": "sessionId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string",
+                      "description": "The ID of the created browser session."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "starting",
+                        "active",
+                        "completed",
+                        "error"
+                      ],
+                      "description": "The status of the session."
+                    },
+                    "servedBy": {
+                      "type": "string",
+                      "description": "The node ID that is serving this session."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "The ISO 8601 timestamp when the session was created."
+                    },
+                    "stoppedAt": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The ISO 8601 timestamp when the session was stopped, or null if it is still active."
+                    },
+                    "cdpUrl": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "uri",
+                      "description": "The URL to access the Chrome DevTools Protocol for this session, or null if not available."
+                    },
+                    "note": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "An optional note attached to the session, or null if not set."
+                    },
+                    "bandwidthBytes": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "The total bandwidth used by the session in bytes."
+                    }
+                  },
+                  "required": [
+                    "sessionId",
+                    "status",
+                    "servedBy",
+                    "createdAt",
+                    "stoppedAt",
+                    "cdpUrl",
+                    "note"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Session not found",
+                      "example": "Session not found"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get Browser Session",
+        "operationId": "getBrowserSession"
+      },
+      "delete": {
+        "description": "Stop an existing browser session.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "example-session-id",
+              "description": "The ID of the browser session to stop."
+            },
+            "required": true,
+            "description": "The ID of the browser session to stop.",
+            "name": "sessionId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully stopped browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the session was successfully stopped."
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Session not found",
+                      "example": "Session not found"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to stop browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Stop Browser Session",
+        "operationId": "stopBrowserSession"
+      },
+      "patch": {
+        "description": "Update an existing browser session. Currently supports updating the session note.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "example-session-id",
+              "description": "The ID of the browser session to update."
+            },
+            "required": true,
+            "description": "The ID of the browser session to update.",
+            "name": "sessionId",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "description": "A note to attach to the session. Maximum 256 characters.",
+                    "example": "Scraping product pages for client X"
+                  }
+                },
+                "required": [
+                  "note"
+                ]
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the session was successfully updated."
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Session not found",
+                      "example": "Session not found"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to update browser session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update Browser Session",
+        "operationId": "updateBrowserSession"
+      }
+    },
+    "/v1/browser/sessions": {
+      "get": {
+        "description": "List browser sessions with pagination.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "example": 1,
+              "description": "The page number for pagination."
+            },
+            "required": false,
+            "description": "The page number for pagination.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "example": 20,
+              "description": "The number of sessions per page."
+            },
+            "required": false,
+            "description": "The number of sessions per page.",
+            "name": "pageSize",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "starting",
+                "active",
+                "completed",
+                "error"
+              ],
+              "example": "active",
+              "description": "Filter sessions by status."
+            },
+            "required": false,
+            "description": "Filter sessions by status.",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved list of browser sessions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "page": {
+                      "type": "integer",
+                      "description": "The current page number."
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "description": "The number of sessions per page."
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "The total number of sessions."
+                    },
+                    "totalPages": {
+                      "type": "integer",
+                      "description": "The total number of pages."
+                    },
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sessionId": {
+                            "type": "string",
+                            "description": "The unique session ID."
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "starting",
+                              "active",
+                              "completed",
+                              "error"
+                            ],
+                            "description": "The status of the session."
+                          },
+                          "servedBy": {
+                            "type": "string",
+                            "description": "The node ID that is serving this session."
+                          },
+                          "type": {
+                            "type": "string",
+                            "nullable": true,
+                            "enum": [
+                              "hosted"
+                            ],
+                            "description": "Session infrastructure type. Public docs only expose hosted sessions.",
+                            "example": "hosted"
+                          },
+                          "country": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The ISO country code of the node serving this session."
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "description": "The ISO 8601 timestamp when the session was created."
+                          },
+                          "stoppedAt": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The ISO 8601 timestamp when the session was stopped, or null if it is still active."
+                          },
+                          "bandwidthBytes": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "The total bandwidth used by the session in bytes."
+                          },
+                          "note": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "An optional note attached to the session, or null if not set."
+                          }
+                        },
+                        "required": [
+                          "sessionId",
+                          "status",
+                          "servedBy",
+                          "type",
+                          "country",
+                          "createdAt",
+                          "stoppedAt",
+                          "note"
+                        ]
+                      },
+                      "description": "Array of browser sessions."
+                    }
+                  },
+                  "required": [
+                    "page",
+                    "pageSize",
+                    "total",
+                    "totalPages",
+                    "sessions"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve browser sessions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "List Browser Sessions",
+        "operationId": "listBrowserSessions"
+      }
+    },
+    "/v1/browser/profile": {
+      "delete": {
+        "description": "Delete a browser profile by name.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "test",
+              "description": "The name of the browser profile to delete."
+            },
+            "required": true,
+            "description": "The name of the browser profile to delete.",
+            "name": "profileName",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted browser profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the profile was successfully deleted."
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to delete browser profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Delete Browser Profile",
+        "operationId": "deleteBrowserProfile"
+      }
+    },
+    "/v1/browser/profiles": {
+      "get": {
+        "description": "List all browser profiles.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved list of browser profiles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "profileId": {
+                            "type": "string",
+                            "description": "The unique identifier of the browser profile."
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the browser profile."
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "description": "The ISO 8601 timestamp when the profile was created."
+                          }
+                        },
+                        "required": [
+                          "profileId",
+                          "name",
+                          "createdAt"
+                        ]
+                      },
+                      "description": "Array of browser profiles."
+                    }
+                  },
+                  "required": [
+                    "profiles"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve browser profiles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "List Browser Profiles",
+        "operationId": "listBrowserProfiles"
+      }
+    },
+    "/v1/account/balance": {
+      "get": {
+        "description": "Retrieve the current balance.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved account balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "object",
+                      "properties": {
+                        "balance_cents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "The current account balance in cents."
+                        },
+                        "network_mb_remaining": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "The remaining network allowance in megabytes for organization users."
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "The organization account status."
+                        }
+                      },
+                      "required": [
+                        "balance_cents"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "balance"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Account not found",
+                      "example": "Account not found"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve account balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get Account Balance",
+        "operationId": "getAccountBalance"
+      }
+    },
+    "/v1/scrape": {
+      "post": {
+        "summary": "Scrape URL",
+        "operationId": "scrapeUrl",
+        "description": "Render a URL in a browser and return the page content as HTML or Markdown.",
+        "servers": [
+          {
+            "url": "https://qk.driver.dev"
+          }
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "url": "https://example.com",
+                "output": "html",
+                "smartdoor": {
+                  "nodes": [
+                    {
+                      "type": "hosted",
+                      "country": "US"
+                    }
+                  ],
+                  "timeout": 60000,
+                  "delay": 2500,
+                  "retryFresh": true,
+                  "retryCount": 2,
+                  "refreshWhile": {
+                    "expression": "document.body?.innerText?.includes('ERR_CONNECTION_RESET') || location.href.includes('/risk/challenge')",
+                    "maxRefreshes": 3,
+                    "minDelayMs": 700,
+                    "maxDelayMs": 1300
+                  }
+                }
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL to scrape.",
+                    "example": "https://example.com"
+                  },
+                  "output": {
+                    "type": "string",
+                    "enum": [
+                      "html",
+                      "md"
+                    ],
+                    "description": "Response format. Defaults to html.",
+                    "example": "html"
+                  },
+                  "smartdoor": {
+                    "type": "object",
+                    "description": "Browser rendering, waiting, retry, and node options for the scrape.",
+                    "properties": {
+                      "nodes": {
+                        "type": "array",
+                        "description": "Preferred hosted node configurations. Multiple entries mean any match is acceptable.",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "hosted"
+                              ],
+                              "description": "Use hosted Driver infrastructure.",
+                              "example": "hosted"
+                            },
+                            "country": {
+                              "type": "string",
+                              "minLength": 2,
+                              "maxLength": 2,
+                              "description": "Preferred 2-letter country code.",
+                              "example": "US"
+                            }
+                          }
+                        },
+                        "example": [
+                          {
+                            "type": "hosted",
+                            "country": "US"
+                          }
+                        ]
+                      },
+                      "timeout": {
+                        "type": "integer",
+                        "minimum": 1000,
+                        "maximum": 60000,
+                        "description": "Overall scrape timeout in milliseconds.",
+                        "example": 60000
+                      },
+                      "delay": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 30000,
+                        "description": "Additional delay in milliseconds after the page settles before capture.",
+                        "example": 2500
+                      },
+                      "retryFresh": {
+                        "type": "boolean",
+                        "description": "Retry with a fresh browser context when a scrape attempt should be retried.",
+                        "example": true
+                      },
+                      "retryCount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Maximum number of retry attempts.",
+                        "example": 2
+                      },
+                      "refreshWhile": {
+                        "type": "object",
+                        "description": "Refresh the page while an in-page JavaScript expression evaluates truthy.",
+                        "properties": {
+                          "expression": {
+                            "type": "string",
+                            "description": "Synchronous JavaScript expression evaluated in the page. Refreshing continues while it returns truthy.",
+                            "example": "location.href.includes('/risk/challenge')"
+                          },
+                          "maxRefreshes": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Maximum number of page refreshes.",
+                            "example": 3
+                          },
+                          "minDelayMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Minimum delay before each refresh in milliseconds.",
+                            "example": 700
+                          },
+                          "maxDelayMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Maximum delay before each refresh in milliseconds.",
+                            "example": 1300
+                          }
+                        }
+                      },
+                      "waitForSelector": {
+                        "type": "string",
+                        "description": "CSS selector to wait for before capture.",
+                        "example": ".content-loaded"
+                      },
+                      "waitForSelectorValue": {
+                        "type": "string",
+                        "description": "Text content the selector element must contain before capture.",
+                        "example": "Ready"
+                      },
+                      "waitForFunction": {
+                        "type": "string",
+                        "description": "Synchronous JavaScript expression that must evaluate truthy before capture.",
+                        "example": "window.dataLoaded === true"
+                      },
+                      "challengeBudget": {
+                        "type": "integer",
+                        "minimum": 2000,
+                        "maximum": 30000,
+                        "description": "How long to wait for an anti-bot challenge to resolve, in milliseconds.",
+                        "example": 10000
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully scraped the URL. The response body is the scraped content.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "<html><head><title>Example Domain</title></head><body>...</body></html>"
+              },
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "# Example Domain\n\nThis domain is for use in documentation examples."
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Scrape failed.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Internal Server Error"
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.driver.dev"
+    }
+  ]
+}

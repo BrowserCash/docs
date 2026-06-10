@@ -8,7 +8,16 @@ description: "Build AI-native browser automations with Stagehand"
 ## Installation
 
 ```bash
-npm install @browserbasehq/stagehand @browsercash/sdk
+npm install @browserbasehq/stagehand @browsercash/sdk zod
+```
+
+<Note>
+  CDP URL attachment requires Stagehand 2.0 or newer. In `LOCAL` mode, Stagehand also needs an API key for your chosen model provider.
+</Note>
+
+```bash
+DRIVER_API_KEY=your-driver-key
+OPENAI_API_KEY=your-openai-key
 ```
 
 ## Quick Start
@@ -16,18 +25,21 @@ npm install @browserbasehq/stagehand @browsercash/sdk
 ```typescript TypeScript
 import { Stagehand } from '@browserbasehq/stagehand';
 import BrowsercashSDK from '@browsercash/sdk';
+import { z } from 'zod';
 
 async function run() {
   const client = new BrowsercashSDK({
     apiKey: process.env.DRIVER_API_KEY!,
+    baseURL: "https://api.driver.dev",
   });
 
   // Create Driver session
-  const session = await client.browser.session.create();
+  const session = await client.browser.session.create({ type: 'hosted' });
 
   // Initialize Stagehand with Driver CDP URL
   const stagehand = new Stagehand({
     env: 'LOCAL',
+    model: 'openai/gpt-5',
     localBrowserLaunchOptions: {
       cdpUrl: session.cdpUrl,
     },
@@ -35,25 +47,17 @@ async function run() {
 
   await stagehand.init();
 
-  // Use natural language to interact with pages
-  await stagehand.page.goto('https://example.com');
-
-  await stagehand.act({ action: 'click on the login button' });
-  await stagehand.act({ action: 'type "user@example.com" in the email field' });
-  await stagehand.act({ action: 'type "password123" in the password field' });
-  await stagehand.act({ action: 'click submit' });
+  const page = stagehand.context.pages()[0] || await stagehand.context.newPage();
+  await page.goto('https://example.com');
 
   // Extract data using natural language
-  const data = await stagehand.extract({
-    instruction: 'Extract the user profile information',
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        email: { type: 'string' },
-      },
-    },
-  });
+  const data = await stagehand.extract(
+    'Extract the page title and main heading',
+    z.object({
+      title: z.string(),
+      heading: z.string(),
+    })
+  );
 
   console.log(data);
 
@@ -71,40 +75,32 @@ run().catch(console.error);
 
 ```typescript TypeScript
 // Click elements
-await stagehand.act({ action: 'click the sign up button' });
+await stagehand.act('click the sign up button');
 
 // Fill forms
-await stagehand.act({ action: 'enter "John Doe" in the name field' });
+await stagehand.act('enter "John Doe" in the name field');
 
 // Navigate
-await stagehand.act({ action: 'scroll down to the pricing section' });
+await stagehand.act('scroll down to the pricing section');
 ```
 
 ### Structured Data Extraction
 
 ```typescript TypeScript
-const products = await stagehand.extract({
-  instruction: 'Extract all products with their prices',
-  schema: {
-    type: 'array',
-    items: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        price: { type: 'number' },
-        inStock: { type: 'boolean' },
-      },
-    },
-  },
-});
+const products = await stagehand.extract(
+  'Extract all products with their prices',
+  z.array(z.object({
+    name: z.string(),
+    price: z.number(),
+    inStock: z.boolean(),
+  }))
+);
 ```
 
 ### Observe Page State
 
 ```typescript TypeScript
-const observations = await stagehand.observe({
-  instruction: 'What actions can I take on this page?',
-});
+const observations = await stagehand.observe('What actions can I take on this page?');
 ```
 
 ## With Session Options
@@ -112,7 +108,7 @@ const observations = await stagehand.observe({
 ```typescript TypeScript
 const session = await client.browser.session.create({
   country: 'US',
-  type: 'consumer_distributed',
+  type: 'hosted',
   windowSize: '1920x1080',
   profile: { name: 'stagehand-session', persist: true },
 });
@@ -123,23 +119,21 @@ const session = await client.browser.session.create({
 ```typescript TypeScript
 // Multi-step workflow with error handling
 async function checkoutFlow(stagehand: Stagehand) {
-  await stagehand.page.goto('https://shop.example.com');
+  const page = stagehand.context.pages()[0] || await stagehand.context.newPage();
+  await page.goto('https://shop.example.com');
 
-  await stagehand.act({ action: 'search for "laptop"' });
-  await stagehand.act({ action: 'click on the first product' });
-  await stagehand.act({ action: 'add to cart' });
-  await stagehand.act({ action: 'go to checkout' });
+  await stagehand.act('search for "laptop"');
+  await stagehand.act('click on the first product');
+  await stagehand.act('add to cart');
+  await stagehand.act('go to checkout');
 
-  const cartSummary = await stagehand.extract({
-    instruction: 'Extract the cart total and item count',
-    schema: {
-      type: 'object',
-      properties: {
-        total: { type: 'string' },
-        itemCount: { type: 'number' },
-      },
-    },
-  });
+  const cartSummary = await stagehand.extract(
+    'Extract the cart total and item count',
+    z.object({
+      total: z.string(),
+      itemCount: z.number(),
+    })
+  );
 
   return cartSummary;
 }
@@ -149,5 +143,5 @@ async function checkoutFlow(stagehand: Stagehand) {
 
 - **AI-native** — Use natural language instead of brittle selectors
 - **Self-healing** — Adapts to UI changes automatically
-- **Stealth** — Driver's consumer nodes avoid detection
+- **Hosted browsers** — Run Stagehand on managed Chrome sessions
 - **Scalable** — No local browser management needed

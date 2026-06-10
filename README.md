@@ -1,26 +1,24 @@
 # Driver Docs
 
-This folder contains documentation for the Driver platform: Dashboard, Lisa (Cloudflare Worker), Tron (Agents), and the Billing Worker.
+Documentation for Driver's managed browser API.
 
-- Start at `docs/index.mdx` for an overview
-- See `docs/quickstart.mdx` to configure env, deploy Workers, and run Tron
-- See `docs/development.mdx` for local dev
-- See `docs/api-reference` for key endpoints
+## Structure
 
-## Preview locally
+- `docs/index.mdx` — API overview and core session flow
+- `docs/introduction/` — introductory getting-started pages
+- `docs/fundamentals/` — browser session lifecycle, usage, viewer, and management
+- `docs/features/` — profiles, geolocation, node targeting, proxies, and window size
+- `docs/integrations/` — Playwright, Puppeteer, Browser-Use, Crawl4AI, and Stagehand
+- `docs.json` — Mintlify navigation and site configuration
+- `api-reference/openapi.json` — Mintlify OpenAPI reference generated from the live Driver API spec with docs-specific simplifications
 
-We use Mintlify for the docs site. To preview the docs locally:
+The API Reference tab is generated from `api-reference/openapi.json`. The local OpenAPI file is based on `https://api.driver.dev/doc` with docs-specific corrections.
 
-```
+## Preview Locally
+
+```bash
 npm i -g mint
 mint dev
 ```
 
-Open http://localhost:3000.
-
-## Structure
-
-- `index.mdx` — overview + flow
-- `quickstart.mdx` — setup and first run
-- `development.mdx` — local development for each service
-- `api-reference/` — endpoint overview
+Open `http://localhost:3000`.

@@ -13,6 +13,7 @@ Pass a 2-letter ISO country code when creating a session:
 
 ```typescript TypeScript
 const session = await client.browser.session.create({
+  type: "hosted",
   country: "US", // United States
 });
 ```
@@ -24,8 +25,9 @@ resp = requests.post(
         "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
         "Content-Type": "application/json",
     },
-    json={"country": "US"}
+    json={"type": "hosted", "country": "US"}
 )
+resp.raise_for_status()
 session = resp.json()
 ```
 
@@ -33,95 +35,19 @@ session = resp.json()
 curl -X POST https://api.driver.dev/v1/browser/session \
   -H "Authorization: Bearer $DRIVER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"country": "US"}'
+  -d '{"type":"hosted","country":"US"}'
 ```
 
 </CodeGroup>
 
-## Supported Countries
-
-Driver supports sessions from multiple countries. Common options include:
-
-| Code | Country       |
-| ---- | ------------- |
-| `US` | United States |
-| `CA` | Canada        |
+## Availability
 
 <Note>
   Available countries depend on node availability. If no nodes are available in
   a requested country, the API will return an error.
 </Note>
 
-## Combining with Node Selection
-
-For maximum control, combine country filtering with specific node selection:
-
-<CodeGroup>
-
-```typescript TypeScript
-// First session — let Driver pick a US node
-const session1 = await client.browser.session.create({
-  country: "US",
-});
-
-// Save the node ID for later
-const nodeId = session1.servedBy;
-
-// Later — target the exact same node
-const session2 = await client.browser.session.create({
-  nodeId: nodeId,
-});
-```
-
-```python Python
-import os
-import requests
-
-headers = {
-    "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
-    "Content-Type": "application/json",
-}
-
-# First session — let Driver pick a US node
-resp1 = requests.post(
-    "https://api.driver.dev/v1/browser/session",
-    headers=headers,
-    json={"country": "US"}
-)
-session1 = resp1.json()
-
-# Save the node ID for later
-node_id = session1["servedBy"]
-
-# Later — target the exact same node
-resp2 = requests.post(
-    "https://api.driver.dev/v1/browser/session",
-    headers=headers,
-    json={"nodeId": node_id}
-)
-session2 = resp2.json()
-```
-
-```bash cURL
-# First session — let Driver pick a US node
-curl -X POST https://api.driver.dev/v1/browser/session \
-  -H "Authorization: Bearer $DRIVER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"country": "US"}'
-
-# Response includes servedBy field with the node ID
-# Use it to target the same node later
-
-curl -X POST https://api.driver.dev/v1/browser/session \
-  -H "Authorization: Bearer $DRIVER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"nodeId": "node-us-east-abc123"}'
-```
-
-</CodeGroup>
-
 ## Notes
 
 - Country filtering is best-effort based on available nodes
-- For consistent location, save and reuse `nodeId` from previous sessions
 - Some countries may have limited node availability

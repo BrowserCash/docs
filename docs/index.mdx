@@ -1,386 +1,103 @@
-﻿---
+---
 title: "Overview"
-description: "Get started with our hosted browsers and browser agents."
+description: "Create managed browser sessions and use Driver's API from your automation code."
 ---
 
+Driver provides managed Chrome sessions that you control over CDP. Create a hosted session, connect with Playwright, Puppeteer, Browser-Use, Crawl4AI, Stagehand, or another CDP client, then stop the session when your automation finishes.
 
-<Tabs>
-  <Tab title="Start Browser Session">
-    <CodeGroup>
+## Base URL
+
+```text
+https://api.driver.dev
+```
+
+Send your API key as a bearer token:
+
+```bash
+Authorization: Bearer $DRIVER_API_KEY
+```
+
+## Quick Start
+
+<CodeGroup>
 
 ```bash cURL
 curl -X POST "https://api.driver.dev/v1/browser/session" \
   -H "Authorization: Bearer $DRIVER_API_KEY" \
-  -H "content-type: application/json" \
-  -d '{}'
+  -H "Content-Type: application/json" \
+  -d '{"type":"hosted"}'
 ```
 
 ```python Python
 import os
 import requests
 
-DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
-
 resp = requests.post(
     "https://api.driver.dev/v1/browser/session",
     headers={
-        "Authorization": f"Bearer {DRIVER_API_KEY}",
-        "content-type": "application/json",
+        "Authorization": f"Bearer {os.getenv('DRIVER_API_KEY')}",
+        "Content-Type": "application/json",
     },
-    json={},
+    json={"type": "hosted"},
 )
-data = resp.json()
-print("cdpUrl:", data.get("cdpUrl"))
+resp.raise_for_status()
+session = resp.json()
+print(session["cdpUrl"])
 ```
 
 ```typescript TypeScript
-import BrowsercashSDK from '@browsercash/sdk';
+import BrowsercashSDK from "@browsercash/sdk";
 
 const client = new BrowsercashSDK({
   apiKey: process.env.DRIVER_API_KEY!,
+  baseURL: "https://api.driver.dev",
 });
 
-const session = await client.browser.session.create();
-
+const session = await client.browser.session.create({ type: "hosted" });
 console.log(session.cdpUrl);
 ```
 
-    </CodeGroup>
+</CodeGroup>
 
-    <style>
-      {`
-      `}
-    </style>
-    {/* <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
-      <button
-        className="run-request-btn run-icon"
-        data-url="https://api.driver.dev/v1/browser/session"
-        data-method="POST"
-        data-body="{}"
-        aria-label="Test Request"
-        style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <svg className="run-icon-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        <svg className="run-spinner" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'none' }}>
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" opacity="0.75"></path>
-        </svg>
-        Test Request
-      </button>
-      <span className="run-status"></span>
-      <div className="run-response">
-        <div
-          className="run-output"
-          style={{ marginTop: '6px', maxHeight: '260px', overflow: 'auto', marginBottom: '6px'}}
-        ></div>
-      </div>
-    </div> */}
+## Core Flow
 
-  </Tab>
+<Steps>
+  <Step title="Create a session">
+    `POST /v1/browser/session` returns a `sessionId`, status, node, and `cdpUrl`.
+  </Step>
+  <Step title="Connect over CDP">
+    Use `cdpUrl` with Playwright, Puppeteer, Browser-Use, Crawl4AI, Stagehand, or another CDP-compatible client.
+  </Step>
+  <Step title="Run your automation">
+    Navigate, click, scrape, or test from the remote browser.
+  </Step>
+  <Step title="Stop the session">
+    `DELETE /v1/browser/session?sessionId=...` stops billing and releases the browser.
+  </Step>
+</Steps>
 
-  <Tab title="Trigger Agent Task">
-    <CodeGroup>
+## Current APIs
 
-```bash cURL
-curl -X POST "https://api.driver.dev/v1/agent/task" \
-  -H "Authorization: Bearer $DRIVER_API_KEY" \
-  -H "content-type: application/json" \
-  -d '{"agent":"gemini","prompt":"What text does the homepage of example.com say?","mode":"text","stepLimit":10}'
-```
-
-```python Python
-import os
-import requests
-
-DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
-
-resp = requests.post(
-    "https://api.driver.dev/v1/agent/task",
-    headers={
-        "Authorization": f"Bearer {DRIVER_API_KEY}",
-        "content-type": "application/json",
-    },
-    json={"agent": "gemini", "prompt": "What text does the homepage of example.com say?", "mode": "text", "stepLimit": 10},
-)
-data = resp.json()
-print("taskId:", data.get("taskId"))
-```
-
-```typescript TypeScript
-import BrowsercashSDK from '@browsercash/sdk';
-
-const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY!,
-});
-
-const agent = await client.agent.task.create({
-  "agent": "gemini",
-  "prompt": "What text does the homepage of example.com say?",
-  "mode": "text",
-  "stepLimit": 10
-})
-
-console.log(agent.taskId);
-```
-
-    </CodeGroup>
-
-    {/* <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
-      <button
-        className="run-request-btn run-icon"
-        data-url="https://api.driver.dev/v1/agent/task"
-        data-method="POST"
-        data-body={`{"agent":"gemini","prompt":"What text does the homepage of example.com say?","mode":"text","stepLimit":10}`}
-        style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <svg className="run-icon-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        <svg className="run-spinner" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'none' }}>
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" opacity="0.75"></path>
-        </svg>
-        Test Request
-      </button>
-      <span className="run-status"></span>
-     <div
-          className="run-output"
-          style={{ marginTop: '6px', maxHeight: '260px', overflow: 'auto', marginBottom: '6px'}}
-          ></div>
-    </div> */}
-
-  </Tab>
-
-  <Tab title="Get Session">
-    <CodeGroup>
-
-```bash cURL
-curl "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
-  -H "Authorization: Bearer $DRIVER_API_KEY"
-```
-
-```python Python
-import os
-import requests
-
-DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
-SESSION_ID = os.getenv("SESSION_ID")
-
-resp = requests.get(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {DRIVER_API_KEY}"},
-    params={"sessionId": SESSION_ID},
-)
-print(resp.json())
-```
-
-```typescript TypeScript
-import BrowsercashSDK from '@browsercash/sdk';
-
-const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY!,
-});
-
-const session = await client.browser.session.get({ sessionId: process.env.SESSION_ID! });
-
-console.log(session);
-```
-
-    </CodeGroup>
-
-    {/* <div style={{ marginTop: '10px', marginBottom: '12px' }}>
-      <input
-        id="session-id-input-get"
-        className="run-input"
-        placeholder="sessionId"
-        style={{
-          width: '260px',
-          background: 'transparent',
-          color: 'inherit',
-          border: '1px solid #ddd',
-          padding: '6px 12px',
-          borderRadius: '9999px',
-          outline: 'none',
-        }}
-      />
-    </div>
-    <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
-      <button
-        className="run-request-btn run-icon"
-        data-url="https://api.driver.dev/v1/browser/session?sessionId={sessionId}"
-        data-method="GET"
-        data-vars='{"sessionId":"#session-id-input-get"}'
-        style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <svg className="run-icon-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        <svg className="run-spinner" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'none' }}>
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" opacity="0.75"></path>
-        </svg>
-        Test Request
-      </button>
-      <span className="run-status"></span>
-      <div className="run-output" style={{ marginTop: '6px', maxHeight: '260px', overflow: 'auto' }}></div>
-    </div> */}
-
-  </Tab>
-
-  <Tab title="Stop Session">
-    <CodeGroup>
-
-```bash cURL
-curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
-  -H "Authorization: Bearer $DRIVER_API_KEY"
-```
-
-```python Python
-import os
-import requests
-
-DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
-SESSION_ID = os.getenv("SESSION_ID")
-
-resp = requests.delete(
-    "https://api.driver.dev/v1/browser/session",
-    headers={"Authorization": f"Bearer {DRIVER_API_KEY}"},
-    params={"sessionId": SESSION_ID},
-)
-print("stopped:", resp.status_code)
-```
-
-```typescript TypeScript
-import BrowsercashSDK from '@browsercash/sdk';
-
-const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY!,
-});
-
-const session = await client.browser.session.stop({ sessionId: process.env.SESSION_ID! });
-
-console.log(session);
-```
-
-    </CodeGroup>
-
-    {/* <div style={{ marginTop: '10px', marginBottom: '12px' }}>
-      <input
-        id="session-id-input-stop"
-        className="run-input"
-        placeholder="sessionId"
-        style={{
-          width: '260px',
-          background: 'transparent',
-          color: 'inherit',
-          border: '1px solid #ddd',
-          padding: '6px 12px',
-          borderRadius: '9999px',
-          outline: 'none',
-        }}
-      />
-    </div>
-    <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
-      <button
-        className="run-request-btn run-icon"
-        data-url="https://api.driver.dev/v1/browser/session?sessionId={sessionId}"
-        data-method="DELETE"
-        data-vars='{"sessionId":"#session-id-input-stop"}'
-        style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <svg className="run-icon-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        <svg className="run-spinner" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'none' }}>
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" opacity="0.75"></path>
-        </svg>
-        Test Request
-      </button>
-      <span className="run-status"></span>
-      <div className="run-output" style={{ marginTop: '6px', maxHeight: '260px', overflow: 'auto' }}></div>
-    </div> */}
-
-  </Tab>
-
-  <Tab title="Get Agent Task">
-    <CodeGroup>
-
-```bash cURL
-curl -H "Authorization: Bearer $DRIVER_API_KEY" \
-  "https://api.driver.dev/v1/agent/task?taskId=$TASK_ID"
-```
-
-```python Python
-import os
-import requests
-
-DRIVER_API_KEY = os.getenv("DRIVER_API_KEY")
-TASK_ID = os.getenv("TASK_ID")
-
-resp = requests.get(
-    "https://api.driver.dev/v1/agent/task",
-    headers={"Authorization": f"Bearer {DRIVER_API_KEY}"},
-    params={"taskId": TASK_ID},
-)
-print(resp.json())
-```
-
-```typescript TypeScript
-import BrowsercashSDK from '@browsercash/sdk';
-
-const client = new BrowsercashSDK({
-  apiKey: process.env.DRIVER_API_KEY!,
-});
-
-const agent = await client.agent.task.get({ taskId: process.env.TASK_ID! });
-
-console.log(agent);
-```
-
-    </CodeGroup>
-
-    {/* <div style={{ marginTop: '10px', marginBottom: '12px' }}>
-      <input
-        id="task-id-input"
-        className="run-input"
-        placeholder="taskId"
-        style={{
-          width: '260px',
-          background: 'transparent',
-          color: 'inherit',
-          border: '1px solid #ddd',
-          padding: '6px 12px',
-          borderRadius: '9999px',
-          outline: 'none',
-        }}
-      />
-    </div> */}
-    
-   {/* <div className="run-request" style={{ marginBottom: '30px', position: 'relative' }}>
-      <button
-        className="run-request-btn run-btn"
-        data-url="https://api.driver.dev/v1/agent/task?taskId={taskId}"
-        data-method="GET"
-        data-vars='{"taskId":"#task-id-input"}'
-        style={{ background: '#fff', color: '#000', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '9999px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <svg className="run-icon-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-        <svg className="run-spinner" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: 'none' }}>
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" opacity="0.75"></path>
-        </svg>
-        Test Request
-      </button>
-      <span className="run-status"></span>
-      <div className="run-output" style={{ marginTop: '6px', maxHeight: '260px', overflow: 'auto' }}></div>
-    </div>*/}
-
-  </Tab>
-</Tabs>
-
-<h2 style={{ marginTop: "8px" }}>Products</h2>
-
-  <CardGroup cols={2}>
-  <Card title="Browser API" href="/docs/browser-api/quickstart" icon="browser">
-    Launch hosted browsers for web automation, scraping, and testing at scale.
+<CardGroup cols={2}>
+  <Card title="Browser Sessions" href="/docs/fundamentals/creating-a-browser-session" icon="browser">
+    Create, list, fetch, update, and stop managed browser sessions.
   </Card>
-  <Card title="Agent API" href="/docs/agent-api/quickstart" icon="robot">
-    Deploy autonomous agents that can browse the web, interact with pages, and
-    complete complex tasks.
+  <Card title="Session Options" href="/docs/fundamentals/creating-a-browser-session#session-options" icon="sliders">
+    Configure hosted sessions with country, duration, window size, and profiles.
+  </Card>
+  <Card title="Profiles" href="/docs/features/browser-profiles" icon="id-card">
+    Persist cookies and browser state across hosted sessions.
+  </Card>
+  <Card title="API Reference" href="/api-reference" icon="book-open">
+    View the Mintlify API reference generated from the Driver OpenAPI spec.
   </Card>
 </CardGroup>
+
+## Account Balance
+
+Use the balance endpoint to check the current account balance and included network allowance.
+
+```bash
+curl "https://api.driver.dev/v1/account/balance" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
