@@ -1,0 +1,44 @@
+---
+title: "Billing"
+description: "Sessions are metered by bandwidth against the workspace's credits. Two endpoints expose the balance and the plan."
+---
+
+Driver bills on **bandwidth**: the bytes a session moves, metered per megabyte and charged against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage beyond the allowance draws on purchased credits. The exact rates and plans are on the [pricing page](https://driver.dev/pricing) and under **Billing** in the dashboard.
+
+Keeping sessions short and stopping them when the job is done is the whole cost-control story. `duration` on create caps what a forgotten session can cost.
+
+## Balance
+
+<CodeGroup>
+```bash cURL
+curl https://api.driver.dev/v1/account/balance -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+```typescript TypeScript
+const { balance } = await fetch("https://api.driver.dev/v1/account/balance", { headers })
+  .then((r) => r.json());
+```
+```python Python
+balance = requests.get("https://api.driver.dev/v1/account/balance", headers=headers).json()
+balance = balance["balance"]
+```
+</CodeGroup>
+
+```json
+{ "balance": { "balance_cents": 1250, "network_mb_remaining": 500, "status": "active" } }
+```
+
+`network_mb_remaining` is the included allowance still unused this period. Sessions are refused with `402` once the balance is negative and the allowance is gone.
+
+## Billing details
+
+`GET /v1/account/billing` returns the full picture: the plan (`plan_key`, `display_name`, `price_monthly_cents`, `included_network_mb`, `overage_millicents_per_mb`, `concurrent_browsers`, `max_session_seconds`), the current period (`start_ms`, `end_ms`, `network_mb_used`, `network_mb_remaining`), the wallet (`balance_cents`, `balance_millicents`), and the subscription (`status`, `current_period_end`, `cancel_at_period_end`) when there is one.
+
+```bash
+curl https://api.driver.dev/v1/account/billing -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+
+Use it to show usage in your own tooling or to stop launching sessions before you hit the limit. Amounts are cents; `millicents` fields are for exact arithmetic (1000 millicents = 1 cent).
+
+## Where to change things
+
+Plan changes, adding credits, auto top-up, invoices and the card on file all live under **Billing** in the [dashboard](https://app.driver.dev/settings/billing). There is no API for payments.

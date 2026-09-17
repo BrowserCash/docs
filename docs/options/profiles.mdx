@@ -1,0 +1,66 @@
+---
+title: "Profiles"
+description: "Save a session's cookies and browser state under a name, and start later sessions already signed in."
+---
+
+A profile is a full browser profile stored under a name you choose. Start a session with `profile: { name, persist: true }`, sign in, stop the session: the state is saved. Start another session with the same name and it opens signed in.
+
+<CodeGroup>
+```json Request
+{ "profile": { "name": "shop-account", "persist": true } }
+```
+```typescript TypeScript
+// First run: sign in and save.
+const first = await createSession({ profile: { name: "shop-account", persist: true } });
+// … sign in through the browser, then stop the session …
+
+// Later: the same name, already signed in.
+const next = await createSession({ profile: { name: "shop-account", persist: true } });
+```
+```python Python
+first = create_session(profile={"name": "shop-account", "persist": True})
+# ... sign in, stop ...
+next_session = create_session(profile={"name": "shop-account", "persist": True})
+```
+</CodeGroup>
+
+| Field | Type | Meaning |
+|---|---|---|
+| `name` | string | The profile to load. Created on first use. |
+| `persist` | boolean | Save the profile when the session ends. `false` loads it read-only: changes made during the session are discarded. |
+
+Profiles are supported on every browser type.
+
+## Listing and deleting
+
+<CodeGroup>
+```bash cURL
+curl https://api.driver.dev/v1/browser/profiles -H "Authorization: Bearer $DRIVER_API_KEY"
+# → { "profiles": [ { "profileId": "…", "name": "shop-account", "createdAt": "…" } ] }
+
+curl -X DELETE "https://api.driver.dev/v1/browser/profile?profileName=shop-account" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+```typescript TypeScript
+const { profiles } = await fetch("https://api.driver.dev/v1/browser/profiles", { headers })
+  .then((r) => r.json());
+await fetch("https://api.driver.dev/v1/browser/profile?profileName=shop-account", {
+  method: "DELETE",
+  headers,
+});
+```
+```python Python
+profiles = requests.get("https://api.driver.dev/v1/browser/profiles", headers=headers).json()
+requests.delete(
+    "https://api.driver.dev/v1/browser/profile", headers=headers, params={"profileName": "shop-account"}
+)
+```
+</CodeGroup>
+
+Deleting is idempotent: an unknown name also answers `{ "success": true }`. The dashboard's **Profiles** page shows the same list, and lets you launch a session on a profile to sign in by hand through the live view.
+
+## Practical notes
+
+- One profile, one session at a time. Two concurrent sessions on the same persisted profile will overwrite each other's state when they stop.
+- Keep the same `country` for a profile across runs. A profile that signed in from Germany and returns from Brazil looks like a stolen session to the site.
+- Profiles hold everything a browser profile holds: cookies, local storage, IndexedDB, service workers. Delete a profile when the account it belongs to is no longer needed.

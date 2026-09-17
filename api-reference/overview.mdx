@@ -1,0 +1,42 @@
+---
+title: "API overview"
+description: "Base URL, authentication, conventions, and the live OpenAPI document these pages are generated from."
+---
+
+## Base URL
+
+```text
+https://api.driver.dev
+```
+
+## Authentication
+
+Every endpoint takes a workspace API key as a bearer token. Keys come from **Settings → API keys** in the [dashboard](https://app.driver.dev).
+
+```bash
+Authorization: Bearer $DRIVER_API_KEY
+```
+
+## Conventions
+
+- Request and response bodies are JSON, except extension uploads, which are `multipart/form-data`.
+- Identifiers that select a resource go in the query string (`?sessionId=…`, `?profileName=…`), not the path, except for extensions.
+- Errors are `{ "error": "message" }` with a meaningful HTTP status; some carry a `code`. See [Errors](/docs/sessions/errors).
+- Timestamps are ISO 8601 strings; money is in cents (and millicents where exactness matters); bandwidth is bytes on sessions and megabytes on billing.
+
+## Endpoints
+
+| Group | Endpoints |
+|---|---|
+| Sessions | `POST/GET/PATCH/DELETE /v1/browser/session`, `GET /v1/browser/sessions` |
+| Profiles | `GET /v1/browser/profiles`, `DELETE /v1/browser/profile` |
+| Account | `GET /v1/account/balance`, `GET /v1/account/billing` |
+| Extensions | `POST/GET /v1/browser/extensions`, `GET/PUT/DELETE /v1/browser/extensions/{extensionId}` |
+
+## Source of truth
+
+These reference pages are generated from the API's own OpenAPI document, served live at `https://api.driver.dev/doc` and rendered at [api.driver.dev/scalar](https://api.driver.dev/scalar). If a page here and the live document ever disagree, the live document wins.
+
+## SDK
+
+`@browsercash/sdk` on npm wraps these endpoints for TypeScript; set `baseURL: "https://api.driver.dev"`. Python users call the endpoints directly with `requests`; the [For agents](/docs/start/for-agents) page has a small client module for both.

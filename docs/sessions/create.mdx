@@ -1,0 +1,115 @@
+---
+title: "Create a session"
+description: "POST /v1/browser/session starts a real Chrome and returns its CDP URL once it is reachable."
+---
+
+A session is one browser on one machine for up to an hour. Create it with the options you need; every field is optional and the defaults give you a hosted Chrome in the US.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.driver.dev/v1/browser/session \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "duration": 600,
+    "windowSize": "1920x1080",
+    "profile": { "name": "my-profile", "persist": true },
+    "note": "price check, client X"
+  }'
+```
+```typescript TypeScript
+const session = await fetch("https://api.driver.dev/v1/browser/session", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.DRIVER_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    country: "US",
+    duration: 600,
+    windowSize: "1920x1080",
+    profile: { name: "my-profile", persist: true },
+    note: "price check, client X",
+  }),
+}).then((r) => r.json());
+```
+```python Python
+session = requests.post(
+    "https://api.driver.dev/v1/browser/session",
+    headers={"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"},
+    json={
+        "country": "US",
+        "duration": 600,
+        "windowSize": "1920x1080",
+        "profile": {"name": "my-profile", "persist": True},
+        "note": "price check, client X",
+    },
+).json()
+```
+```typescript TypeScript SDK
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.DRIVER_API_KEY!,
+  baseURL: "https://api.driver.dev",
+});
+const session = await client.browser.session.create({ country: "US", duration: 600 });
+```
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "sessionId": "0b1f5c1e6d3a4f7c9e2b8d4a6c1e3f5a",
+  "status": "active",
+  "servedBy": "adapt-ensure-swim",
+  "createdAt": "2026-09-17T14:02:11.000Z",
+  "stoppedAt": null,
+  "cdpUrl": "wss://…",
+  "note": "price check, client X"
+}
+```
+
+The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears.
+
+## Options
+
+| Field | Type | Default | What it does |
+|---|---|---|---|
+| `type` | string | `hosted` | Browser class: `hosted`, `hosted_stealth` or `hosted_privacy`. See [Browser types](/docs/options/browser-types). |
+| `country` | string | `US` | Two-letter country for placement, network and locale. See [Location](/docs/options/location). |
+| `timezone` | string | chosen for the country | IANA timezone, must belong to the country. |
+| `language` | string | chosen for the country | BCP-47 browser language, must belong to the country. |
+| `duration` | integer | `3600` | Seconds before the session stops on its own, 60 to 3600. |
+| `url` | string | | A URL to open right after launch. |
+| `windowSize` | string | node default | Outer window size as `WIDTHxHEIGHT`. See [Window size](/docs/options/window-size). |
+| `displaySize` | string | | Virtual display size as `WIDTHxHEIGHT`. |
+| `proxyUrl` | string | Driver's network | Your own `socks5://`, `socks5h://` or `tcperfect://` URL. See [Proxies](/docs/options/proxies). |
+| `profile` | object | | `{ "name": "…", "persist": true }` to load and save browser state. See [Profiles](/docs/options/profiles). |
+| `captchaSolver` | boolean | `false` | Load Driver's CAPTCHA solver into the session. |
+| `adblock` | boolean | `false` | Block ads in the session. |
+| `extensionIds` | string[] | | Uploaded extension ids to load. Requires extension access. See [Extensions](/docs/options/extensions). |
+| `nodeId` | string | | Run on the machine that served an earlier session. Overrides `country` and `type`. See [Node reuse](/docs/options/node-reuse). |
+| `browserCheck` | boolean | `false` | Run a browser validation check during creation. |
+| `note` | string | | Up to 256 characters, shown in the dashboard. |
+
+Options that contradict each other are rejected with `400` and a message naming the field. The common ones: a `timezone` or `language` not listed for the `country` (`Unsupported timezone "Europe/Berlin" for country US.`), a `country` that does not match a supplied proxy's exit, a proxy that cannot be reached, and out-of-range `duration`, `windowSize` or `note`.
+
+## Errors
+
+| Status | Meaning |
+|---|---|
+| `400` | Invalid or incompatible options. The message names the field. |
+| `401` | Missing or invalid API key. |
+| `402` | The workspace is out of credits. |
+| `403` | Session or account limit reached (concurrency, or a feature your plan does not include). |
+| `429` | Too many requests. |
+| `503` | No browser capacity available right now. |
+| `504` | A machine was selected but Chrome was not reachable before the startup deadline. |
+
+## Next
+
+- [Connect over CDP](/docs/sessions/connect)
+- [Lifecycle](/docs/sessions/lifecycle) to get, list, label and stop sessions

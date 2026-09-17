@@ -1,0 +1,39 @@
+---
+title: "Crawl4AI"
+description: "Point Crawl4AI's managed browser at a Driver session to crawl from real Chrome on a residential network."
+---
+
+[Crawl4AI](https://crawl4ai.com) turns pages into LLM-ready Markdown. Configure it to use a Driver session instead of launching its own browser.
+
+```bash
+pip install crawl4ai requests
+```
+
+```python Python
+import asyncio, os, requests
+from crawl4ai import AsyncWebCrawler, BrowserConfig
+
+API = "https://api.driver.dev"
+headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+
+async def main():
+    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+    try:
+        config = BrowserConfig(browser_mode="custom", cdp_url=session["cdpUrl"], use_managed_browser=True)
+        async with AsyncWebCrawler(config=config) as crawler:
+            result = await crawler.arun(url="https://www.nbcnews.com/business")
+            print(result.markdown)
+    finally:
+        requests.delete(
+            f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+        )
+
+
+asyncio.run(main())
+```
+
+## Notes
+
+- `browser_mode="custom"` with `cdp_url` tells Crawl4AI to attach to the browser you give it instead of launching one; `use_managed_browser=True` keeps control over CDP.
+- Crawl several URLs in one session; creating the session is the expensive step.

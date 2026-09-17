@@ -1,0 +1,131 @@
+---
+title: "Quickstart"
+description: "Create a Driver session, connect with Patchright, read a page title, and stop the session."
+---
+
+<Steps>
+  <Step title="Get an API key">
+    Sign in to the [dashboard](https://app.driver.dev), open **Settings → API keys**, and create a key. Put it in your environment as `DRIVER_API_KEY`. Never commit it.
+
+    ```bash
+    export DRIVER_API_KEY="dr_…"
+    ```
+  </Step>
+
+  <Step title="Install Patchright">
+    Patchright is a drop-in Playwright with the CDP fingerprints removed. Use it instead of stock Playwright, otherwise sites that watch for automation will block your session. Details in [Why Patchright](/docs/frameworks/patchright#why-patchright).
+
+    <CodeGroup>
+    ```bash npm
+    npm install patchright
+    ```
+    ```bash pip
+    pip install patchright requests
+    ```
+    </CodeGroup>
+
+    You do not need `playwright install` or any browser download: Driver provides the browser.
+  </Step>
+
+  <Step title="Create a session, connect, stop">
+    <CodeGroup>
+    ```typescript TypeScript
+    import { chromium } from "patchright";
+
+    const API = "https://api.driver.dev";
+    const headers = {
+      Authorization: `Bearer ${process.env.DRIVER_API_KEY}`,
+      "Content-Type": "application/json",
+    };
+
+    // 1. Create a session. Every field is optional; this one asks for a US browser for ten minutes.
+    const session = await fetch(`${API}/v1/browser/session`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ country: "US", duration: 600 }),
+    }).then((r) => r.json());
+
+    try {
+      // 2. Connect over CDP and reuse the browser's own context and tab.
+      const browser = await chromium.connectOverCDP(session.cdpUrl);
+      const context = browser.contexts()[0] ?? (await browser.newContext());
+      const page = context.pages()[0] ?? (await context.newPage());
+
+      // 3. Do the work.
+      await page.goto("https://example.com");
+      console.log(await page.title());
+
+      await browser.close();
+    } finally {
+      // 4. Stop the session. This is what ends billing.
+      await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
+        method: "DELETE",
+        headers,
+      });
+    }
+    ```
+
+    ```python Python
+    import os
+    import requests
+    from patchright.sync_api import sync_playwright
+
+    API = "https://api.driver.dev"
+    headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+    # 1. Create a session. Every field is optional; this one asks for a US browser for ten minutes.
+    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US", "duration": 600})
+    session.raise_for_status()
+    session = session.json()
+
+    try:
+        # 2. Connect over CDP and reuse the browser's own context and tab.
+        with sync_playwright() as p:
+            browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+            context = browser.contexts[0] if browser.contexts else browser.new_context()
+            page = context.pages[0] if context.pages else context.new_page()
+
+            # 3. Do the work.
+            page.goto("https://example.com")
+            print(page.title())
+            browser.close()
+    finally:
+        # 4. Stop the session. This is what ends billing.
+        requests.delete(
+        f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+    )
+    ```
+
+    ```bash cURL
+    # Create
+    curl -s -X POST https://api.driver.dev/v1/browser/session \
+      -H "Authorization: Bearer $DRIVER_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"country":"US","duration":600}'
+    # → {"sessionId":"…","status":"active","cdpUrl":"wss://…", …}
+
+    # Stop
+    curl -s -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+      -H "Authorization: Bearer $DRIVER_API_KEY"
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Watch it run">
+    Every session has a page in the dashboard under **Telemetry → Sessions** with a live view while it runs and the full record afterwards: node, country, network, bandwidth, cost. See [Live view](/docs/sessions/live-view).
+  </Step>
+</Steps>
+
+## What just happened
+
+The create call returned as soon as Chrome was reachable over CDP, usually in a few seconds. `cdpUrl` is a WebSocket endpoint to that one browser. Connecting with `connectOverCDP` attaches to the running browser instead of launching one, which is why there is no `chromium.launch()` anywhere and no browser download on your machine.
+
+The browser opened with one context and one tab already. Reusing them keeps the session looking like a person opened Chrome and started browsing; creating extra contexts is one of the things sites notice.
+
+Stopping the session releases the machine and closes the bill for that session. Sessions also stop on their own at the `duration` you set, or after an hour by default.
+
+## Next
+
+- [For agents](/docs/start/for-agents) if a coding agent is doing the integration.
+- [Session options](/docs/options/browser-types) for browser types, location, proxies, profiles and window size.
+- [Best practices](/docs/start/best-practices) before you scale up.

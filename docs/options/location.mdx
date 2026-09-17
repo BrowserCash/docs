@@ -1,0 +1,45 @@
+---
+title: "Location, timezone and language"
+description: "Ask for a country and Driver makes the network, timezone and language agree. Override timezone and language only within that country."
+---
+
+Pass a two-letter `country` and Driver places the session on a machine egressing from that country, then picks a timezone and browser language that belong there. The three always agree, which is what sites check.
+
+<CodeGroup>
+```json Request
+{ "country": "DE" }
+```
+```typescript TypeScript
+const session = await createSession({ country: "DE" });
+```
+```python Python
+session = create_session(country="DE")
+```
+</CodeGroup>
+
+`country` defaults to `US`.
+
+## Overriding timezone and language
+
+Set `timezone` (IANA name) or `language` (BCP-47) when the default choice for the country is not what you want. Both must be valid for the chosen country, or the request is rejected with `400`.
+
+```json
+{ "country": "CA", "timezone": "America/Vancouver", "language": "fr-CA" }
+```
+
+US sessions accept only `en-US`, and omit both language fields so Chrome uses its built-in default. For other countries, Driver picks the likely primary language when you leave `language` out. Chrome reports the nearest variant it ships: a session created with `fr-CA` reported `navigator.language` as `fr-FR` with `fr` and `en-US` as fallbacks, and the requested timezone exactly.
+
+Hosted sessions also provision matching text-to-speech voices where available, and disable Web Speech when a coherent voice is not, so that surface never contradicts the rest.
+
+## With your own proxy
+
+If you supply a `proxyUrl` without `timezone` or `language`, Driver geolocates the proxy's exit and derives the country and timezone from it. A `country` you supply must match that exit. See [Proxies](/docs/options/proxies).
+
+## Availability
+
+Placement is by available machines. If nothing is available in the requested country you get a `503`; back off and retry, or pick another country.
+
+## Related
+
+- [Browser types](/docs/options/browser-types)
+- [Best practices](/docs/start/best-practices): do not override timezone or locale from your script

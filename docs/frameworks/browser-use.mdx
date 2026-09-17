@@ -1,0 +1,46 @@
+---
+title: "Browser Use"
+description: "Run Browser Use agents on a Driver browser by handing the agent the session's cdpUrl."
+---
+
+[Browser Use](https://browser-use.com) builds autonomous agents on top of a Chromium it controls. Give it a Driver session's `cdpUrl` and the agent drives real Chrome on a residential network instead of a local headless browser.
+
+```bash
+pip install browser-use requests
+```
+
+```python Python
+import asyncio, os, requests
+from browser_use import Agent, Browser, ChatBrowserUse
+
+API = "https://api.driver.dev"
+headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+
+async def main():
+    session = requests.post(
+        f"{API}/v1/browser/session", headers=headers, json={"country": "US", "duration": 900}
+    ).json()
+    try:
+        browser = Browser(cdp_url=session["cdpUrl"])
+        agent = Agent(
+            task="Find the current price of Bitcoin", llm=ChatBrowserUse(), browser=browser
+        )
+        result = await agent.run()
+        print(result)
+    finally:
+        requests.delete(
+            f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+        )
+
+
+asyncio.run(main())
+```
+
+`ChatBrowserUse` uses a Browser Use Cloud model key (`BROWSER_USE_API_KEY`); any LangChain-style chat model works in its place.
+
+## Notes
+
+- Agents take many steps; set `duration` to cover the task (up to 3600 seconds) and stop the session in `finally`.
+- Browser Use uses CDP directly and does not go through Playwright, so the [Patchright](/docs/frameworks/patchright) recommendation does not apply to it.
+- Watch the agent through the session's [live view](/docs/sessions/live-view); it is the fastest way to see where an agent goes wrong.

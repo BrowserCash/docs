@@ -1,0 +1,56 @@
+---
+title: "Playwright"
+description: "Stock Playwright connects to Driver over CDP, with fingerprints that get sessions blocked on protected sites. Prefer Patchright."
+---
+
+<Warning>
+Stock Playwright issues CDP commands that anti-bot systems detect (`Runtime.enable` and its bookkeeping hooks). On sites that look for automation, sessions driven by stock Playwright get challenged or blocked. Use [Patchright](/docs/frameworks/patchright) instead: same API, one import change.
+</Warning>
+
+If you have measured that your targets do not care, stock Playwright works unchanged:
+
+<CodeGroup>
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+const context = browser.contexts()[0] ?? (await browser.newContext());
+const page = context.pages()[0] ?? (await context.newPage());
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+```
+```python Python
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    context = browser.contexts[0] if browser.contexts else browser.new_context()
+    page = context.pages[0] if context.pages else context.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+```
+</CodeGroup>
+
+Install with `npm install playwright` or `pip install playwright`. Do not run `playwright install`; the browser is Driver's.
+
+## Using the TypeScript SDK for the session calls
+
+The `@browsercash/sdk` package wraps the REST API. Point it at Driver's base URL:
+
+```typescript
+import BrowsercashSDK from "@browsercash/sdk";
+
+const client = new BrowsercashSDK({
+  apiKey: process.env.DRIVER_API_KEY!,
+  baseURL: "https://api.driver.dev",
+});
+const session = await client.browser.session.create({ country: "US" });
+// … connect with patchright or playwright …
+await client.browser.session.stop({ sessionId: session.sessionId });
+```
+
+## Everything else
+
+Contexts, tabs, disconnecting versus stopping, reconnecting and timeouts are the same as for Patchright; see [Connect over CDP](/docs/sessions/connect).

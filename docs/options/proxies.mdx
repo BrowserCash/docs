@@ -1,0 +1,42 @@
+---
+title: "Proxies"
+description: "Sessions egress from Driver's residential network by default. Pass proxyUrl to route through your own SOCKS5 or TCPerfect endpoint."
+---
+
+By default a session's traffic leaves from a residential connection in the requested country, and you do not configure anything. Set `proxyUrl` when you need a specific egress: your own proxy provider, a sticky IP, or a TCPerfect address.
+
+<CodeGroup>
+```json Request
+{ "proxyUrl": "socks5://user:pass@proxy.example.com:1080" }
+```
+```typescript TypeScript
+const session = await createSession({ proxyUrl: "socks5://user:pass@proxy.example.com:1080" });
+```
+```python Python
+session = create_session(proxyUrl="socks5://user:pass@proxy.example.com:1080")
+```
+</CodeGroup>
+
+## Accepted URLs
+
+| Scheme | Notes |
+|---|---|
+| `socks5://user:pass@host:port` | DNS resolved on the session's machine. |
+| `socks5h://user:pass@host:port` | DNS resolved through the proxy. Use this when the proxy's location should also decide DNS answers. |
+| `tcperfect://user:pass@host:port/exit-ip` | Driver's TCPerfect network: a proxied connection that keeps the machine's own TCP fingerprint intact. |
+
+The proxy must be reachable from Driver's machines. HTTP proxies are not supported.
+
+## Location coherence
+
+When you pass a SOCKS URL without `timezone` or `language`, Driver geolocates the proxy's exit before launch and derives the session's country and timezone from it, so the browser does not claim New York while its packets come from Frankfurt. If you also pass `country`, it must match the exit or the request is rejected with `400`.
+
+## Canada
+
+Hosted sessions in Canada that do not specify a proxy egress through Driver's TCPerfect inventory automatically; nothing to configure.
+
+## If the proxy cannot be reached
+
+Driver connects through the proxy before launch to find its exit. A proxy that does not answer is rejected with `400` and the message `Could not determine SOCKS5 proxy egress location; verify the proxy or specify both timezone and language.` Supplying both `timezone` and `language` skips the lookup; the session then starts even if the proxy is unreachable, and pages fail to load inside it. An `http://` URL is rejected outright.
+
+Credentials travel in the create request only; they are not stored on the session record.

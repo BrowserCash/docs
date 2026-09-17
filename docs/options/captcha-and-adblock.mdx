@@ -1,0 +1,40 @@
+---
+title: "CAPTCHA solving and ad blocking"
+description: "Two flags on create: captchaSolver loads Driver's solver into the session, adblock blocks ads."
+---
+
+## CAPTCHA solving
+
+Set `captchaSolver: true` and the session's Chrome loads Driver's solver extension. Challenges that appear during the session are solved in the browser without any change to your script.
+
+<CodeGroup>
+```json Request
+{ "captchaSolver": true }
+```
+```typescript TypeScript
+const session = await createSession({ captchaSolver: true });
+```
+```python Python
+session = create_session(captchaSolver=True)
+```
+</CodeGroup>
+
+Solving takes time; give steps that may hit a challenge a generous timeout and rely on your framework's auto-waiting rather than fixed sleeps. If a challenge is not solved, the [live view](/docs/sessions/live-view) lets a person complete it in the same session.
+
+## Ad blocking
+
+Set `adblock: true` to block ads in the session. Pages load faster and use less bandwidth, which is what a session is billed on. Some sites detect ad blockers and change behaviour, so leave it off when fidelity matters.
+
+<CodeGroup>
+```json Request
+{ "adblock": true }
+```
+```typescript TypeScript
+const session = await createSession({ adblock: true });
+```
+```python Python
+session = create_session(adblock=True)
+```
+</CodeGroup>
+
+Both flags default to `false`.

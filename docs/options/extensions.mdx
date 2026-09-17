@@ -1,0 +1,64 @@
+---
+title: "Extensions"
+description: "Upload your own Chrome extensions and load them into hosted sessions. Available to accounts with extension access."
+---
+
+<Note>
+The extensions API is enabled per account. Without access, the endpoints return `403` (`Extensions API is not enabled for this account`); write to support@driver.dev to request it. An upload without a file is rejected first with `No file uploaded. Send as multipart field "extension".`
+</Note>
+
+## Upload an extension
+
+Zip the extension's directory (the one containing `manifest.json`) and upload it. Driver packs it as a CRX and returns an `extensionId` to use on create.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.driver.dev/v1/browser/extensions \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -F "extension=@my-extension.zip"
+# → { "extension": { "extensionId": "abc123def456", "crxExtensionId": "…",
+#                     "name": "…", "version": "1.2.0", … } }
+```
+```typescript TypeScript
+const form = new FormData();
+const zip = new Blob([await fs.promises.readFile("my-extension.zip")]);
+form.append("extension", zip, "my-extension.zip");
+const { extension } = await fetch("https://api.driver.dev/v1/browser/extensions", {
+  method: "POST",
+  headers: { Authorization: `Bearer ${process.env.DRIVER_API_KEY}` },
+  body: form,
+}).then((r) => r.json());
+```
+```python Python
+with open("my-extension.zip", "rb") as f:
+    extension = requests.post(
+        "https://api.driver.dev/v1/browser/extensions",
+        headers={"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"},
+        files={"extension": f},
+    ).json()["extension"]
+```
+</CodeGroup>
+
+## Load it into a session
+
+Pass the internal `extensionId` (not the `crxExtensionId`) in `extensionIds`. Works on every browser type.
+
+```json
+{ "extensionIds": ["abc123def456"] }
+```
+
+## Manage extensions
+
+| Call | What it does |
+|---|---|
+| `GET /v1/browser/extensions` | List your extensions. |
+| `GET /v1/browser/extensions/{extensionId}` | One extension's details. |
+| `PUT /v1/browser/extensions/{extensionId}` with a new zip | Replace the code; the id stays the same. |
+| `DELETE /v1/browser/extensions/{extensionId}` | Remove it. |
+
+The dashboard's **Extensions** page (visible once your account has access) offers the same upload and list.
+
+## Notes
+
+- Manifest V3 extensions are expected. `name` and `version` in the response come from the manifest.
+- An extension that opens tabs, injects scripts everywhere or rewrites requests changes how the browser looks to sites. Keep them narrow, for the same reasons as the [CDP hooks guidance](/docs/start/best-practices#keep-cdp-hooks-narrow).

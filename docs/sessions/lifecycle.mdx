@@ -1,0 +1,148 @@
+---
+title: "Lifecycle"
+description: "Get, list, label and stop sessions. What each status means and how long a session lives."
+---
+
+A session moves through `starting` → `active` → `completed`, or `error` if the browser failed. It ends when you stop it, when it reaches its `duration`, or when the machine serving it goes away.
+
+| Status | Meaning |
+|---|---|
+| `starting` | The machine is launching Chrome. `cdpUrl` is `null`. |
+| `active` | Chrome is reachable at `cdpUrl`. |
+| `completed` | The session was stopped or reached its duration. `stoppedAt` is set. |
+| `error` | The session failed to start or ended abnormally. |
+
+## Get a session
+
+Returns the same shape as create, plus `bandwidthBytes`: `null` while the session runs, the metered total once it has ended.
+
+<CodeGroup>
+```bash cURL
+curl "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+```typescript TypeScript
+const url = `https://api.driver.dev/v1/browser/session?sessionId=${id}`;
+const session = await fetch(url, { headers }).then((r) => r.json());
+```
+```python Python
+session = requests.get(
+    "https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id}
+).json()
+```
+</CodeGroup>
+
+## List sessions
+
+Paginated, newest first, with an optional `status` filter.
+
+<CodeGroup>
+```bash cURL
+curl "https://api.driver.dev/v1/browser/sessions?page=1&pageSize=20&status=active" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+```typescript TypeScript
+const { sessions, total, totalPages } = await fetch(
+  "https://api.driver.dev/v1/browser/sessions?status=active",
+  { headers },
+).then((r) => r.json());
+```
+```python Python
+data = requests.get(
+    "https://api.driver.dev/v1/browser/sessions", headers=headers, params={"status": "active"}
+).json()
+```
+</CodeGroup>
+
+Each item carries `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes` and `note`.
+
+## Label a session
+
+Notes show up in the dashboard's session list and record. Set one on create, or afterwards:
+
+<CodeGroup>
+```bash cURL
+curl -X PATCH "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"note":"nightly price check, client X"}'
+```
+```typescript TypeScript
+await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, {
+  method: "PATCH",
+  headers,
+  body: JSON.stringify({ note: "nightly price check, client X" }),
+});
+```
+```python Python
+requests.patch(
+    "https://api.driver.dev/v1/browser/session",
+    headers=headers,
+    params={"sessionId": id},
+    json={"note": "nightly price check, client X"},
+)
+```
+</CodeGroup>
+
+Notes are at most 256 characters. Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a terminal session`).
+
+## Stop a session
+
+Stopping releases the browser and ends billing for the session. Always do it in a `finally`.
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+```typescript TypeScript
+await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, {
+  method: "DELETE",
+  headers,
+});
+```
+```python Python
+requests.delete(
+    "https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id}
+)
+```
+</CodeGroup>
+
+Returns `{ "success": true }`. Stopping is idempotent: a session that already ended answers the same `{ "success": true }`, so a stop in a `finally` is always safe.
+
+## Duration
+
+`duration` on create is the session's lifetime in seconds, from 60 to 3600, default 3600. There is no extension call: choose a duration that covers the job, and start a new session (with a persisted [profile](/docs/options/profiles) if you need the state) when it runs out.
+
+## Waiting for `active`
+
+Create normally returns with `cdpUrl` set. If you see `starting`, poll:
+
+<CodeGroup>
+```typescript TypeScript
+async function waitForActive(id: string, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const s = await getSession(id);
+    if (s.status === "active" && s.cdpUrl) return s;
+    if (s.status === "completed" || s.status === "error") {
+      throw new Error(`session ended: ${s.status}`);
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error("timed out waiting for the browser");
+}
+```
+```python Python
+def wait_for_active(session_id, timeout=30):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        s = get_session(session_id)
+        if s["status"] == "active" and s.get("cdpUrl"):
+            return s
+        if s["status"] in ("completed", "error"):
+            raise RuntimeError(f"session ended: {s['status']}")
+        time.sleep(1)
+    raise TimeoutError("timed out waiting for the browser")
+```
+</CodeGroup>
