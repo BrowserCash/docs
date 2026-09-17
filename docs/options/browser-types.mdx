@@ -1,0 +1,38 @@
+---
+title: "Browser types"
+description: "The type field picks the browser class: hosted by default, with stealth variants and a legacy distributed route."
+---
+
+`type` on [create](/docs/sessions/create) chooses what kind of Chrome serves the session. Leave it out unless a site gives you a reason to change it.
+
+| Type | What it is | When to use it |
+|---|---|---|
+| `hosted` (default) | Real Chrome (Driver's Mirage build) on a hosted machine, native behaviour. | Almost everything. |
+| `hosted_stealth` | Same browser with a conservative stealth policy. | Sites that challenge the default and you want the least invasive change. |
+| `hosted_privacy` | Same browser with the aggressive stealth policy. | Hostile targets. Try `hosted_stealth` first; more masking is not always better. |
+| `consumer_distributed` | The legacy route on distributed consumer devices. | Only if you depended on it before. Profiles, extensions and display size are not supported here. |
+
+<CodeGroup>
+```json Request
+{ "type": "hosted_stealth", "country": "GB" }
+```
+```typescript TypeScript
+const session = await createSession({ type: "hosted_stealth", country: "GB" });
+```
+```python Python
+session = create_session(type="hosted_stealth", country="GB")
+```
+</CodeGroup>
+
+## What "real Chrome" means here
+
+Hosted sessions run consumer Chrome builds on real hardware with a real display, not a headless container. Fingerprint surfaces (GPU, fonts, media devices, timing) are what a person's machine would show, and the network is residential in the country you asked for. That is why the [best practices](/docs/start/best-practices) tell you not to patch fingerprints from your script: the browser is already genuine, and patches make it less so.
+
+## Choosing between the stealth policies
+
+The stealth policies change how the browser answers certain probes. `hosted_stealth` is the conservative set; it rarely breaks sites. `hosted_privacy` masks more and can change page behaviour on sites that rely on the masked APIs. Measure against your target rather than defaulting to the strongest setting.
+
+## Related
+
+- [Location](/docs/options/location) for country, timezone and language coherence
+- [Proxies](/docs/options/proxies) when you need your own egress

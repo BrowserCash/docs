@@ -1,0 +1,117 @@
+---
+title: "Patchright"
+description: "The recommended client for Driver: Playwright's API with the automation fingerprints removed. Node and Python."
+---
+
+[Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) is a patched build of Playwright. Same API, same docs, same selectors; the difference is what it sends over CDP. Use it for every Driver integration.
+
+## Why Patchright
+
+Stock Playwright (and Puppeteer) drive the browser through CDP calls that a normal Chrome never makes on its own, and anti-bot vendors look for exactly those:
+
+- `Runtime.enable`, which makes every page's JavaScript world observable and leaves detectable traces in the page.
+- Console and binding hooks (`Runtime.addBinding`, `Page.addScriptToEvaluateOnNewDocument`) that Playwright installs for its own bookkeeping.
+- Command-line switches and the `navigator.webdriver` flag in launched browsers (not relevant when connecting to Driver, but Patchright removes them anyway).
+
+Driver gives you a real Chrome on real hardware and a residential network. If the client then announces itself through CDP, that work is wasted and the session gets challenged or blocked. Patchright removes those signals while keeping the Playwright API, so the switch costs nothing.
+
+## Install
+
+<CodeGroup>
+```bash npm
+npm install patchright
+```
+```bash pip
+pip install patchright
+```
+</CodeGroup>
+
+No browser download is needed; you connect to Driver's Chrome.
+
+## Connect
+
+<CodeGroup>
+```typescript TypeScript
+import { chromium } from "patchright";
+
+const API = "https://api.driver.dev";
+const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Content-Type": "application/json" };
+
+const session = await fetch(`${API}/v1/browser/session`, { method: "POST", headers, body: JSON.stringify({ country: "US" }) }).then((r) => r.json());
+
+try {
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
+  const context = browser.contexts()[0] ?? (await browser.newContext());
+  const page = context.pages()[0] ?? (await context.newPage());
+
+  await page.goto("https://example.com");
+  console.log(await page.title());
+
+  await browser.close();
+} finally {
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
+}
+```
+```python Python
+import os, requests
+from patchright.sync_api import sync_playwright
+
+API = "https://api.driver.dev"
+headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+try:
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+        context = browser.contexts[0] if browser.contexts else browser.new_context()
+        page = context.pages[0] if context.pages else context.new_page()
+
+        page.goto("https://example.com")
+        print(page.title())
+        browser.close()
+finally:
+    requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+```
+```python Python (async)
+import asyncio, os, requests
+from patchright.async_api import async_playwright
+
+API = "https://api.driver.dev"
+headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+async def main():
+    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.connect_over_cdp(session["cdpUrl"])
+            context = browser.contexts[0] if browser.contexts else await browser.new_context()
+            page = context.pages[0] if context.pages else await context.new_page()
+            await page.goto("https://example.com")
+            print(await page.title())
+            await browser.close()
+    finally:
+        requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+
+asyncio.run(main())
+```
+</CodeGroup>
+
+## Migrating from Playwright
+
+Change the import. That is the whole migration.
+
+```diff
+- import { chromium } from "playwright";
++ import { chromium } from "patchright";
+```
+
+```diff
+- from playwright.sync_api import sync_playwright
++ from patchright.sync_api import sync_playwright
+```
+
+Remove any `chromium.launch()` and any `playwright install` step: Driver provides the browser.
+
+## Things Patchright does not fix
+
+Patchright removes the client's fingerprints. It cannot undo choices in your script that look automated: fresh contexts for every page, broad `page.route` interception, injected init scripts, overridden `navigator` properties, or clicking a thousand things per minute. The [best practices](/docs/start/best-practices) cover those.

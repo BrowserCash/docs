@@ -1,0 +1,50 @@
+---
+title: "Stagehand"
+description: "Natural-language actions and extraction on a Driver browser through Stagehand's CDP attachment."
+---
+
+[Stagehand](https://github.com/browserbase/stagehand) adds `act`, `extract` and `observe` on top of Playwright. Attach it to a Driver session's `cdpUrl` in `LOCAL` mode.
+
+```bash
+npm install @browserbasehq/stagehand zod
+```
+
+```typescript TypeScript
+import { Stagehand } from "@browserbasehq/stagehand";
+import { z } from "zod";
+
+const API = "https://api.driver.dev";
+const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Content-Type": "application/json" };
+
+const session = await fetch(`${API}/v1/browser/session`, { method: "POST", headers, body: JSON.stringify({ country: "US" }) }).then((r) => r.json());
+
+try {
+  const stagehand = new Stagehand({
+    env: "LOCAL",
+    model: "openai/gpt-5",
+    localBrowserLaunchOptions: { cdpUrl: session.cdpUrl },
+  });
+  await stagehand.init();
+
+  const page = stagehand.context.pages()[0] ?? (await stagehand.context.newPage());
+  await page.goto("https://example.com");
+
+  const data = await stagehand.extract(
+    "Extract the page title and main heading",
+    z.object({ title: z.string(), heading: z.string() }),
+  );
+  console.log(data);
+
+  await stagehand.close();
+} finally {
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
+}
+```
+
+Stagehand needs a model provider key for the model you name (here `OPENAI_API_KEY`).
+
+## Notes
+
+- CDP attachment needs Stagehand 2.0 or newer.
+- Stagehand drives the browser through Playwright internally, so it carries stock Playwright's CDP fingerprints. On protected sites, prefer plain [Patchright](/docs/frameworks/patchright) with your own extraction, or keep Stagehand to the parts of a flow that are not behind bot protection.
+- Reuse `stagehand.context.pages()[0]` rather than opening a new page.

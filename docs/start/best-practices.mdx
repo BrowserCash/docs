@@ -1,0 +1,95 @@
+---
+title: "Best practices"
+description: "How to keep Driver sessions unblocked and cheap: the right framework, minimal CDP noise, coherent location settings, and reliable cleanup."
+---
+
+Driver gives you a real browser on a real network. Most blocks come from the automation side, not the browser, and they are avoidable. These practices are the difference between a session that looks like a person and one that looks like a script.
+
+## Use Patchright
+
+Stock Playwright and Puppeteer enable CDP domains (`Runtime.enable`, console and binding hooks) that anti-bot vendors fingerprint. [Patchright](/docs/frameworks/patchright) is Playwright with those signals removed and the same API. Use it for every Driver integration; use stock Playwright only if you have measured that your target does not care.
+
+## Prefer the remote browser's defaults
+
+Do not change browser settings unless the task requires it.
+
+- Reuse `browser.contexts()[0]` and `context.pages()[0]` when they exist. The browser opened with a context and a tab already.
+- Keep the default viewport, user agent, locale, permissions and flags. Set [`windowSize`](/docs/options/window-size), [`country`, `timezone` and `language`](/docs/options/location) on the create call instead; Driver makes them coherent with the network the session egresses from.
+- Do not add timeouts and navigation settings until a specific site needs them.
+
+## Never launch a browser
+
+Driver provides the browser. Connect to the returned `cdpUrl`.
+
+Not in a Driver integration:
+
+- `chromium.launch()`, `chromium.launchPersistentContext()`, `puppeteer.launch()`
+- `playwright install`, or any browser download
+- invented `localhost` CDP ports or CDP hosts not returned by Driver
+
+## Keep CDP hooks narrow
+
+Broad event listeners, request routing and injected scripts make the browser behave unusually and are detectable. Use them only when the task genuinely requires them.
+
+Avoid by default:
+
+- `page.on(...)`, `context.on(...)`, `browser.on(...)`
+- `page.route(...)`, `context.route(...)`
+- `page.exposeBinding(...)`, `page.exposeFunction(...)`
+- `page.addInitScript(...)`, `context.addInitScript(...)`
+
+Prefer direct actions and reads: `page.goto`, `page.click`, `page.fill`, `page.locator`, `page.title`, `page.textContent`.
+
+When a hook is unavoidable, listen for one event type instead of every event, route one URL pattern instead of all requests, and remove listeners and routes as soon as the step is done.
+
+## Do not patch fingerprints
+
+The point of Driver is that the browser is genuine. Overriding `navigator`, the user agent, WebGL, canvas, timezone or locale from your script makes a real browser look fake. If you need a different location, ask for it on the create call.
+
+## Debug with the live view first
+
+When a page behaves differently than expected, open the session's [live view](/docs/sessions/live-view) and look before adding hooks or logging every event. You can take the mouse and keyboard yourself, which is often the fastest way to see what a site is doing.
+
+## Always stop sessions
+
+Wrap browser work in `try` / `finally` so the session is stopped even when navigation or extraction fails. Stopping is what releases the browser and ends billing.
+
+<CodeGroup>
+```typescript TypeScript
+const session = await createSession({ country: "US" });
+try {
+  // connect and automate
+} finally {
+  await stopSession(session.sessionId);
+}
+```
+```python Python
+session = create_session(country="US")
+try:
+    ...  # connect and automate
+finally:
+    stop_session(session["sessionId"])
+```
+</CodeGroup>
+
+Set a `duration` that matches the job. Sessions end on their own at the duration (one hour by default), which caps the cost of anything you forget.
+
+## Reuse logins with profiles
+
+Signing in on every run is slow and looks suspicious. Sign in once under a named [profile](/docs/options/profiles) with `persist: true`, then start later sessions with the same name; they open already signed in.
+
+## Handle the errors that matter
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `402` | Workspace is out of credits | Tell the user. Retrying will not help. |
+| `403` | Plan limit: concurrency or feature not enabled | Wait for a session to finish, or upgrade. |
+| `429` | Rate limited | Back off and retry. |
+| `503` | No browser capacity right now | Back off with jitter, or tell the user. |
+| `504` | Browser did not become reachable in time | Retry once. |
+
+The full list is on [Errors](/docs/sessions/errors).
+
+## Label your sessions
+
+Pass `note` on create, or `PATCH` it later, with something a teammate would recognise ("nightly price check, client X"). It shows up in the dashboard's session list and record.

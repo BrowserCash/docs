@@ -1,0 +1,36 @@
+---
+title: "Crawl4AI"
+description: "Point Crawl4AI's managed browser at a Driver session to crawl from real Chrome on a residential network."
+---
+
+[Crawl4AI](https://crawl4ai.com) turns pages into LLM-ready Markdown. Configure it to use a Driver session instead of launching its own browser.
+
+```bash
+pip install crawl4ai requests
+```
+
+```python Python
+import asyncio, os, requests
+from crawl4ai import AsyncWebCrawler, BrowserConfig
+
+API = "https://api.driver.dev"
+headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+
+async def main():
+    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+    try:
+        config = BrowserConfig(cdp_url=session["cdpUrl"], use_managed_browser=True)
+        async with AsyncWebCrawler(config=config) as crawler:
+            result = await crawler.arun(url="https://www.nbcnews.com/business")
+            print(result.markdown)
+    finally:
+        requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+
+
+asyncio.run(main())
+```
+
+## When to use the scrape endpoint instead
+
+If all you need is one page as Markdown, [`POST /v1/teracrawl/scrape`](/docs/scrape/scrape) returns it without you managing a session, and handles anti-bot challenges on its own. Crawl4AI on a Driver session is for crawls that need Crawl4AI's own extraction, chunking or multi-page logic.

@@ -1,0 +1,41 @@
+---
+title: "Puppeteer"
+description: "puppeteer-core connects to Driver with browserWSEndpoint. Same detectability caveat as stock Playwright."
+---
+
+<Warning>
+Puppeteer, like stock Playwright, makes CDP calls that anti-bot systems fingerprint. For protected sites use [Patchright](/docs/frameworks/patchright). If your code base is Puppeteer and the targets are not hostile, the connection below works.
+</Warning>
+
+Install `puppeteer-core`, not `puppeteer`: Driver provides the browser, so nothing should be downloaded.
+
+```bash
+npm install puppeteer-core
+```
+
+```typescript TypeScript
+import puppeteer from "puppeteer-core";
+
+const API = "https://api.driver.dev";
+const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Content-Type": "application/json" };
+
+const session = await fetch(`${API}/v1/browser/session`, { method: "POST", headers, body: JSON.stringify({ country: "US" }) }).then((r) => r.json());
+
+try {
+  const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
+  const [page = await browser.newPage()] = await browser.pages(); // reuse the tab that is already open
+
+  await page.goto("https://example.com");
+  console.log(await page.title());
+
+  await browser.disconnect(); // ends your connection only
+} finally {
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
+}
+```
+
+## Notes
+
+- `browser.disconnect()` leaves the session running. `browser.close()` would close Driver's Chrome from inside; use the API's stop call instead so the session record is complete.
+- `browser.pages()` returns the tab the session opened with. Reuse it rather than creating a fresh one.
+- Viewport: prefer `windowSize` on create over `page.setViewport`, see [Window size](/docs/options/window-size).

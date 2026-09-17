@@ -1,0 +1,63 @@
+---
+title: "Introduction"
+description: "Driver runs real Chrome on real hardware and hands you a CDP URL. Create a session, connect your framework, stop the session."
+---
+
+Driver is hosted browser infrastructure. Every session is a real Chrome window on a real machine, on a residential network in the country you ask for, reachable over the Chrome DevTools Protocol in seconds. You bring the automation; Driver brings the browser.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/docs/start/quickstart">
+    Create a session, connect with Patchright, stop it. Five minutes.
+  </Card>
+  <Card title="For agents" icon="robot" href="/docs/start/for-agents">
+    You are a coding agent? Start here: the rules, the endpoints, the pitfalls.
+  </Card>
+  <Card title="Best practices" icon="shield-check" href="/docs/start/best-practices">
+    How to stay unblocked: framework choice, CDP hygiene, session cleanup.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/overview">
+    Every endpoint, generated from the live OpenAPI document.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Create a session">
+    `POST /v1/browser/session` with the options you need (country, profile, proxy, window size). The response carries a `sessionId` and a `cdpUrl`.
+  </Step>
+  <Step title="Connect over CDP">
+    Point your framework at `cdpUrl`. Use [Patchright](/docs/frameworks/patchright) unless you have a reason not to; stock Playwright and Puppeteer leave fingerprints that get sessions blocked.
+  </Step>
+  <Step title="Do the work">
+    Navigate, fill, click, extract. The browser is a normal Chrome: no headless quirks, no emulated hardware.
+  </Step>
+  <Step title="Stop the session">
+    `DELETE /v1/browser/session?sessionId=…` releases the browser. Bandwidth is what you pay for, so stop what you no longer need.
+  </Step>
+</Steps>
+
+## What you get
+
+| | |
+|---|---|
+| **Real Chrome** | Consumer Chrome builds on real hardware, not a headless container. Sites see a normal browser. |
+| **Residential networks** | Sessions egress from residential connections in the country you choose. Bring your own SOCKS5 proxy when you need to. |
+| **Profiles** | Save cookies and local state under a name and reuse them, so logins survive between sessions. |
+| **CAPTCHA solving** | One flag loads Driver's solver into the session. |
+| **Live view** | Watch and drive any running session from the dashboard or a viewer URL. |
+| **Scrape and search** | Two endpoints that return clean Markdown or structured search results without you managing a browser at all. |
+
+## Base URL and authentication
+
+All requests go to `https://api.driver.dev` with your workspace API key as a bearer token. Keys are created under **Settings → API keys** in the [dashboard](https://app.driver.dev).
+
+```bash
+Authorization: Bearer $DRIVER_API_KEY
+```
+
+## Next
+
+- [Quickstart](/docs/start/quickstart) creates and stops a session end to end.
+- [Session options](/docs/options/browser-types) explains every field you can pass on create.
+- [Frameworks](/docs/frameworks/patchright) shows the connection code for Patchright, Playwright, Puppeteer, Browser Use, Stagehand and Crawl4AI.

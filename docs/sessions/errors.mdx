@@ -1,0 +1,41 @@
+---
+title: "Errors"
+description: "Every status the API returns, what it means, and whether retrying helps."
+---
+
+Errors are JSON with an `error` message. Some carry a machine-readable `code`.
+
+```json
+{ "error": "Insufficient balance" }
+```
+
+## Status codes
+
+| Status | Meaning | Retry? |
+|---|---|---|
+| `400` | Invalid or incompatible options. The message names the field. | No. Fix the request. |
+| `401` | Missing or invalid API key. | No. Check `Authorization: Bearer …`. |
+| `402` | The workspace is out of credits. | No. Add credits in the dashboard. |
+| `403` | Session or account limit reached: the plan's concurrent-browser limit, or a feature (extensions) the account is not enabled for. | Only after a session ends. |
+| `404` | Session, profile or extension not found. | No. |
+| `429` | Too many requests. | Yes, with backoff. |
+| `500` | Something failed on Driver's side. | Once. |
+| `503` | No browser capacity available right now, or the session service is unavailable. | Yes, with backoff and jitter, or tell the user. |
+| `504` | A machine was selected but Chrome did not become reachable before the startup deadline. | Once. |
+
+## Guidance for agents and automations
+
+- Do not retry `402` or `403` in a loop. Surface the message; a person has to act.
+- Treat `503` and `504` as transient: back off (a few seconds, growing), cap the attempts, then report.
+- After a `504`, the session is not running; no stop call is needed.
+- A `404` on `DELETE` means the session already ended. Ignore it.
+
+## Framework-side failures
+
+Some failures show up in your framework rather than as an HTTP status:
+
+| Symptom | Likely cause |
+|---|---|
+| `Target closed` / `Browser closed` mid-run | The session reached its `duration`, or was stopped from the dashboard. Check `GET /v1/browser/session`. |
+| Connection refused on `cdpUrl` | The session is not `active` yet or has ended. |
+| The site shows a challenge or block page | Framework fingerprint. Switch to [Patchright](/docs/frameworks/patchright) and remove CDP hooks; see [Best practices](/docs/start/best-practices). |
