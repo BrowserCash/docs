@@ -22,10 +22,13 @@ curl "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" \
   -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 ```typescript TypeScript
-const session = await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, { headers }).then((r) => r.json());
+const url = `https://api.driver.dev/v1/browser/session?sessionId=${id}`;
+const session = await fetch(url, { headers }).then((r) => r.json());
 ```
 ```python Python
-session = requests.get("https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id}).json()
+session = requests.get(
+    "https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id}
+).json()
 ```
 </CodeGroup>
 
@@ -39,10 +42,15 @@ curl "https://api.driver.dev/v1/browser/sessions?page=1&pageSize=20&status=activ
   -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 ```typescript TypeScript
-const { sessions, total, totalPages } = await fetch("https://api.driver.dev/v1/browser/sessions?status=active", { headers }).then((r) => r.json());
+const { sessions, total, totalPages } = await fetch(
+  "https://api.driver.dev/v1/browser/sessions?status=active",
+  { headers },
+).then((r) => r.json());
 ```
 ```python Python
-data = requests.get("https://api.driver.dev/v1/browser/sessions", headers=headers, params={"status": "active"}).json()
+data = requests.get(
+    "https://api.driver.dev/v1/browser/sessions", headers=headers, params={"status": "active"}
+).json()
 ```
 </CodeGroup>
 
@@ -60,14 +68,23 @@ curl -X PATCH "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID" 
   -d '{"note":"nightly price check, client X"}'
 ```
 ```typescript TypeScript
-await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, { method: "PATCH", headers, body: JSON.stringify({ note: "nightly price check, client X" }) });
+await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, {
+  method: "PATCH",
+  headers,
+  body: JSON.stringify({ note: "nightly price check, client X" }),
+});
 ```
 ```python Python
-requests.patch("https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id}, json={"note": "nightly price check, client X"})
+requests.patch(
+    "https://api.driver.dev/v1/browser/session",
+    headers=headers,
+    params={"sessionId": id},
+    json={"note": "nightly price check, client X"},
+)
 ```
 </CodeGroup>
 
-Notes are at most 256 characters.
+Notes are at most 256 characters. Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a terminal session`).
 
 ## Stop a session
 
@@ -79,10 +96,15 @@ curl -X DELETE "https://api.driver.dev/v1/browser/session?sessionId=$SESSION_ID"
   -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 ```typescript TypeScript
-await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, { method: "DELETE", headers });
+await fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, {
+  method: "DELETE",
+  headers,
+});
 ```
 ```python Python
-requests.delete("https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id})
+requests.delete(
+    "https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": id}
+)
 ```
 </CodeGroup>
 
@@ -103,7 +125,9 @@ async function waitForActive(id: string, timeoutMs = 30_000) {
   while (Date.now() < deadline) {
     const s = await getSession(id);
     if (s.status === "active" && s.cdpUrl) return s;
-    if (s.status === "completed" || s.status === "error") throw new Error(`session ended: ${s.status}`);
+    if (s.status === "completed" || s.status === "error") {
+      throw new Error(`session ended: ${s.status}`);
+    }
     await new Promise((r) => setTimeout(r, 1000));
   }
   throw new Error("timed out waiting for the browser");

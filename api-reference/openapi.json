@@ -253,7 +253,7 @@
   "paths": {
     "/v1/browser/session": {
       "post": {
-        "description": "Create a browser session and wait for CDP readiness. hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one. Hosted Canadian sessions without an explicit proxy use TCPerfect. consumer_distributed is the legacy route. Country defaults to US; omitted locale and proxy values are resolved coherently.",
+        "description": "Create a browser session and wait for CDP readiness. hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one. Hosted Canadian sessions without an explicit proxy use TCPerfect. Country defaults to US; omitted locale and proxy values are resolved coherently.",
         "security": [
           {
             "Bearer": []
@@ -280,13 +280,12 @@
                   "type": {
                     "type": "string",
                     "enum": [
-                      "consumer_distributed",
                       "hosted",
                       "hosted_stealth",
                       "hosted_privacy"
                     ],
                     "default": "hosted",
-                    "description": "Browser execution class. hosted is the native browser, hosted_stealth applies the conservative stealth policy, and hosted_privacy the aggressive one. consumer_distributed is the legacy distributed-browser route. Defaults to hosted.",
+                    "description": "Browser execution class. hosted is the native browser, hosted_stealth applies the conservative stealth policy, and hosted_privacy the aggressive one. Defaults to hosted.",
                     "example": "hosted_privacy"
                   },
                   "url": {
@@ -367,7 +366,7 @@
                     "items": {
                       "type": "string"
                     },
-                    "description": "Internal extension IDs returned by the extensions API. Supported by all hosted types and rejected for consumer_distributed sessions. Requires account-level extension access.",
+                    "description": "Internal extension IDs returned by the extensions API. Supported by all hosted types. Requires account-level extension access.",
                     "example": [
                       "abc123def456"
                     ]
@@ -454,7 +453,7 @@
                     "servedBy": "this-node-id",
                     "createdAt": "2025-11-20T01:51:25.000Z",
                     "stoppedAt": null,
-                    "cdpUrl": "wss://gcp-usc1-1.milan-taurine.tera.space/v1/consumer/example-session-id/devtools/browser/uuid",
+                    "cdpUrl": "wss://sessions.driver.dev/v1/consumer/example-session-id/devtools/browser/uuid",
                     "note": null
                   }
                 }
@@ -711,7 +710,7 @@
                     "createdAt": "2025-11-20T01:51:25.000Z",
                     "stoppedAt": null,
                     "bandwidthBytes": 1048576,
-                    "cdpUrl": "wss://gcp-usc1-1.milan-taurine.tera.space/v1/consumer/example-session-id/devtools/browser/uuid",
+                    "cdpUrl": "wss://sessions.driver.dev/v1/consumer/example-session-id/devtools/browser/uuid",
                     "note": null
                   }
                 }
@@ -1180,7 +1179,7 @@
                           "type": {
                             "type": "string",
                             "nullable": true,
-                            "description": "The session execution type, such as 'hosted', 'hosted_stealth', 'hosted_privacy', or 'consumer_distributed'."
+                            "description": "The session execution type, such as 'hosted', 'hosted_stealth', 'hosted_privacy'."
                           },
                           "country": {
                             "type": "string",
@@ -1703,421 +1702,6 @@
         "tags": [
           "Account"
         ]
-      }
-    },
-    "/v1/teracrawl/scrape": {
-      "post": {
-        "description": "Scrape a URL and return the page content.",
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "url": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "URL to scrape.",
-                    "example": "https://example.com"
-                  },
-                  "output": {
-                    "type": "string",
-                    "enum": [
-                      "html",
-                      "md"
-                    ],
-                    "description": "Response format. Defaults to html.",
-                    "example": "md"
-                  },
-                  "smartdoor": {
-                    "type": "object",
-                    "properties": {
-                      "waitForSelector": {
-                        "type": "string",
-                        "description": "CSS selector to wait for in the DOM before extracting.",
-                        "example": ".content-loaded"
-                      },
-                      "waitForSelectorValue": {
-                        "type": "string",
-                        "description": "Text content the selector element must contain.",
-                        "example": "Ready"
-                      },
-                      "waitForFunction": {
-                        "type": "string",
-                        "description": "JavaScript expression that must evaluate to truthy before extracting.",
-                        "example": "window.dataLoaded === true"
-                      },
-                      "timeout": {
-                        "type": "integer",
-                        "minimum": 1000,
-                        "maximum": 60000,
-                        "description": "Override the overall scrape timeout in ms (1000-60000).",
-                        "example": 15000
-                      },
-                      "delay": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 30000,
-                        "description": "Additional delay in ms after page settles before extracting (0-30000).",
-                        "example": 2000
-                      },
-                      "challengeBudget": {
-                        "type": "integer",
-                        "minimum": 2000,
-                        "maximum": 30000,
-                        "description": "How long to wait for an antibot challenge to solve before giving up, in ms (default 4100).",
-                        "example": 10000
-                      },
-                      "nodes": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "type": {
-                              "type": "string",
-                              "enum": [
-                                "consumer_distributed",
-                                "hosted",
-                                "testing"
-                              ],
-                              "description": "Preferred node type.",
-                              "example": "hosted"
-                            },
-                            "country": {
-                              "type": "string",
-                              "description": "Preferred country code.",
-                              "example": "US"
-                            }
-                          }
-                        },
-                        "description": "Preferred node configurations. Multiple entries = any match is acceptable.",
-                        "example": [
-                          {
-                            "type": "hosted",
-                            "country": "US"
-                          },
-                          {
-                            "type": "consumer_distributed"
-                          }
-                        ]
-                      }
-                    },
-                    "description": "Smartdoor signals for domain-specific wait conditions."
-                  }
-                },
-                "required": [
-                  "url"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully scraped the URL.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "content": {
-                          "type": "string",
-                          "description": "The extracted page content."
-                        },
-                        "format": {
-                          "type": "string",
-                          "enum": [
-                            "html",
-                            "md"
-                          ],
-                          "description": "The format of the returned content."
-                        },
-                        "finalUrl": {
-                          "type": "string",
-                          "description": "Final URL after any redirects."
-                        },
-                        "statusCode": {
-                          "type": "number",
-                          "description": "HTTP status code from the page."
-                        },
-                        "navigations": {
-                          "type": "number",
-                          "description": "Number of navigation events during scrape."
-                        },
-                        "totalTimeMs": {
-                          "type": "number",
-                          "description": "Total time spent scraping in milliseconds."
-                        }
-                      },
-                      "required": [
-                        "content",
-                        "format",
-                        "finalUrl",
-                        "statusCode",
-                        "navigations",
-                        "totalTimeMs"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing or invalid token.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Scrape failed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        false
-                      ]
-                    },
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "error"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Scrape and search"
-        ],
-        "summary": "Scrape a page"
-      }
-    },
-    "/v1/teracrawl/search": {
-      "post": {
-        "description": "Search the web and return structured results.",
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Search query.",
-                    "example": "Neon serverless postgres funding"
-                  },
-                  "maxResults": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 20,
-                    "description": "Maximum results to return (default 5).",
-                    "example": 5
-                  },
-                  "includeContent": {
-                    "type": "boolean",
-                    "description": "Include full page markdown in results (default false)."
-                  }
-                },
-                "required": [
-                  "query"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully completed the search.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "query": {
-                          "type": "string",
-                          "description": "The original search query."
-                        },
-                        "results": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "title": {
-                                "type": "string"
-                              },
-                              "url": {
-                                "type": "string"
-                              },
-                              "snippet": {
-                                "type": "string",
-                                "description": "Relevant passage extracted from the page."
-                              },
-                              "content": {
-                                "type": "string",
-                                "description": "Full page markdown (when includeContent=true)."
-                              },
-                              "score": {
-                                "type": "number",
-                                "description": "Relevance score from reranker (0-1)."
-                              },
-                              "publishedDate": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "title",
-                              "url",
-                              "snippet"
-                            ]
-                          }
-                        },
-                        "knowledgeGraph": {
-                          "type": "object",
-                          "properties": {
-                            "title": {
-                              "type": "string"
-                            },
-                            "type": {
-                              "type": "string"
-                            },
-                            "description": {
-                              "type": "string"
-                            },
-                            "attributes": {
-                              "type": "object",
-                              "additionalProperties": {
-                                "type": "string"
-                              }
-                            }
-                          },
-                          "description": "Structured knowledge graph data."
-                        },
-                        "latencyMs": {
-                          "type": "number",
-                          "description": "Total latency in milliseconds."
-                        }
-                      },
-                      "required": [
-                        "query",
-                        "results",
-                        "latencyMs"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "data"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing or invalid token.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Search failed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        false
-                      ]
-                    },
-                    "error": {
-                      "type": "string",
-                      "description": "Error message"
-                    }
-                  },
-                  "required": [
-                    "success",
-                    "error"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Scrape and search"
-        ],
-        "summary": "Search the web"
       }
     },
     "/v1/browser/extensions": {
@@ -2791,9 +2375,6 @@
     },
     {
       "name": "Account"
-    },
-    {
-      "name": "Scrape and search"
     },
     {
       "name": "Extensions"

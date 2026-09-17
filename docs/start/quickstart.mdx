@@ -58,7 +58,10 @@ description: "Create a Driver session, connect with Patchright, read a page titl
       await browser.close();
     } finally {
       // 4. Stop the session. This is what ends billing.
-      await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
+      await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
+        method: "DELETE",
+        headers,
+      });
     }
     ```
 
@@ -88,7 +91,9 @@ description: "Create a Driver session, connect with Patchright, read a page titl
             browser.close()
     finally:
         # 4. Stop the session. This is what ends billing.
-        requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+        requests.delete(
+        f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+    )
     ```
 
     ```bash cURL

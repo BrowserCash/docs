@@ -14,11 +14,10 @@ Documentation for [docs.driver.dev](https://docs.driver.dev), written from scrat
   pages carry the warning.
 - **Best practices stay.** `docs/start/best-practices.mdx` carries the CDP-hygiene guidance forward.
 
-## Not published yet
+## Deprecated surface
 
-`docs/scrape/` (the teracrawl scrape and search endpoints) is written from the spec but left out of the navigation:
-in verification on 2026-09-17 both endpoints answered `500 { "success": false, "error": "Scrape failed" }` within
-100 ms. Add the group back to `docs.json` once they answer.
+The teracrawl scrape/search endpoints and the `consumer_distributed` browser type are deprecated and deliberately
+absent: `scripts/sync-openapi.mjs` drops them from the generated reference, and no guide mentions them.
 
 ## Working on it
 

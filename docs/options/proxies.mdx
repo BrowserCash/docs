@@ -37,6 +37,6 @@ Hosted sessions in Canada that do not specify a proxy egress through Driver's TC
 
 ## If the proxy cannot be reached
 
-Driver connects through the proxy before launch to find its exit. A proxy that does not answer is rejected with `400` and the message `Could not determine SOCKS5 proxy egress location; verify the proxy or specify both timezone and language.` Supplying both `timezone` and `language` skips the lookup. An `http://` URL is rejected outright.
+Driver connects through the proxy before launch to find its exit. A proxy that does not answer is rejected with `400` and the message `Could not determine SOCKS5 proxy egress location; verify the proxy or specify both timezone and language.` Supplying both `timezone` and `language` skips the lookup; the session then starts even if the proxy is unreachable, and pages fail to load inside it. An `http://` URL is rejected outright.
 
 Credentials travel in the create request only; they are not stored on the session record.

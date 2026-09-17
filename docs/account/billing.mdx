@@ -14,10 +14,12 @@ Keeping sessions short and stopping them when the job is done is the whole cost-
 curl https://api.driver.dev/v1/account/balance -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 ```typescript TypeScript
-const { balance } = await fetch("https://api.driver.dev/v1/account/balance", { headers }).then((r) => r.json());
+const { balance } = await fetch("https://api.driver.dev/v1/account/balance", { headers })
+  .then((r) => r.json());
 ```
 ```python Python
-balance = requests.get("https://api.driver.dev/v1/account/balance", headers=headers).json()["balance"]
+balance = requests.get("https://api.driver.dev/v1/account/balance", headers=headers).json()
+balance = balance["balance"]
 ```
 </CodeGroup>
 

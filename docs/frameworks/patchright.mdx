@@ -35,9 +35,16 @@ No browser download is needed; you connect to Driver's Chrome.
 import { chromium } from "patchright";
 
 const API = "https://api.driver.dev";
-const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Content-Type": "application/json" };
+const headers = {
+  Authorization: `Bearer ${process.env.DRIVER_API_KEY}`,
+  "Content-Type": "application/json",
+};
 
-const session = await fetch(`${API}/v1/browser/session`, { method: "POST", headers, body: JSON.stringify({ country: "US" }) }).then((r) => r.json());
+const session = await fetch(`${API}/v1/browser/session`, {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ country: "US" }),
+}).then((r) => r.json());
 
 try {
   const browser = await chromium.connectOverCDP(session.cdpUrl);
@@ -49,7 +56,10 @@ try {
 
   await browser.close();
 } finally {
-  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
+    method: "DELETE",
+    headers,
+  });
 }
 ```
 ```python Python
@@ -59,7 +69,8 @@ from patchright.sync_api import sync_playwright
 API = "https://api.driver.dev"
 headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
-session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"})
+    session = session.json()
 try:
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp(session["cdpUrl"])
@@ -70,7 +81,9 @@ try:
         print(page.title())
         browser.close()
 finally:
-    requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+    requests.delete(
+        f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+    )
 ```
 ```python Python (async)
 import asyncio, os, requests
@@ -80,7 +93,8 @@ API = "https://api.driver.dev"
 headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 async def main():
-    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"})
+    session = session.json()
     try:
         async with async_playwright() as p:
             browser = await p.chromium.connect_over_cdp(session["cdpUrl"])
@@ -90,7 +104,9 @@ async def main():
             print(await page.title())
             await browser.close()
     finally:
-        requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+        requests.delete(
+        f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+    )
 
 asyncio.run(main())
 ```

@@ -4,7 +4,7 @@ description: "Upload your own Chrome extensions and load them into hosted sessio
 ---
 
 <Note>
-The extensions API is enabled per account. Without access, the endpoints return `403`; write to support@driver.dev to request it.
+The extensions API is enabled per account. Without access, the endpoints return `403` (`Extensions API is not enabled for this account`); write to support@driver.dev to request it. An upload without a file is rejected first with `No file uploaded. Send as multipart field "extension".`
 </Note>
 
 ## Upload an extension
@@ -16,11 +16,13 @@ Zip the extension's directory (the one containing `manifest.json`) and upload it
 curl -X POST https://api.driver.dev/v1/browser/extensions \
   -H "Authorization: Bearer $DRIVER_API_KEY" \
   -F "extension=@my-extension.zip"
-# → { "extension": { "extensionId": "abc123def456", "crxExtensionId": "…", "name": "…", "version": "1.2.0", … } }
+# → { "extension": { "extensionId": "abc123def456", "crxExtensionId": "…",
+#                     "name": "…", "version": "1.2.0", … } }
 ```
 ```typescript TypeScript
 const form = new FormData();
-form.append("extension", new Blob([await fs.promises.readFile("my-extension.zip")]), "my-extension.zip");
+const zip = new Blob([await fs.promises.readFile("my-extension.zip")]);
+form.append("extension", zip, "my-extension.zip");
 const { extension } = await fetch("https://api.driver.dev/v1/browser/extensions", {
   method: "POST",
   headers: { Authorization: `Bearer ${process.env.DRIVER_API_KEY}` },
@@ -39,7 +41,7 @@ with open("my-extension.zip", "rb") as f:
 
 ## Load it into a session
 
-Pass the internal `extensionId` (not the `crxExtensionId`) in `extensionIds`. Works on all hosted types; rejected on `consumer_distributed`.
+Pass the internal `extensionId` (not the `crxExtensionId`) in `extensionIds`. Works on every browser type.
 
 ```json
 { "extensionIds": ["abc123def456"] }

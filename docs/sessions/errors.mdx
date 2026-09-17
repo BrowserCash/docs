@@ -16,7 +16,7 @@ Errors are JSON with an `error` message. Some carry a machine-readable `code`.
 | `400` | Invalid or incompatible options. The message names the field. | No. Fix the request. |
 | `401` | Missing or invalid API key. | No. Check `Authorization: Bearer …`. |
 | `402` | The workspace is out of credits. | No. Add credits in the dashboard. |
-| `403` | Session or account limit reached: the plan's concurrent-browser limit, or a feature (extensions) the account is not enabled for. | Only after a session ends. |
+| `403` | Session or account limit reached: the workspace's concurrent-browser limit (`plan.concurrent_browsers` on `GET /v1/account/billing`), or a feature (extensions) the account is not enabled for. | Only after a session ends. |
 | `404` | Session, profile or extension not found (unknown id, or one belonging to another workspace). | No. |
 | `429` | Too many requests. | Yes, with backoff. |
 | `500` | Something failed on Driver's side. | Once. |

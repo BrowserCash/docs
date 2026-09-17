@@ -18,14 +18,20 @@ headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 
 async def main():
-    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US", "duration": 900}).json()
+    session = requests.post(
+        f"{API}/v1/browser/session", headers=headers, json={"country": "US", "duration": 900}
+    ).json()
     try:
         browser = Browser(cdp_url=session["cdpUrl"])
-        agent = Agent(task="Find the current price of Bitcoin", llm=ChatBrowserUse(), browser=browser)
+        agent = Agent(
+            task="Find the current price of Bitcoin", llm=ChatBrowserUse(), browser=browser
+        )
         result = await agent.run()
         print(result)
     finally:
-        requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+        requests.delete(
+            f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+        )
 
 
 asyncio.run(main())

@@ -17,20 +17,30 @@ npm install puppeteer-core
 import puppeteer from "puppeteer-core";
 
 const API = "https://api.driver.dev";
-const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Content-Type": "application/json" };
+const headers = {
+  Authorization: `Bearer ${process.env.DRIVER_API_KEY}`,
+  "Content-Type": "application/json",
+};
 
-const session = await fetch(`${API}/v1/browser/session`, { method: "POST", headers, body: JSON.stringify({ country: "US" }) }).then((r) => r.json());
+const session = await fetch(`${API}/v1/browser/session`, {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ country: "US" }),
+}).then((r) => r.json());
 
 try {
   const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
-  const [page = await browser.newPage()] = await browser.pages(); // reuse the tab that is already open
+  const [page = await browser.newPage()] = await browser.pages(); // reuse the open tab
 
   await page.goto("https://example.com");
   console.log(await page.title());
 
   await browser.disconnect(); // ends your connection only
 } finally {
-  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
+    method: "DELETE",
+    headers,
+  });
 }
 ```
 

@@ -9,6 +9,16 @@ const doc = await fetch(SOURCE).then((r) => { if (!r.ok) throw new Error(`${SOUR
 doc.servers = [{ url: 'https://api.driver.dev', description: 'Production' }]
 doc.info = { ...doc.info, title: 'Driver API', description: doc.info?.description || 'Hosted Chrome sessions over CDP, plus scrape and search.' }
 
+// Deprecated surface is not documented: the teracrawl endpoints and the consumer_distributed browser type.
+for (const path of Object.keys(doc.paths)) if (path.startsWith('/v1/teracrawl')) delete doc.paths[path]
+const dropDeprecatedType = (node) => {
+  if (Array.isArray(node)) return node.forEach(dropDeprecatedType)
+  if (!node || typeof node !== 'object') return
+  if (Array.isArray(node.enum)) node.enum = node.enum.filter((v) => v !== 'consumer_distributed')
+  for (const v of Object.values(node)) dropDeprecatedType(v)
+}
+dropDeprecatedType(doc)
+
 const tagFor = (path) => path.startsWith('/v1/browser/session') ? 'Sessions'
   : path.startsWith('/v1/browser/profile') ? 'Profiles'
   : path.startsWith('/v1/browser/extensions') ? 'Extensions'
@@ -60,6 +70,11 @@ fixExamples(doc)
 
 // The source document names internal systems. Readers get product language instead. Ordered: phrases first, then words.
 const SCRUB = [
+  [/ consumer_distributed is the legacy route\./g, ''],
+  [/ consumer_distributed is the legacy distributed-browser route\./g, ''],
+  [/ and rejected for consumer_distributed sessions/g, ''],
+  [/, or 'consumer_distributed'/g, ''],
+  [/, 'hosted_privacy', or 'consumer_distributed'/g, ", or 'hosted_privacy'"],
   [/hosted, hosted_stealth, and hosted_privacy launch on Rio; hosted_stealth enables conservative Mirage Stealth and hosted_privacy enables the preserved aggressive Stealth policy\./g, 'hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one.'],
   [/hosted uses Mirage natively, hosted_stealth uses conservative Stealth, and hosted_privacy uses the preserved aggressive Stealth policy\./g, 'hosted is the native browser, hosted_stealth applies the conservative stealth policy, and hosted_privacy the aggressive one.'],
   [/Rio\/Mirage virtual display size/g, 'Virtual display size'],
@@ -72,6 +87,8 @@ const SCRUB = [
   [/Rio is unavailable, so a complete account session response cannot be produced\./g, 'The session service is unavailable.'],
   [/Rio session service unavailable/g, 'Session service unavailable'],
   [/Lisa or its billing provider could not return billing details\./g, 'Billing details could not be returned.'],
+  [/wss:\/\/[a-z0-9.-]+\.tera\.space\//g, 'wss://sessions.driver.dev/'],
+  [/[a-z0-9.-]+\.tera\.space/g, 'driver.dev'],
   [/APIGW/g, 'Driver'],
   [/\bRio\b/g, 'Driver'],
   [/\bMirage\b/g, 'Chrome'],

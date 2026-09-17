@@ -42,7 +42,10 @@ The `@browsercash/sdk` package wraps the REST API. Point it at Driver's base URL
 ```typescript
 import BrowsercashSDK from "@browsercash/sdk";
 
-const client = new BrowsercashSDK({ apiKey: process.env.DRIVER_API_KEY!, baseURL: "https://api.driver.dev" });
+const client = new BrowsercashSDK({
+  apiKey: process.env.DRIVER_API_KEY!,
+  baseURL: "https://api.driver.dev",
+});
 const session = await client.browser.session.create({ country: "US" });
 // … connect with patchright or playwright …
 await client.browser.session.stop({ sessionId: session.sessionId });

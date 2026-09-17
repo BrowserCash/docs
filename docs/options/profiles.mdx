@@ -29,7 +29,7 @@ next_session = create_session(profile={"name": "shop-account", "persist": True})
 | `name` | string | The profile to load. Created on first use. |
 | `persist` | boolean | Save the profile when the session ends. `false` loads it read-only: changes made during the session are discarded. |
 
-Profiles are supported on hosted types (`hosted`, `hosted_stealth`, `hosted_privacy`), not on `consumer_distributed`.
+Profiles are supported on every browser type.
 
 ## Listing and deleting
 
@@ -42,16 +42,22 @@ curl -X DELETE "https://api.driver.dev/v1/browser/profile?profileName=shop-accou
   -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 ```typescript TypeScript
-const { profiles } = await fetch("https://api.driver.dev/v1/browser/profiles", { headers }).then((r) => r.json());
-await fetch("https://api.driver.dev/v1/browser/profile?profileName=shop-account", { method: "DELETE", headers });
+const { profiles } = await fetch("https://api.driver.dev/v1/browser/profiles", { headers })
+  .then((r) => r.json());
+await fetch("https://api.driver.dev/v1/browser/profile?profileName=shop-account", {
+  method: "DELETE",
+  headers,
+});
 ```
 ```python Python
-profiles = requests.get("https://api.driver.dev/v1/browser/profiles", headers=headers).json()["profiles"]
-requests.delete("https://api.driver.dev/v1/browser/profile", headers=headers, params={"profileName": "shop-account"})
+profiles = requests.get("https://api.driver.dev/v1/browser/profiles", headers=headers).json()
+requests.delete(
+    "https://api.driver.dev/v1/browser/profile", headers=headers, params={"profileName": "shop-account"}
+)
 ```
 </CodeGroup>
 
-The dashboard's **Profiles** page shows the same list, and lets you launch a session on a profile to sign in by hand through the live view.
+Deleting is idempotent: an unknown name also answers `{ "success": true }`. The dashboard's **Profiles** page shows the same list, and lets you launch a session on a profile to sign in by hand through the live view.
 
 ## Practical notes
 

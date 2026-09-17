@@ -25,7 +25,9 @@ async def main():
             result = await crawler.arun(url="https://www.nbcnews.com/business")
             print(result.markdown)
     finally:
-        requests.delete(f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]})
+        requests.delete(
+            f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+        )
 
 
 asyncio.run(main())
