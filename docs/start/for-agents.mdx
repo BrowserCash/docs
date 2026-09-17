@@ -17,6 +17,34 @@ This page is written for an AI coding agent (Claude Code, Cursor, Codex, or simi
 8. **Handle 402 and 503 by reporting, not retrying.** 402 means the workspace is out of credits; 503 means no browser capacity right now. Surface the message to the user. Retry only 429 (rate limited) and 504 (browser did not start in time), with backoff.
 9. **Stay under the plan's concurrency.** Sessions beyond the plan's concurrent-browser limit are refused with 403.
 
+## How to write the automation
+
+- **Minimal logic wins.** The shortest script that reaches the outcome is the most reliable and the least detectable. Go to the page, do the action, read the result. Do not add retries, waits, listeners, request routing or "stealth" helpers unless a specific failure on a specific site demands them, and then add the smallest thing that fixes it.
+- **Fast and accurate, in that order of effort.** Before writing browser steps, ask whether the outcome is reachable faster: a direct URL instead of clicking through navigation, one session doing several pages instead of one session per page, a persisted [profile](/docs/options/profiles) instead of logging in every run. Then keep the browser steps short: no fixed sleeps, rely on the framework's auto-waiting, stop the session the moment the result is in hand.
+- **Test the automation for real, every time.** Run it against the live target through Driver and check the result, not just that the script exits. Confirm the data is right, the action happened, and the session was stopped (look it up under Telemetry → Sessions). A run that "worked" but read the wrong element is worse than one that failed loudly.
+- **Do not pollute the session.** Every extra CDP feature you switch on, every injected script, every overridden property is a signal. If you did not need it to reach the outcome, take it out.
+
+## Handoff prompt
+
+Give this to a coding agent along with the target and the outcome you want. It is the whole briefing.
+
+```text
+Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into this project.
+
+- API docs: https://docs.driver.dev (agents: https://docs.driver.dev/docs/start/for-agents). Endpoints: https://api.driver.dev/scalar
+- Auth: Authorization: Bearer $DRIVER_API_KEY (from the environment; never commit it)
+- Most tasks need no options at all: POST https://api.driver.dev/v1/browser/session with {} gives a hosted US Chrome.
+  Use "country" for geo-specific sites, "profile" to keep logins, "duration" to cap cost.
+- Drive the browser only with Patchright (https://github.com/Kaliiiiiiiiii-Vinyzu/patchright): chromium.connectOverCDP(cdpUrl),
+  reuse browser.contexts()[0] and context.pages()[0]. Never launch a browser, never use stock Playwright or Puppeteer.
+- No CDP or automation tactics that leak or get sites to block: no page.route, no init scripts, no exposed functions,
+  no fingerprint patches. Minimal automation logic is always best: https://docs.driver.dev/docs/start/best-practices
+- Check whether the outcome can be reached faster (direct URLs, one session for many pages, a persisted profile instead of logging in).
+  Avoid slow browser logic and fixed sleeps.
+- Always stop the session in a finally: DELETE /v1/browser/session?sessionId=<id>. Keep the sessionId in logs.
+- Test the automation against the real target and verify the result before calling it done.
+```
+
 ## The three calls
 
 Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DRIVER_API_KEY`. Store the key in an environment variable named `DRIVER_API_KEY`; never commit it.

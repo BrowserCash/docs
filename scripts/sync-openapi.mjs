@@ -57,6 +57,33 @@ const fixExamples = (node) => {
   for (const v of Object.values(node)) fixExamples(v)
 }
 fixExamples(doc)
+
+// The source document names internal systems. Readers get product language instead. Ordered: phrases first, then words.
+const SCRUB = [
+  [/hosted, hosted_stealth, and hosted_privacy launch on Rio; hosted_stealth enables conservative Mirage Stealth and hosted_privacy enables the preserved aggressive Stealth policy\./g, 'hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one.'],
+  [/hosted uses Mirage natively, hosted_stealth uses conservative Stealth, and hosted_privacy uses the preserved aggressive Stealth policy\./g, 'hosted is the native browser, hosted_stealth applies the conservative stealth policy, and hosted_privacy the aggressive one.'],
+  [/Rio\/Mirage virtual display size/g, 'Virtual display size'],
+  [/Only supported by Rio-backed hosted types\./g, 'Only supported by hosted types.'],
+  [/Supported by all Rio-backed hosted types/g, 'Supported by all hosted types'],
+  [/Rio stores persistent profiles as portable Mirage plaintext archives\./g, 'Persistent profiles are kept between sessions.'],
+  [/so Mirage uses its built-in en-US default/g, 'so the browser uses its built-in en-US default'],
+  [/primary language supported by Mirage/g, 'primary language the browser supports'],
+  [/Rio selected a machine but the browser did not become CDP-ready before the startup deadline\./g, 'A machine was selected but the browser did not become CDP-ready before the startup deadline.'],
+  [/Rio is unavailable, so a complete account session response cannot be produced\./g, 'The session service is unavailable.'],
+  [/Rio session service unavailable/g, 'Session service unavailable'],
+  [/Lisa or its billing provider could not return billing details\./g, 'Billing details could not be returned.'],
+  [/APIGW/g, 'Driver'],
+  [/\bRio\b/g, 'Driver'],
+  [/\bMirage\b/g, 'Chrome'],
+  [/\bLisa\b/g, 'the session service'],
+]
+const scrub = (node) => {
+  if (Array.isArray(node)) return node.map(scrub)
+  if (node && typeof node === 'object') { for (const k of Object.keys(node)) node[k] = scrub(node[k]); return node }
+  if (typeof node === 'string') return SCRUB.reduce((acc, [re, to]) => acc.replace(re, to), node)
+  return node
+}
+scrub(doc)
 fs.mkdirSync('api-reference', { recursive: true })
 fs.writeFileSync('api-reference/openapi.json', JSON.stringify(doc, null, 2) + '\n')
 console.log(`wrote api-reference/openapi.json from ${SOURCE}: ${Object.keys(doc.paths).length} paths`)

@@ -66,7 +66,7 @@ const session = await client.browser.session.create({ country: "US", duration: 6
 }
 ```
 
-The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears.
+The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears.
 
 ## Options
 
@@ -89,7 +89,7 @@ The call waits until Chrome is reachable, so `cdpUrl` is normally set in the res
 | `browserCheck` | boolean | `false` | Run a browser validation check during creation. |
 | `note` | string | | Up to 256 characters, shown in the dashboard. |
 
-Options that contradict each other are rejected with `400` and a message naming the field. The common ones: a `timezone` or `language` not listed for the `country`, a `country` that does not match a supplied proxy's exit, and `proxyUrl` together with `nodeId`.
+Options that contradict each other are rejected with `400` and a message naming the field. The common ones: a `timezone` or `language` not listed for the `country` (`Unsupported timezone "Europe/Berlin" for country US.`), a `country` that does not match a supplied proxy's exit, a proxy that cannot be reached, and out-of-range `duration`, `windowSize` or `note`.
 
 ## Errors
 

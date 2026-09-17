@@ -1,17 +1,17 @@
 ---
 title: "Stagehand"
-description: "Natural-language actions and extraction on a Driver browser through Stagehand's CDP attachment."
+description: "Natural-language act and extract on a Driver browser: connect Stagehand v4 to the session's cdpUrl."
 ---
 
-[Stagehand](https://github.com/browserbase/stagehand) adds `act`, `extract` and `observe` on top of Playwright. Attach it to a Driver session's `cdpUrl` in `LOCAL` mode.
+[Stagehand](https://docs.stagehand.dev) adds `act`, `extract` and `observe` on top of a browser it attaches to. With Stagehand v4, connect it to a Driver session's `cdpUrl` through `localBrowser.connect`.
 
 ```bash
-npm install @browserbasehq/stagehand zod
+npm install @browserbasehq/stagehand zod@~4.4.3
 ```
 
 ```typescript TypeScript
-import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
+import { localBrowser, Stagehand } from "@browserbasehq/stagehand";
+import { z } from "zod/v4";
 
 const API = "https://api.driver.dev";
 const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Content-Type": "application/json" };
@@ -19,14 +19,14 @@ const headers = { Authorization: `Bearer ${process.env.DRIVER_API_KEY}`, "Conten
 const session = await fetch(`${API}/v1/browser/session`, { method: "POST", headers, body: JSON.stringify({ country: "US" }) }).then((r) => r.json());
 
 try {
-  const stagehand = new Stagehand({
-    env: "LOCAL",
-    model: "openai/gpt-5",
-    localBrowserLaunchOptions: { cdpUrl: session.cdpUrl },
+  // Attach to Driver's Chrome; Stagehand never launches or closes a browser it did not start.
+  const browser = await localBrowser.connect({ cdpUrl: session.cdpUrl });
+  const stagehand = await Stagehand.create({
+    browser,
+    model: { modelName: "openai/gpt-5.6-sol", apiKey: process.env.OPENAI_API_KEY },
   });
-  await stagehand.init();
 
-  const page = stagehand.context.pages()[0] ?? (await stagehand.context.newPage());
+  const [page] = await browser.context.pages(); // the tab the session opened with
   await page.goto("https://example.com");
 
   const data = await stagehand.extract(
@@ -35,16 +35,16 @@ try {
   );
   console.log(data);
 
-  await stagehand.close();
+  await stagehand.close(); // ends the Stagehand connection; the session keeps running
 } finally {
   await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, { method: "DELETE", headers });
 }
 ```
 
-Stagehand needs a model provider key for the model you name (here `OPENAI_API_KEY`).
+Stagehand reads no environment variables itself: pass the model provider key in `model.apiKey`.
 
 ## Notes
 
-- CDP attachment needs Stagehand 2.0 or newer.
-- Stagehand drives the browser through Playwright internally, so it carries stock Playwright's CDP fingerprints. On protected sites, prefer plain [Patchright](/docs/frameworks/patchright) with your own extraction, or keep Stagehand to the parts of a flow that are not behind bot protection.
-- Reuse `stagehand.context.pages()[0]` rather than opening a new page.
+- This is the v4 API (`localBrowser.connect`, `Stagehand.create`). Stagehand 2.x used `new Stagehand({ env: "LOCAL", localBrowserLaunchOptions: { cdpUrl } })`; if you are on 2.x, that is the equivalent.
+- Stagehand instruments the page to work (it loads its own extension and drives the browser over CDP), which is the kind of signal protected sites look for. On those sites, prefer plain [Patchright](/docs/frameworks/patchright) with your own extraction, or keep Stagehand to the parts of a flow that are not behind bot protection.
+- Reuse the page from `browser.context.pages()` rather than opening a new one.

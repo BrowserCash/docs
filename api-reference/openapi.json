@@ -253,7 +253,7 @@
   "paths": {
     "/v1/browser/session": {
       "post": {
-        "description": "Create a browser session and wait for CDP readiness. hosted, hosted_stealth, and hosted_privacy launch on Rio; hosted_stealth enables conservative Mirage Stealth and hosted_privacy enables the preserved aggressive Stealth policy. Hosted Canadian sessions without an explicit proxy use TCPerfect. consumer_distributed is the legacy route. Country defaults to US; omitted locale and proxy values are resolved coherently.",
+        "description": "Create a browser session and wait for CDP readiness. hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one. Hosted Canadian sessions without an explicit proxy use TCPerfect. consumer_distributed is the legacy route. Country defaults to US; omitted locale and proxy values are resolved coherently.",
         "security": [
           {
             "Bearer": []
@@ -274,7 +274,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 2,
-                    "description": "Two-letter country code used for placement and locale coherence. Defaults to US unless a SOCKS5 URL is supplied with neither language nor timezone, in which case APIGW derives the country from the proxy exit. A supplied country must match that resolved exit. APIGW otherwise selects a plausible primary language and dominant regional timezone.",
+                    "description": "Two-letter country code used for placement and locale coherence. Defaults to US unless a SOCKS5 URL is supplied with neither language nor timezone, in which case Driver derives the country from the proxy exit. A supplied country must match that resolved exit. Driver otherwise selects a plausible primary language and dominant regional timezone.",
                     "example": "US"
                   },
                   "type": {
@@ -286,7 +286,7 @@
                       "hosted_privacy"
                     ],
                     "default": "hosted",
-                    "description": "Browser execution class. hosted uses Mirage natively, hosted_stealth uses conservative Stealth, and hosted_privacy uses the preserved aggressive Stealth policy. consumer_distributed is the legacy distributed-browser route. Defaults to hosted.",
+                    "description": "Browser execution class. hosted is the native browser, hosted_stealth applies the conservative stealth policy, and hosted_privacy the aggressive one. consumer_distributed is the legacy distributed-browser route. Defaults to hosted.",
                     "example": "hosted_privacy"
                   },
                   "url": {
@@ -297,7 +297,7 @@
                   },
                   "proxyUrl": {
                     "type": "string",
-                    "description": "Explicit SOCKS5, SOCKS5H, or TCPerfect network URL for the session. A SOCKS URL supplied without language or timezone is geolocated before launch; APIGW derives or validates country and uses the exit timezone. When omitted, hosted Canadian sessions use a uniformly selected public address from the production TCPerfect inventory.",
+                    "description": "Explicit SOCKS5, SOCKS5H, or TCPerfect network URL for the session. A SOCKS URL supplied without language or timezone is geolocated before launch; Driver derives or validates country and uses the exit timezone. When omitted, hosted Canadian sessions use a uniformly selected public address from the production TCPerfect inventory.",
                     "example": "tcperfect://user:password@206.223.186.11:1194/65.97.36.3"
                   },
                   "windowSize": {
@@ -307,21 +307,21 @@
                   },
                   "displaySize": {
                     "type": "string",
-                    "description": "Rio/Mirage virtual display size in WIDTHxHEIGHT format. Width must be 320–16384 and height 200–16384. Only supported by Rio-backed hosted types.",
+                    "description": "Virtual display size in WIDTHxHEIGHT format. Width must be 320–16384 and height 200–16384. Only supported by hosted types.",
                     "example": "1920x1080"
                   },
                   "timezone": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 128,
-                    "description": "IANA timezone for the browser. It must be listed for the selected country. When omitted, APIGW selects a dominant regional timezone and targets managed proxy geography where the provider supports regional targeting.",
+                    "description": "IANA timezone for the browser. It must be listed for the selected country. When omitted, Driver selects a dominant regional timezone and targets managed proxy geography where the provider supports regional targeting.",
                     "example": "America/New_York"
                   },
                   "language": {
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 64,
-                    "description": "BCP-47 browser language listed for the selected country. US sessions accept only en-US and omit both language launch fields so Mirage uses its built-in en-US default. For other countries, APIGW deterministically chooses the likely primary language supported by Mirage. Hosted sessions provision matching TTS when available; otherwise Web Speech is disabled for coherence.",
+                    "description": "BCP-47 browser language listed for the selected country. US sessions accept only en-US and omit both language launch fields so the browser uses its built-in en-US default. For other countries, Driver deterministically chooses the likely primary language the browser supports. Hosted sessions provision matching TTS when available; otherwise Web Speech is disabled for coherence.",
                     "example": "en-US"
                   },
                   "duration": {
@@ -350,7 +350,7 @@
                       "name"
                     ],
                     "additionalProperties": false,
-                    "description": "A named full browser profile. Rio stores persistent profiles as portable Mirage plaintext archives."
+                    "description": "A named full browser profile. Persistent profiles are kept between sessions."
                   },
                   "adblock": {
                     "type": "boolean",
@@ -367,7 +367,7 @@
                     "items": {
                       "type": "string"
                     },
-                    "description": "Internal extension IDs returned by the extensions API. Supported by all Rio-backed hosted types and rejected for consumer_distributed sessions. Requires account-level extension access.",
+                    "description": "Internal extension IDs returned by the extensions API. Supported by all hosted types and rejected for consumer_distributed sessions. Requires account-level extension access.",
                     "example": [
                       "abc123def456"
                     ]
@@ -599,7 +599,7 @@
             }
           },
           "504": {
-            "description": "Rio selected a machine but the browser did not become CDP-ready before the startup deadline.",
+            "description": "A machine was selected but the browser did not become CDP-ready before the startup deadline.",
             "content": {
               "application/json": {
                 "schema": {
@@ -777,7 +777,7 @@
             }
           },
           "503": {
-            "description": "Rio is unavailable, so a complete account session response cannot be produced.",
+            "description": "The session service is unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -786,7 +786,7 @@
                     "error": {
                       "type": "string",
                       "description": "Error message",
-                      "example": "Rio session service unavailable"
+                      "example": "Session service unavailable"
                     }
                   },
                   "required": [
@@ -904,7 +904,7 @@
             }
           },
           "503": {
-            "description": "Rio is unavailable, so a complete account session response cannot be produced.",
+            "description": "The session service is unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -913,7 +913,7 @@
                     "error": {
                       "type": "string",
                       "description": "Error message",
-                      "example": "Rio session service unavailable"
+                      "example": "Session service unavailable"
                     }
                   },
                   "required": [
@@ -1051,7 +1051,7 @@
             }
           },
           "503": {
-            "description": "Rio is unavailable, so a complete account session response cannot be produced.",
+            "description": "The session service is unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1060,7 +1060,7 @@
                     "error": {
                       "type": "string",
                       "description": "Error message",
-                      "example": "Rio session service unavailable"
+                      "example": "Session service unavailable"
                     }
                   },
                   "required": [
@@ -1290,7 +1290,7 @@
             }
           },
           "503": {
-            "description": "Rio is unavailable, so a complete account session response cannot be produced.",
+            "description": "The session service is unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1299,7 +1299,7 @@
                     "error": {
                       "type": "string",
                       "description": "Error message",
-                      "example": "Rio session service unavailable"
+                      "example": "Session service unavailable"
                     }
                   },
                   "required": [
@@ -1681,7 +1681,7 @@
             }
           },
           "500": {
-            "description": "Lisa or its billing provider could not return billing details.",
+            "description": "Billing details could not be returned.",
             "content": {
               "application/json": {
                 "schema": {

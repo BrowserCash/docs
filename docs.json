@@ -10,8 +10,14 @@
   },
   "fonts": {
     "family": "IBM Plex Sans",
-    "heading": { "family": "IBM Plex Sans", "weight": 600 },
-    "body": { "family": "IBM Plex Sans", "weight": 400 }
+    "heading": {
+      "family": "IBM Plex Sans",
+      "weight": 600
+    },
+    "body": {
+      "family": "IBM Plex Sans",
+      "weight": 400
+    }
   },
   "favicon": "/favicon.svg",
   "logo": {
@@ -19,9 +25,19 @@
     "dark": "/logo/dark.svg",
     "href": "https://driver.dev"
   },
-  "appearance": { "default": "dark", "strict": false },
-  "background": { "color": { "light": "#ffffff", "dark": "#050505" } },
-  "styling": { "codeblocks": "dark" },
+  "appearance": {
+    "default": "dark",
+    "strict": false
+  },
+  "background": {
+    "color": {
+      "light": "#ffffff",
+      "dark": "#050505"
+    }
+  },
+  "styling": {
+    "codeblocks": "dark"
+  },
   "navigation": {
     "tabs": [
       {
@@ -71,13 +87,6 @@
             ]
           },
           {
-            "group": "Scrape and search",
-            "pages": [
-              "docs/scrape/scrape",
-              "docs/scrape/search"
-            ]
-          },
-          {
             "group": "Account",
             "pages": [
               "docs/account/api-keys",
@@ -92,7 +101,9 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": ["api-reference/overview"]
+            "pages": [
+              "api-reference/overview"
+            ]
           },
           {
             "group": "Sessions",
@@ -111,14 +122,6 @@
             "pages": [
               "GET /v1/browser/profiles",
               "DELETE /v1/browser/profile"
-            ]
-          },
-          {
-            "group": "Scrape and search",
-            "openapi": "api-reference/openapi.json",
-            "pages": [
-              "POST /v1/teracrawl/scrape",
-              "POST /v1/teracrawl/search"
             ]
           },
           {
@@ -146,13 +149,32 @@
   },
   "navbar": {
     "links": [
-      { "label": "Support", "href": "mailto:support@driver.dev" },
-      { "label": "Status", "href": "https://status.driver.dev" }
+      {
+        "label": "Support",
+        "href": "mailto:support@driver.dev"
+      },
+      {
+        "label": "Status",
+        "href": "https://status.driver.dev"
+      }
     ],
-    "primary": { "type": "button", "label": "Dashboard", "href": "https://app.driver.dev" }
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.driver.dev"
+    }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude", "perplexity", "mcp", "cursor", "vscode"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
@@ -161,24 +183,81 @@
     }
   },
   "redirects": [
-    { "source": "/", "destination": "/docs/start/index" },
-    { "source": "/docs", "destination": "/docs/start/index" },
-    { "source": "/docs/index", "destination": "/docs/start/index" },
-    { "source": "/docs/introduction/getting-started", "destination": "/docs/start/quickstart" },
-    { "source": "/docs/fundamentals/creating-a-browser-session", "destination": "/docs/sessions/create" },
-    { "source": "/docs/fundamentals/using-a-browser-session", "destination": "/docs/sessions/connect" },
-    { "source": "/docs/fundamentals/best-practices", "destination": "/docs/start/best-practices" },
-    { "source": "/docs/fundamentals/viewing-a-browser-session", "destination": "/docs/sessions/live-view" },
-    { "source": "/docs/fundamentals/managing-a-browser-session", "destination": "/docs/sessions/lifecycle" },
-    { "source": "/docs/features/browser-profiles", "destination": "/docs/options/profiles" },
-    { "source": "/docs/features/geolocation", "destination": "/docs/options/location" },
-    { "source": "/docs/features/node-selection", "destination": "/docs/options/node-reuse" },
-    { "source": "/docs/features/proxies", "destination": "/docs/options/proxies" },
-    { "source": "/docs/features/window-size", "destination": "/docs/options/window-size" },
-    { "source": "/docs/integrations/playwright", "destination": "/docs/frameworks/playwright" },
-    { "source": "/docs/integrations/puppeteer", "destination": "/docs/frameworks/puppeteer" },
-    { "source": "/docs/integrations/browser-use", "destination": "/docs/frameworks/browser-use" },
-    { "source": "/docs/integrations/crawl4ai", "destination": "/docs/frameworks/crawl4ai" },
-    { "source": "/docs/integrations/stagehand", "destination": "/docs/frameworks/stagehand" }
+    {
+      "source": "/",
+      "destination": "/docs/start/index"
+    },
+    {
+      "source": "/docs",
+      "destination": "/docs/start/index"
+    },
+    {
+      "source": "/docs/index",
+      "destination": "/docs/start/index"
+    },
+    {
+      "source": "/docs/introduction/getting-started",
+      "destination": "/docs/start/quickstart"
+    },
+    {
+      "source": "/docs/fundamentals/creating-a-browser-session",
+      "destination": "/docs/sessions/create"
+    },
+    {
+      "source": "/docs/fundamentals/using-a-browser-session",
+      "destination": "/docs/sessions/connect"
+    },
+    {
+      "source": "/docs/fundamentals/best-practices",
+      "destination": "/docs/start/best-practices"
+    },
+    {
+      "source": "/docs/fundamentals/viewing-a-browser-session",
+      "destination": "/docs/sessions/live-view"
+    },
+    {
+      "source": "/docs/fundamentals/managing-a-browser-session",
+      "destination": "/docs/sessions/lifecycle"
+    },
+    {
+      "source": "/docs/features/browser-profiles",
+      "destination": "/docs/options/profiles"
+    },
+    {
+      "source": "/docs/features/geolocation",
+      "destination": "/docs/options/location"
+    },
+    {
+      "source": "/docs/features/node-selection",
+      "destination": "/docs/options/node-reuse"
+    },
+    {
+      "source": "/docs/features/proxies",
+      "destination": "/docs/options/proxies"
+    },
+    {
+      "source": "/docs/features/window-size",
+      "destination": "/docs/options/window-size"
+    },
+    {
+      "source": "/docs/integrations/playwright",
+      "destination": "/docs/frameworks/playwright"
+    },
+    {
+      "source": "/docs/integrations/puppeteer",
+      "destination": "/docs/frameworks/puppeteer"
+    },
+    {
+      "source": "/docs/integrations/browser-use",
+      "destination": "/docs/frameworks/browser-use"
+    },
+    {
+      "source": "/docs/integrations/crawl4ai",
+      "destination": "/docs/frameworks/crawl4ai"
+    },
+    {
+      "source": "/docs/integrations/stagehand",
+      "destination": "/docs/frameworks/stagehand"
+    }
   ]
 }

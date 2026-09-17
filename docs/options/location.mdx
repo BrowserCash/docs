@@ -27,7 +27,7 @@ Set `timezone` (IANA name) or `language` (BCP-47) when the default choice for th
 { "country": "CA", "timezone": "America/Vancouver", "language": "fr-CA" }
 ```
 
-US sessions accept only `en-US`, and omit both language fields so Chrome uses its built-in default. For other countries, Driver picks the likely primary language when you leave `language` out.
+US sessions accept only `en-US`, and omit both language fields so Chrome uses its built-in default. For other countries, Driver picks the likely primary language when you leave `language` out. Chrome reports the nearest variant it ships: a session created with `fr-CA` reported `navigator.language` as `fr-FR` with `fr` and `en-US` as fallbacks, and the requested timezone exactly.
 
 Hosted sessions also provision matching text-to-speech voices where available, and disable Web Speech when a coherent voice is not, so that surface never contradicts the rest.
 

@@ -17,13 +17,14 @@ Build a viewer URL from `cdpUrl` and open it in any browser:
 https://viewer.driver.dev?ws=<cdpUrl>
 ```
 
+Paste `cdpUrl` in as it is; no encoding is needed.
+
 <CodeGroup>
 ```typescript TypeScript
-const viewerUrl = `https://viewer.driver.dev?ws=${encodeURIComponent(session.cdpUrl)}`;
+const viewerUrl = `https://viewer.driver.dev?ws=${session.cdpUrl}`;
 ```
 ```python Python
-from urllib.parse import quote
-viewer_url = f"https://viewer.driver.dev?ws={quote(session['cdpUrl'], safe='')}"
+viewer_url = f"https://viewer.driver.dev?ws={session['cdpUrl']}"
 ```
 </CodeGroup>
 

@@ -14,7 +14,7 @@ A session moves through `starting` → `active` → `completed`, or `error` if t
 
 ## Get a session
 
-Returns the same shape as create, plus `bandwidthBytes` once the session has traffic.
+Returns the same shape as create, plus `bandwidthBytes`: `null` while the session runs, the metered total once it has ended.
 
 <CodeGroup>
 ```bash cURL
@@ -86,7 +86,7 @@ requests.delete("https://api.driver.dev/v1/browser/session", headers=headers, pa
 ```
 </CodeGroup>
 
-Returns `{ "success": true }`. Stopping a session that already ended returns `404`.
+Returns `{ "success": true }`. Stopping is idempotent: a session that already ended answers the same `{ "success": true }`, so a stop in a `finally` is always safe.
 
 ## Duration
 

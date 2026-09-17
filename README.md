@@ -14,6 +14,12 @@ Documentation for [docs.driver.dev](https://docs.driver.dev), written from scrat
   pages carry the warning.
 - **Best practices stay.** `docs/start/best-practices.mdx` carries the CDP-hygiene guidance forward.
 
+## Not published yet
+
+`docs/scrape/` (the teracrawl scrape and search endpoints) is written from the spec but left out of the navigation:
+in verification on 2026-09-17 both endpoints answered `500 { "success": false, "error": "Scrape failed" }` within
+100 ms. Add the group back to `docs.json` once they answer.
+
 ## Working on it
 
 ```bash

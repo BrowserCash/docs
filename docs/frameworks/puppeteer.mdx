@@ -36,6 +36,6 @@ try {
 
 ## Notes
 
-- `browser.disconnect()` leaves the session running. `browser.close()` would close Driver's Chrome from inside; use the API's stop call instead so the session record is complete.
+- End your connection with `browser.disconnect()`, then stop the session through the API. Do not use `browser.close()`: it tells the remote Chrome to quit, and the session record is then closed from the browser's side rather than by your stop call.
 - `browser.pages()` returns the tab the session opened with. Reuse it rather than creating a fresh one.
 - Viewport: prefer `windowSize` on create over `page.setViewport`, see [Window size](/docs/options/window-size).

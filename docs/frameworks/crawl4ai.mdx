@@ -20,7 +20,7 @@ headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 async def main():
     session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
     try:
-        config = BrowserConfig(cdp_url=session["cdpUrl"], use_managed_browser=True)
+        config = BrowserConfig(browser_mode="custom", cdp_url=session["cdpUrl"], use_managed_browser=True)
         async with AsyncWebCrawler(config=config) as crawler:
             result = await crawler.arun(url="https://www.nbcnews.com/business")
             print(result.markdown)
@@ -31,6 +31,7 @@ async def main():
 asyncio.run(main())
 ```
 
-## When to use the scrape endpoint instead
+## Notes
 
-If all you need is one page as Markdown, [`POST /v1/teracrawl/scrape`](/docs/scrape/scrape) returns it without you managing a session, and handles anti-bot challenges on its own. Crawl4AI on a Driver session is for crawls that need Crawl4AI's own extraction, chunking or multi-page logic.
+- `browser_mode="custom"` with `cdp_url` tells Crawl4AI to attach to the browser you give it instead of launching one; `use_managed_browser=True` keeps control over CDP.
+- Crawl several URLs in one session; creating the session is the expensive step.

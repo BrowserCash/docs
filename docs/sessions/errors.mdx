@@ -17,7 +17,7 @@ Errors are JSON with an `error` message. Some carry a machine-readable `code`.
 | `401` | Missing or invalid API key. | No. Check `Authorization: Bearer …`. |
 | `402` | The workspace is out of credits. | No. Add credits in the dashboard. |
 | `403` | Session or account limit reached: the plan's concurrent-browser limit, or a feature (extensions) the account is not enabled for. | Only after a session ends. |
-| `404` | Session, profile or extension not found. | No. |
+| `404` | Session, profile or extension not found (unknown id, or one belonging to another workspace). | No. |
 | `429` | Too many requests. | Yes, with backoff. |
 | `500` | Something failed on Driver's side. | Once. |
 | `503` | No browser capacity available right now, or the session service is unavailable. | Yes, with backoff and jitter, or tell the user. |
@@ -28,7 +28,7 @@ Errors are JSON with an `error` message. Some carry a machine-readable `code`.
 - Do not retry `402` or `403` in a loop. Surface the message; a person has to act.
 - Treat `503` and `504` as transient: back off (a few seconds, growing), cap the attempts, then report.
 - After a `504`, the session is not running; no stop call is needed.
-- A `404` on `DELETE` means the session already ended. Ignore it.
+- `DELETE` on a session that already ended still returns `{ "success": true }`; a `404` means the id was never a session of this workspace.
 
 ## Framework-side failures
 

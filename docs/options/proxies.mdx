@@ -35,7 +35,8 @@ When you pass a SOCKS URL without `timezone` or `language`, Driver geolocates th
 
 Hosted sessions in Canada that do not specify a proxy egress through Driver's TCPerfect inventory automatically; nothing to configure.
 
-## Restrictions
+## If the proxy cannot be reached
 
-- `proxyUrl` cannot be combined with [`nodeId`](/docs/options/node-reuse).
-- Credentials travel in the create request only; they are not stored on the session record.
+Driver connects through the proxy before launch to find its exit. A proxy that does not answer is rejected with `400` and the message `Could not determine SOCKS5 proxy egress location; verify the proxy or specify both timezone and language.` Supplying both `timezone` and `language` skips the lookup. An `http://` URL is rejected outright.
+
+Credentials travel in the create request only; they are not stored on the session record.

@@ -5,6 +5,21 @@ description: "How to keep Driver sessions unblocked and cheap: the right framewo
 
 Driver gives you a real browser on a real network. Most blocks come from the automation side, not the browser, and they are avoidable. These practices are the difference between a session that looks like a person and one that looks like a script.
 
+## Keep the logic minimal
+
+The shortest script that reaches the outcome is the best one. It is faster, it fails in obvious ways, and it gives sites the least to notice. Every added retry loop, event listener, request interceptor, "stealth" helper or defensive wait is a place for bugs to hide and a signal that this is not a person. Add a mechanism only after a specific site has shown you that you need it, and add the smallest one that works.
+
+## Optimise for speed, then verify
+
+Before writing browser steps, ask whether the outcome is reachable faster:
+
+- Go straight to the URL that has the result instead of clicking through navigation.
+- Do several pages in one session rather than one session per page. Creating a session is the expensive step.
+- Sign in once on a persisted [profile](/docs/options/profiles) and reuse it instead of logging in on every run.
+- Never use fixed sleeps. Rely on the framework's auto-waiting and stop the session the moment the result is in hand.
+
+Then test the automation for real: run it against the live target through Driver and check the result, not just the exit code. Confirm the data is what you expected, the action took effect, and the session was stopped. The session record under **Telemetry → Sessions** shows duration and bandwidth, which is how you know a run was actually fast.
+
 ## Use Patchright
 
 Stock Playwright and Puppeteer enable CDP domains (`Runtime.enable`, console and binding hooks) that anti-bot vendors fingerprint. [Patchright](/docs/frameworks/patchright) is Playwright with those signals removed and the same API. Use it for every Driver integration; use stock Playwright only if you have measured that your target does not care.
