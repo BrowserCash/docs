@@ -17,7 +17,7 @@ Build a viewer URL from `cdpUrl` and open it in any browser:
 https://viewer.driver.dev?ws=<cdpUrl>
 ```
 
-Paste `cdpUrl` in as it is; no encoding is needed.
+Paste `cdpUrl` in as it is; no encoding is needed: the viewer reads everything after `ws=`. Print the URL as soon as the session exists, before the automation starts, so the person has time to open it; it shows the tab your script is driving.
 
 <CodeGroup>
 ```typescript TypeScript

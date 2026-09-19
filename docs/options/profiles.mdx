@@ -57,7 +57,7 @@ requests.delete(
 ```
 </CodeGroup>
 
-Deleting is idempotent: an unknown name also answers `{ "success": true }`. The dashboard's **Profiles** page shows the same list, and lets you launch a session on a profile to sign in by hand through the live view.
+Deleting is idempotent: an unknown name also answers `{ "success": true }`. The list is not paginated and returns every profile in the workspace, so delete the ones you no longer need. The dashboard's **Profiles** page shows the same list, and lets you launch a session on a profile to sign in by hand through the live view.
 
 ## Practical notes
 
@@ -65,3 +65,5 @@ Deleting is idempotent: an unknown name also answers `{ "success": true }`. The 
 - The profile is written as the session ends. Before starting the next session on the same name, wait until `GET /v1/browser/session` reports the previous one as `completed`.
 - Keep the same `country` for a profile across runs. A profile that signed in from Germany and returns from Brazil looks like a stolen session to the site.
 - Profiles hold everything a browser profile holds: cookies, local storage, IndexedDB, service workers. Delete a profile when the account it belongs to is no longer needed.
+- As in desktop Chrome, cookies without an expiry (session cookies) are dropped when the browser closes and do not carry over. Sites that keep you signed in set persistent cookies, which do; a login that only sets a session cookie has to be repeated each run.
+- The next session on the profile can run on a different machine; the state travels with the name.

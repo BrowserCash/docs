@@ -27,7 +27,7 @@ balance = balance["balance"]
 { "balance": { "balance_cents": 1250, "network_mb_remaining": 500, "status": "active" } }
 ```
 
-`balance_cents` can go below zero. `network_mb_remaining` (the included allowance still unused this period) and `status` are present for workspace accounts and absent on a legacy account. Sessions are refused with `402` once the balance is negative and the allowance is gone.
+`balance_cents` can go below zero. `network_mb_remaining` (the included allowance still unused this period) and `status` (the plan key, for example `free`) are present for workspace accounts and absent on a legacy account. Sessions are refused with `402` once the balance is negative and the allowance is gone.
 
 ## Billing details
 

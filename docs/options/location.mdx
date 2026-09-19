@@ -29,6 +29,8 @@ Set `timezone` (IANA name) or `language` (BCP-47) when the default choice for th
 
 US sessions always use `en-US` (any other `language` is rejected). For other countries, Driver picks the country's primary language when you leave `language` out. Chrome reports the nearest variant it ships: a session created with `fr-CA` reported `navigator.language` as `fr-FR` with `fr` and `en-US` as fallbacks.
 
+The browser's `Accept-Language` header follows the same choice (a `de-DE` session sends `de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7`), so servers and scripts see one story.
+
 Hosted sessions also provision matching text-to-speech voices where available, and disable Web Speech when a coherent voice is not, so that surface never contradicts the rest.
 
 ## With your own proxy
