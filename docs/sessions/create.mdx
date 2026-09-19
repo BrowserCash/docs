@@ -57,7 +57,7 @@ session = r.json()
 
 ```json
 {
-  "sessionId": "k3f9…128 lowercase letters and digits…q7z2",
+  "sessionId": "0b1f5c1e6d3a4f7c9e2b8d4a6c1e3f5a",
   "status": "active",
   "servedBy": "adapt-ensure-swim",
   "createdAt": "2026-09-17T14:02:11.000Z",
@@ -67,7 +67,7 @@ session = r.json()
 }
 ```
 
-The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. It gives up after 20 seconds on most machines and after three minutes on the newest hosted machines, then answers `504`; give the create call a client timeout of at least three minutes (other calls answer within seconds). The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears. Session ids are 128 lowercase letters and digits; treat `cdpUrl` as a secret, since anyone holding it can drive the browser.
+The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. It gives up after 20 seconds on most machines and after three minutes on the newest hosted machines, then answers `504`; give the create call a client timeout of at least three minutes (other calls answer within seconds). The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears. Session ids are opaque strings (32 hexadecimal characters today); do not validate their format. Treat `cdpUrl` as a secret, since anyone holding it can drive the browser.
 
 ## Options
 
@@ -90,7 +90,7 @@ The call waits until Chrome is reachable, so `cdpUrl` is normally set in the res
 | `browserCheck` | boolean | `false` | Run a browser validation check during creation. |
 | `note` | string | | Up to 256 characters, shown in the dashboard. |
 
-Unknown fields are rejected with `400`. Options that contradict each other are rejected with `400` and a message naming the field. The common ones: a `timezone` or `language` not listed for the `country` (`Unsupported timezone "Europe/Berlin" for country US.`), a `country` that does not match a supplied proxy's exit, a proxy that cannot be reached, and out-of-range `duration`, `windowSize` or `note`.
+Unknown fields are rejected with `400` (`window_size is not supported by this endpoint`). Out-of-range values name the field and the bound (`duration: Too small: expected number to be >=60`, `note: Too big: expected string to have <=256 characters`). Options that contradict each other are rejected with `400` and a message naming the field. The common ones: a `timezone` or `language` not listed for the `country` (`Unsupported timezone "Europe/Berlin" for country US.`), a `country` that does not match a supplied proxy's exit, a proxy that cannot be reached, and out-of-range `duration`, `windowSize` or `note`.
 
 ## Errors
 

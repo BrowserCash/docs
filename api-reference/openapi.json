@@ -399,8 +399,7 @@
                   "properties": {
                     "sessionId": {
                       "type": "string",
-                      "description": "The session id: 128 lowercase letters and digits.",
-                      "pattern": "^[a-z0-9]{128}$"
+                      "description": "The session id: an opaque string; do not validate its format."
                     },
                     "status": {
                       "type": "string",
@@ -662,8 +661,7 @@
                   "properties": {
                     "sessionId": {
                       "type": "string",
-                      "description": "The session id: 128 lowercase letters and digits.",
-                      "pattern": "^[a-z0-9]{128}$"
+                      "description": "The session id: an opaque string; do not validate its format."
                     },
                     "status": {
                       "type": "string",
@@ -702,7 +700,8 @@
                     "bandwidthBytes": {
                       "type": "integer",
                       "minimum": 0,
-                      "description": "Bandwidth used by the session in bytes: 0 while it runs, the metered total once it has ended (final by the time a stop call returns)."
+                      "description": "Bandwidth used by the session in bytes: null while it runs, the metered total once it has ended (final by the time a stop call returns).",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1004,7 +1003,7 @@
             }
           },
           "400": {
-            "description": "The session has ended (\"Cannot update a completed or errored session\") or the note is longer than 256 characters.",
+            "description": "The session has ended (\"Cannot update a terminal session\") or the note is longer than 256 characters.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1191,8 +1190,7 @@
                         "properties": {
                           "sessionId": {
                             "type": "string",
-                            "description": "The session id: 128 lowercase letters and digits.",
-                            "pattern": "^[a-z0-9]{128}$"
+                            "description": "The session id: an opaque string; do not validate its format."
                           },
                           "status": {
                             "type": "string",

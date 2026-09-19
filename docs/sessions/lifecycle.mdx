@@ -14,7 +14,7 @@ A session moves through `starting` → `active` → `completed`, or `error` if t
 
 ## Get a session
 
-Returns the same shape as create, plus `bandwidthBytes`: `0` while the session runs, the metered total once it has ended. The total is final by the time a stop call returns.
+Returns the same shape as create, plus `bandwidthBytes`: `null` while the session runs, the metered total once it has ended (final by the time a stop call returns; `0` for a session that moved no bytes). `cdpUrl` is `null` once the session has ended.
 
 <CodeGroup>
 ```bash cURL
@@ -54,7 +54,7 @@ data = requests.get(
 ```
 </CodeGroup>
 
-The response carries `sessions`, `total`, `totalPages`, `page` and `pageSize`. Each item has `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes` and `note`; `type` and `country` are the only place the API reports them, since the single-session calls do not.
+The response carries `sessions`, `total`, `totalPages`, `page` and `pageSize`. Each item has `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes` and `note`; the list is the only place the API reports `country` (`type` is `null` for sessions created with the default type), since the single-session calls do not.
 
 ## Label a session
 
@@ -84,7 +84,7 @@ requests.patch(
 ```
 </CodeGroup>
 
-Returns `{ "success": true }`. Notes are at most 256 characters (longer is a `400`). Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a completed or errored session`).
+Returns `{ "success": true }`. Notes are at most 256 characters (longer is a `400`). Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a terminal session`).
 
 ## Stop a session
 

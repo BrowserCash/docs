@@ -66,7 +66,7 @@ Closing your client (`browser.close()` in Patchright and Playwright, `browser.di
 
 If your process crashes, fetch the session with [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session): while `status` is `active` the `cdpUrl` is still valid and you can attach again. Profiles with `persist: true` also carry state into a brand-new session if the old one has ended.
 
-Several clients can be attached at once (your script and the [live view](/docs/sessions/live-view), for instance). Two scripts driving the same tab will fight each other, so keep it to one automation client per session. `cdpUrl` is a credential: anyone who has it can drive the browser while the session is active.
+Several clients can be attached at once (your script and the [live view](/docs/sessions/live-view), for instance). Two scripts driving the same tab will fight each other, so keep it to one automation client per session. `cdpUrl` is a credential: anyone who has it can drive the browser while the session is active. Its hostname is a relay near the machine, not the session's network; the egress country is the one you asked for regardless of the host you connect to.
 
 ## Timeouts and waits
 

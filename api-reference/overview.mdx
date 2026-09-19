@@ -23,7 +23,7 @@ Authorization: Bearer $DRIVER_API_KEY
 - Identifiers that select a resource go in the query string (`?sessionId=…`, `?profileName=…`), not the path, except for extensions.
 - Errors are `{ "error": "message" }` with a meaningful HTTP status; the create call's `503` also carries a `code`. See [Errors](/docs/sessions/errors).
 - Session timestamps are ISO 8601 strings; billing periods use Unix epoch milliseconds (fields ending in `_ms`, and the subscription period bounds). Money is in cents (and millicents where exactness matters); bandwidth is bytes on sessions and megabytes on billing.
-- Unknown fields in a request body are rejected with `400`.
+- Unknown fields in the create body are rejected with `400`; the update call ignores them.
 - Create answers `200` with the session; only the extension upload answers `201`.
 
 ## Endpoints

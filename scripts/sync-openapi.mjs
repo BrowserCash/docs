@@ -80,7 +80,7 @@ const balanceCents = doc.paths['/v1/account/balance']?.get?.responses?.['200']?.
 if (balanceCents) { delete balanceCents.minimum; balanceCents.description = `${balanceCents.description || 'Balance in cents.'} Can be negative when usage exceeds prepaid credit.` }
 if (create?.patch && !create.patch.responses['400']) {
   create.patch.responses['400'] = {
-    description: 'The session has ended ("Cannot update a completed or errored session") or the note is longer than 256 characters.',
+    description: 'The session has ended ("Cannot update a terminal session") or the note is longer than 256 characters.',
     content: { 'application/json': { schema: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] } } },
   }
 }
@@ -100,10 +100,11 @@ if (list) {
 const getSession = create?.get?.responses?.['200']?.content?.['application/json']?.schema
 if (getSession?.properties?.bandwidthBytes) {
   if (!getSession.required.includes('bandwidthBytes')) getSession.required.push('bandwidthBytes')
-  getSession.properties.bandwidthBytes.description = 'Bandwidth used by the session in bytes: 0 while it runs, the metered total once it has ended (final by the time a stop call returns).'
+  getSession.properties.bandwidthBytes.nullable = true
+  getSession.properties.bandwidthBytes.description = 'Bandwidth used by the session in bytes: null while it runs, the metered total once it has ended (final by the time a stop call returns).'
 }
 const walk = (node, fn) => { if (Array.isArray(node)) node.forEach((n) => walk(n, fn)); else if (node && typeof node === 'object') { fn(node); Object.values(node).forEach((v) => walk(v, fn)) } }
-walk(doc, (n) => { if (n.properties?.sessionId?.type === 'string' && !n.properties.sessionId.pattern) { n.properties.sessionId.pattern = '^[a-z0-9]{128}$'; n.properties.sessionId.description = 'The session id: 128 lowercase letters and digits.' } })
+walk(doc, (n) => { if (n.properties?.sessionId?.type === 'string') n.properties.sessionId.description = 'The session id: an opaque string; do not validate its format.' })
 const create503 = create?.post?.responses?.['503']
 if (create503) {
   create503.headers = { 'Retry-After': { description: 'Seconds to wait before trying again (2).', schema: { type: 'integer' } } }
