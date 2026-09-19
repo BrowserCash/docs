@@ -399,7 +399,8 @@
                   "properties": {
                     "sessionId": {
                       "type": "string",
-                      "description": "The ID of the created browser session."
+                      "description": "The session id: 128 lowercase letters and digits.",
+                      "pattern": "^[a-z0-9]{128}$"
                     },
                     "status": {
                       "type": "string",
@@ -585,12 +586,23 @@
                     },
                     "code": {
                       "type": "string",
-                      "description": "Machine-readable error code"
+                      "description": "Machine-readable cause; present when no browser capacity is available.",
+                      "enum": [
+                        "browser_capacity_unavailable"
+                      ]
                     }
                   },
                   "required": [
                     "error"
                   ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before trying again (2).",
+                "schema": {
+                  "type": "integer"
                 }
               }
             }
@@ -650,7 +662,8 @@
                   "properties": {
                     "sessionId": {
                       "type": "string",
-                      "description": "The ID of the created browser session."
+                      "description": "The session id: 128 lowercase letters and digits.",
+                      "pattern": "^[a-z0-9]{128}$"
                     },
                     "status": {
                       "type": "string",
@@ -689,7 +702,7 @@
                     "bandwidthBytes": {
                       "type": "integer",
                       "minimum": 0,
-                      "description": "The total bandwidth used by the session in bytes."
+                      "description": "Bandwidth used by the session in bytes: 0 while it runs, the metered total once it has ended (final by the time a stop call returns)."
                     }
                   },
                   "required": [
@@ -699,7 +712,8 @@
                     "createdAt",
                     "stoppedAt",
                     "cdpUrl",
-                    "note"
+                    "note",
+                    "bandwidthBytes"
                   ],
                   "example": {
                     "sessionId": "example-session-id",
@@ -1104,10 +1118,10 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
+              "minimum": 1,
               "example": 1,
-              "description": "The page number for pagination."
+              "description": "The page number for pagination.",
+              "default": 1
             },
             "required": false,
             "description": "The page number for pagination.",
@@ -1117,13 +1131,14 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
+              "minimum": 1,
               "example": 20,
-              "description": "The number of sessions per page."
+              "description": "The number of sessions per page.",
+              "default": 20,
+              "maximum": 100
             },
             "required": false,
-            "description": "The number of sessions per page.",
+            "description": "The number of sessions per page, 1 to 100. Larger values are clamped to 100.",
             "name": "pageSize",
             "in": "query"
           },
@@ -1140,7 +1155,7 @@
               "description": "Filter sessions by status."
             },
             "required": false,
-            "description": "Filter sessions by status.",
+            "description": "Only sessions in exactly this status.",
             "name": "status",
             "in": "query"
           }
@@ -1176,7 +1191,8 @@
                         "properties": {
                           "sessionId": {
                             "type": "string",
-                            "description": "The unique session ID."
+                            "description": "The session id: 128 lowercase letters and digits.",
+                            "pattern": "^[a-z0-9]{128}$"
                           },
                           "status": {
                             "type": "string",
@@ -1230,7 +1246,8 @@
                           "country",
                           "createdAt",
                           "stoppedAt",
-                          "note"
+                          "note",
+                          "bandwidthBytes"
                         ]
                       },
                       "description": "Array of browser sessions."
@@ -1262,6 +1279,24 @@
                       }
                     ]
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The status filter is not one of starting, active, completed, error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }

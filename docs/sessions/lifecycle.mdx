@@ -34,7 +34,7 @@ session = requests.get(
 
 ## List sessions
 
-Paginated, newest first, with an optional `status` filter. `page` defaults to 1 and `pageSize` to 20 (at most 100; larger values are clamped, not rejected). A `status` outside `starting`, `active`, `completed`, `error` is a `400`.
+Paginated, newest first, with an optional `status` filter that matches exactly one status (`starting` sessions are not in `?status=active`). `page` defaults to 1 and `pageSize` to 20 (at most 100; larger values are clamped, not rejected). A `status` outside `starting`, `active`, `completed`, `error` is a `400`.
 
 <CodeGroup>
 ```bash cURL

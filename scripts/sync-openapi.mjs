@@ -84,6 +84,32 @@ if (create?.patch && !create.patch.responses['400']) {
     content: { 'application/json': { schema: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] } } },
   }
 }
+// What the prose promises but the generator leaves out, so generated clients see it too.
+const errorSchema = { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] }
+const list = doc.paths['/v1/browser/sessions']?.get
+if (list) {
+  for (const p of list.parameters || []) {
+    if (p.name === 'page') { p.schema = { ...p.schema, default: 1 }; delete p.schema.exclusiveMinimum; p.schema.minimum = 1 }
+    if (p.name === 'pageSize') { p.schema = { ...p.schema, default: 20, maximum: 100 }; delete p.schema.exclusiveMinimum; p.schema.minimum = 1; p.description = 'The number of sessions per page, 1 to 100. Larger values are clamped to 100.' }
+    if (p.name === 'status') p.description = 'Only sessions in exactly this status.'
+  }
+  if (!list.responses['400']) list.responses['400'] = { description: 'The status filter is not one of starting, active, completed, error.', content: { 'application/json': { schema: errorSchema } } }
+  const item = list.responses['200']?.content?.['application/json']?.schema?.properties?.sessions?.items
+  if (item?.properties?.bandwidthBytes && !item.required.includes('bandwidthBytes')) item.required.push('bandwidthBytes')
+}
+const getSession = create?.get?.responses?.['200']?.content?.['application/json']?.schema
+if (getSession?.properties?.bandwidthBytes) {
+  if (!getSession.required.includes('bandwidthBytes')) getSession.required.push('bandwidthBytes')
+  getSession.properties.bandwidthBytes.description = 'Bandwidth used by the session in bytes: 0 while it runs, the metered total once it has ended (final by the time a stop call returns).'
+}
+const walk = (node, fn) => { if (Array.isArray(node)) node.forEach((n) => walk(n, fn)); else if (node && typeof node === 'object') { fn(node); Object.values(node).forEach((v) => walk(v, fn)) } }
+walk(doc, (n) => { if (n.properties?.sessionId?.type === 'string' && !n.properties.sessionId.pattern) { n.properties.sessionId.pattern = '^[a-z0-9]{128}$'; n.properties.sessionId.description = 'The session id: 128 lowercase letters and digits.' } })
+const create503 = create?.post?.responses?.['503']
+if (create503) {
+  create503.headers = { 'Retry-After': { description: 'Seconds to wait before trying again (2).', schema: { type: 'integer' } } }
+  const code = create503.content?.['application/json']?.schema?.properties?.code
+  if (code) { code.enum = ['browser_capacity_unavailable']; code.description = 'Machine-readable cause; present when no browser capacity is available.' }
+}
 if (doc.components?.securitySchemes?.Bearer) doc.components.securitySchemes.Bearer.description = 'A workspace API key from Settings → API keys in the dashboard (https://app.driver.dev), sent as a bearer token.'
 doc.externalDocs = { url: 'https://docs.driver.dev', description: 'Driver documentation' }
 if (doc.info) doc.info.contact = { name: 'Driver support', email: 'support@driver.dev' }

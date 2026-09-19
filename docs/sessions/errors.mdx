@@ -25,6 +25,7 @@ The bodies you will see most: `401` `Unauthorized: Missing or invalid Authorizat
 | `403` | Session or account limit reached: the workspace's concurrent-browser limit (`plan.concurrent_browsers` on `GET /v1/account/billing`; sessions that are `starting` count, and a stop frees the slot as soon as it returns), or a feature (extensions) the account is not enabled for. | Only after a session ends. Never in a loop. |
 | `404` | Session, extension or account not found (unknown id, or one belonging to another workspace). Deleting an unknown profile is not a 404: it answers `{ "success": true }`. | No. |
 | `429` | Too many requests. The API itself does not rate-limit today; a `429` comes from the edge in front of it. | Yes: a few attempts, a couple of seconds apart and growing. |
+| `502` | The edge could not reach the API. Not JSON. | Once, after a couple of seconds. |
 | `500` | Something failed on Driver's side. | Once. |
 | `503` | No browser capacity right now. The response carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. Or the session service is unavailable. | Yes: back off with jitter, cap the attempts, then tell the user. |
 | `504` | A machine was selected but Chrome did not become reachable before the startup deadline: 20 seconds, up to three minutes on some machines. | Once. |

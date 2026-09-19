@@ -21,7 +21,7 @@ Authorization: Bearer $DRIVER_API_KEY
 
 - Request and response bodies are JSON, except extension uploads, which are `multipart/form-data`.
 - Identifiers that select a resource go in the query string (`?sessionId=…`, `?profileName=…`), not the path, except for extensions.
-- Errors are `{ "error": "message" }` with a meaningful HTTP status; some carry a `code`. See [Errors](/docs/sessions/errors).
+- Errors are `{ "error": "message" }` with a meaningful HTTP status; the create call's `503` also carries a `code`. See [Errors](/docs/sessions/errors).
 - Session timestamps are ISO 8601 strings; billing periods use Unix epoch milliseconds (fields ending in `_ms`, and the subscription period bounds). Money is in cents (and millicents where exactness matters); bandwidth is bytes on sessions and megabytes on billing.
 - Unknown fields in a request body are rejected with `400`.
 - Create answers `200` with the session; only the extension upload answers `201`.
@@ -37,7 +37,7 @@ Authorization: Bearer $DRIVER_API_KEY
 
 ## Source of truth
 
-These reference pages are generated from the API's own OpenAPI document, served live at `https://api.driver.dev/doc` and rendered at [api.driver.dev/scalar](https://api.driver.dev/scalar). If a page here and the live document ever disagree, the live document wins.
+These reference pages are generated from the API's own OpenAPI document, served live at `https://api.driver.dev/doc` and rendered at [api.driver.dev/scalar](https://api.driver.dev/scalar), with a few corrections the generator gets wrong: `duration` accepts 60 (the live document says strictly more), `balance_cents` can be negative, `PATCH` answers `400` for an ended session, `GET /v1/browser/sessions` answers `400` for a bad status filter, the `503` carries `Retry-After` and a `code`, and paging has defaults and a maximum. On those points this reference is right and the live document is behind; on everything else, if the two disagree, the live document wins.
 
 ## Client code
 

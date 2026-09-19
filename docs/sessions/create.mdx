@@ -67,7 +67,7 @@ session = r.json()
 }
 ```
 
-The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. It gives up after 20 seconds (up to three minutes on some machines) and answers `504`, so allow your HTTP client at least that long. The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears. Session ids are 128 lowercase letters and digits; treat `cdpUrl` as a secret, since anyone holding it can drive the browser.
+The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. It gives up after 20 seconds on most machines and after three minutes on the newest hosted machines, then answers `504`; give the create call a client timeout of at least three minutes (other calls answer within seconds). The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears. Session ids are 128 lowercase letters and digits; treat `cdpUrl` as a secret, since anyone holding it can drive the browser.
 
 ## Options
 
