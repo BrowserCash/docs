@@ -46,12 +46,13 @@ Not in a Driver integration:
 
 Broad event listeners, request routing and injected scripts make the browser behave unusually and are detectable. Use them only when the task genuinely requires them.
 
-Avoid by default:
+Avoid by default (Playwright and Patchright names, with the Puppeteer equivalents):
 
 - `page.on(...)`, `context.on(...)`, `browser.on(...)`
-- `page.route(...)`, `context.route(...)`
-- `page.exposeBinding(...)`, `page.exposeFunction(...)`
-- `page.addInitScript(...)`, `context.addInitScript(...)`
+- `page.route(...)`, `context.route(...)` (Puppeteer: `page.setRequestInterception(true)`)
+- `page.exposeBinding(...)`, `page.exposeFunction(...)` (Puppeteer: `page.exposeFunction`)
+- `page.addInitScript(...)`, `context.addInitScript(...)` (Puppeteer: `page.evaluateOnNewDocument`)
+- Puppeteer's `page.setUserAgent`, `page.emulateTimezone`, `page.emulate` and `page.setViewport`: these are the fingerprint patches the next section warns about
 
 Prefer direct actions and reads: `page.goto`, `page.click`, `page.fill`, `page.locator`, `page.title`, `page.textContent`.
 
@@ -98,9 +99,10 @@ Signing in on every run is slow and looks suspicious. Sign in once under a named
 | Status | Meaning | What to do |
 |---|---|---|
 | `402` | Workspace is out of credits | Tell the user. Retrying will not help. |
-| `403` | Plan limit: concurrency or feature not enabled | Wait for a session to finish, or upgrade. |
+| `403` | Plan limit: concurrency or feature not enabled | Wait for a session to finish, or upgrade. Do not loop. |
 | `429` | Rate limited | Back off and retry. |
-| `503` | No browser capacity right now | Back off with jitter, or tell the user. |
+| `500` | Something failed on Driver's side | Retry once. |
+| `503` | No browser capacity right now (`Retry-After: 2`) | Back off with jitter, cap the attempts, then tell the user. |
 | `504` | Browser did not become reachable in time | Retry once. |
 
 The full list is on [Errors](/docs/sessions/errors).

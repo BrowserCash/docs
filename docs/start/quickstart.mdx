@@ -25,6 +25,8 @@ description: "Create a Driver session, connect with Patchright, read a page titl
     </CodeGroup>
 
     You do not need `playwright install` or any browser download: Driver provides the browser.
+
+    The TypeScript examples use top-level `await` and the global `fetch`: Node 18 or newer, in an ES module (`"type": "module"` in `package.json`, or a `.mts` file). Run a file with `npx tsx file.ts`. The Python examples need Python 3.8 or newer.
   </Step>
 
   <Step title="Create a session, connect, stop">
@@ -39,23 +41,27 @@ description: "Create a Driver session, connect with Patchright, read a page titl
     };
 
     // 1. Create a session. Every field is optional; this one asks for a US browser for ten minutes.
-    const session = await fetch(`${API}/v1/browser/session`, {
+    const res = await fetch(`${API}/v1/browser/session`, {
       method: "POST",
       headers,
       body: JSON.stringify({ country: "US", duration: 600 }),
-    }).then((r) => r.json());
+    });
+    if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json()).error}`);
+    const session = await res.json();
 
     try {
       // 2. Connect over CDP and reuse the browser's own context and tab.
       const browser = await chromium.connectOverCDP(session.cdpUrl);
-      const context = browser.contexts()[0] ?? (await browser.newContext());
-      const page = context.pages()[0] ?? (await context.newPage());
+      try {
+        const context = browser.contexts()[0] ?? (await browser.newContext());
+        const page = context.pages()[0] ?? (await context.newPage());
 
-      // 3. Do the work.
-      await page.goto("https://example.com");
-      console.log(await page.title());
-
-      await browser.close();
+        // 3. Do the work.
+        await page.goto("https://example.com");
+        console.log(await page.title());
+      } finally {
+        await browser.close(); // ends your connection; the session is still running
+      }
     } finally {
       // 4. Stop the session. This is what ends billing.
       await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
@@ -92,8 +98,10 @@ description: "Create a Driver session, connect with Patchright, read a page titl
     finally:
         # 4. Stop the session. This is what ends billing.
         requests.delete(
-        f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
-    )
+            f"{API}/v1/browser/session",
+            headers=headers,
+            params={"sessionId": session["sessionId"]},
+        )
     ```
 
     ```bash cURL
@@ -112,13 +120,13 @@ description: "Create a Driver session, connect with Patchright, read a page titl
   </Step>
 
   <Step title="Watch it run">
-    Every session has a page in the dashboard under **Telemetry → Sessions** with a live view while it runs and the full record afterwards: node, country, network, bandwidth, cost. See [Live view](/docs/sessions/live-view).
+    Every session has a page in the dashboard under **Telemetry → Sessions** with a live view while it runs and the full record afterwards: node, country, network, bandwidth, cost. See [Live view](/docs/sessions/live-view). Without a dashboard, `GET /v1/browser/session?sessionId=…` tells you the same essentials: `status` becomes `completed`, `stoppedAt` is set, `bandwidthBytes` is the metered total.
   </Step>
 </Steps>
 
 ## What just happened
 
-The create call returned as soon as Chrome was reachable over CDP, usually in a few seconds. `cdpUrl` is a WebSocket endpoint to that one browser. Connecting with `connectOverCDP` attaches to the running browser instead of launching one, which is why there is no `chromium.launch()` anywhere and no browser download on your machine.
+The create call returned as soon as Chrome was reachable over CDP, usually in a few seconds (it waits up to 20 seconds, on some machines up to three minutes, then answers `504`). `cdpUrl` is a WebSocket endpoint to that one browser. Connecting with `connectOverCDP` attaches to the running browser instead of launching one, which is why there is no `chromium.launch()` anywhere and no browser download on your machine.
 
 The browser opened with one context and one tab already. Reusing them keeps the session looking like a person opened Chrome and started browsing; creating extra contexts is one of the things sites notice.
 
@@ -127,5 +135,5 @@ Stopping the session releases the machine and closes the bill for that session. 
 ## Next
 
 - [For agents](/docs/start/for-agents) if a coding agent is doing the integration.
-- [Session options](/docs/options/browser-types) for browser types, location, proxies, profiles and window size.
+- [Create a session](/docs/sessions/create#options) for every field you can pass: browser type, location, proxies, profiles, window size.
 - [Best practices](/docs/start/best-practices) before you scale up.

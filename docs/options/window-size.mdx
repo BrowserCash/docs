@@ -36,4 +36,4 @@ Pick a size that fits the screen the session's machine would plausibly have. A `
 
 ## Resizing after connecting
 
-Prefer setting the size on create. Changing the viewport from your framework (`page.setViewportSize`) resizes only the content area and leaves `outerWidth` where it was, which is one of the mismatches sites look for.
+Prefer setting the size on create. Changing the viewport from your framework (`page.setViewportSize` in Playwright, `page.setViewport` in Puppeteer) resizes only the content area and leaves `outerWidth` where it was, which is one of the mismatches sites look for. Puppeteer applies an 800x600 viewport on connect unless you pass `defaultViewport: null`, so always pass it.

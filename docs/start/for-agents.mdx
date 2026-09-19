@@ -3,51 +3,57 @@ title: "For agents"
 description: "A briefing for coding agents integrating Driver: the rules that keep sessions unblocked, the three endpoints that matter, and the mistakes to avoid."
 ---
 
-This page is written for an AI coding agent (Claude Code, Cursor, Codex, or similar) that has been asked to integrate Driver into a project. Humans are welcome too. Everything here is also in `llms.txt` at the root of these docs.
+This page is written for an AI coding agent (Claude Code, Cursor, Codex, or similar) that has been asked to integrate Driver into a project. Humans are welcome too. The published docs also serve `/llms.txt` (an index) and `/llms-full.txt` (every page).
 
 ## The rules
 
 1. **Use Patchright, not stock Playwright or Puppeteer.** Install `patchright` (npm or pip) and import `chromium` from it. It has the same API as Playwright, so existing Playwright code works unchanged. Stock Playwright issues CDP commands (`Runtime.enable`, console and binding hooks) that anti-bot systems detect, and sessions get blocked. Patchright removes them. See [Why Patchright](/docs/frameworks/patchright#why-patchright).
 2. **Never launch a browser.** Driver provides the browser. Connect to the `cdpUrl` from the create call with `chromium.connectOverCDP(cdpUrl)`. Do not call `chromium.launch()`, `launchPersistentContext()`, `puppeteer.launch()`, or run `playwright install`.
-3. **Reuse the browser's context and tab.** After connecting, use `browser.contexts()[0]` and `context.pages()[0]`. Only create new ones if none exist. Extra contexts and stripped-down pages look like automation.
+3. **Reuse the browser's context and tab.** After connecting, use `browser.contexts()[0]` and `context.pages()[0]` (in Python they are properties: `browser.contexts[0]`, `context.pages[0]`). Only create new ones if none exist. Extra contexts and stripped-down pages look like automation.
 4. **Do not install broad CDP hooks.** Avoid `page.route`, `context.route`, `page.on('request')`, `page.exposeFunction`, `page.addInitScript` and `context.addInitScript` unless the task cannot be done otherwise, and then scope them as narrowly as possible. They change how the browser behaves and are detectable.
 5. **Do not patch fingerprints.** The browser is real Chrome on real hardware. Overriding `navigator`, the user agent, WebGL, canvas, timezone or locale makes it look fake. Set `country`, `timezone` and `language` on the create call instead.
-6. **Always stop the session.** Wrap the work in `try / finally` and call `DELETE /v1/browser/session?sessionId=…` in `finally`. Sessions bill by bandwidth and end on their own at `duration` (one hour by default), but a session left running still costs.
+6. **Always stop the session.** Wrap the work in `try / finally` and call `DELETE /v1/browser/session?sessionId=…` in `finally`. Sessions are metered by bandwidth and end on their own at `duration` (one hour by default); a session left running holds one of the workspace's concurrency slots and keeps its `cdpUrl` live until then. Closing your client (`browser.close()`) does not stop the session.
 7. **Keep the `sessionId`.** Log it with the run. Every session has a record in the dashboard under Telemetry → Sessions with node, network, timing and cost.
-8. **Handle 402 and 503 by reporting, not retrying.** 402 means the workspace is out of credits; 503 means no browser capacity right now. Surface the message to the user. Retry only 429 (rate limited) and 504 (browser did not start in time), with backoff.
+8. **Report what a person must fix; retry only what time fixes.** `402` (out of credits) and `403` (concurrency or plan limit): report, never loop. `503` (no capacity; the response carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`): back off with jitter, cap the attempts, then report. `504` (Chrome did not start in time) and `500`: retry once. `429`: back off. The full table is on [Errors](/docs/sessions/errors).
 9. **Stay under the workspace's concurrency limit.** `GET /v1/account/billing` reports it as `plan.concurrent_browsers`; sessions beyond it are refused with 403.
 
 ## How to write the automation
 
 - **Minimal logic wins.** The shortest script that reaches the outcome is the most reliable and the least detectable. Go to the page, do the action, read the result. Do not add retries, waits, listeners, request routing or "stealth" helpers unless a specific failure on a specific site demands them, and then add the smallest thing that fixes it.
 - **Fast and accurate, in that order of effort.** Before writing browser steps, ask whether the outcome is reachable faster: a direct URL instead of clicking through navigation, one session doing several pages instead of one session per page, a persisted [profile](/docs/options/profiles) instead of logging in every run. Then keep the browser steps short: no fixed sleeps, rely on the framework's auto-waiting, stop the session the moment the result is in hand.
-- **Test the automation for real, every time.** Run it against the live target through Driver and check the result, not just that the script exits. Confirm the data is right, the action happened, and the session was stopped (look it up under Telemetry → Sessions). A run that "worked" but read the wrong element is worse than one that failed loudly.
+- **Test the automation for real, every time.** Run it against the live target through Driver and check the result, not just that the script exits. Confirm the data is right, the action happened, and the session was stopped: `GET /v1/browser/session?sessionId=…` shows `status: "completed"`, a `stoppedAt` and the metered `bandwidthBytes` (the same record is under Telemetry → Sessions in the dashboard). A run that "worked" but read the wrong element is worse than one that failed loudly.
+- **Unattended jobs clean up after earlier runs.** A crash before `finally` leaves a session running until its `duration`. At start-up, `GET /v1/browser/sessions?status=active`, stop the ones your job created (match on `note`), then start the new one.
 - **Do not pollute the session.** Every extra CDP feature you switch on, every injected script, every overridden property is a signal. If you did not need it to reach the outcome, take it out.
 
 ## Handoff prompt
 
-Give this to a coding agent along with the target and the outcome you want. It is the whole briefing.
+Give this to a coding agent along with the target and the outcome you want. It is enough to start; the rest of this page fills in the details an agent needs once it is writing code.
 
 ```text
 Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into this project.
 
 - Docs: https://docs.driver.dev — agents start at https://docs.driver.dev/docs/start/for-agents
-  Endpoints: https://api.driver.dev/scalar
-- Auth: Authorization: Bearer $DRIVER_API_KEY (read from the environment; never commit it)
+  Endpoints: https://api.driver.dev/scalar (OpenAPI at https://api.driver.dev/doc)
+- Auth: Authorization: Bearer $DRIVER_API_KEY (read from the environment; never commit it).
+  JSON bodies with Content-Type: application/json. Ids go in the query string, not the path.
 - Most tasks need no options: POST https://api.driver.dev/v1/browser/session with {} gives a
-  hosted US Chrome. Use "country" for geo-specific sites, "profile" to keep logins, "duration"
-  to cap cost.
-- Drive the browser only with Patchright (https://github.com/Kaliiiiiiiiii-Vinyzu/patchright):
-  chromium.connectOverCDP(cdpUrl), then reuse browser.contexts()[0] and context.pages()[0].
-  Never launch a browser. Never use stock Playwright or Puppeteer.
+  hosted US Chrome and returns { sessionId, status, cdpUrl }. Use "country" for geo-specific
+  sites, "profile" {name, persist:true} to keep logins, "duration" (60–3600 s, default 3600)
+  to cap how long a forgotten session lives.
+- Drive the browser only with Patchright (npm install patchright / pip install patchright; no
+  browser download): chromium.connectOverCDP(cdpUrl), then reuse browser.contexts()[0] and
+  context.pages()[0]. Never launch a browser. Never use stock Playwright or Puppeteer.
 - No CDP or automation tactics that leak or get sites to block: no page.route, no init scripts,
   no exposed functions, no fingerprint patches. Minimal automation logic is always best:
   https://docs.driver.dev/docs/start/best-practices
 - Check whether the outcome can be reached faster: direct URLs, one session for many pages,
   a persisted profile instead of logging in. Avoid slow browser logic and fixed sleeps.
 - Always stop the session in a finally: DELETE /v1/browser/session?sessionId=<id>.
-  Keep the sessionId in logs.
-- Test the automation against the real target and verify the result before calling it done.
+  browser.close() only disconnects; the session runs until DELETE or its duration. Keep the
+  sessionId in logs.
+- 402 (no credits) and 403 (limit): report. 503: back off, cap, report. 504 and 500: retry once.
+- Test the automation against the real target and verify the result before calling it done:
+  GET /v1/browser/session?sessionId=<id> must show status "completed".
 ```
 
 ## The three calls
@@ -56,11 +62,11 @@ Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DR
 
 | Step | Call | Notes |
 |---|---|---|
-| Create | `POST /v1/browser/session` with a JSON body | All fields optional. Returns `{ sessionId, status, cdpUrl, servedBy, createdAt, stoppedAt, note }`. `cdpUrl` is set when the browser is reachable; the call waits for that. |
+| Create | `POST /v1/browser/session` with a JSON body | All fields optional. Returns `{ sessionId, status, cdpUrl, servedBy, createdAt, stoppedAt, note }`. The call waits for Chrome (up to 20 s, on some machines up to 3 min), so `cdpUrl` is normally set and `status` is `active`; if you ever get `starting`, poll `GET` until `cdpUrl` appears. |
 | Use | `chromium.connectOverCDP(cdpUrl)` | From Patchright. Reuse the first context and page. |
 | Stop | `DELETE /v1/browser/session?sessionId=<id>` | Returns `{ success: true }`. |
 
-Useful extras: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Full options for the create body are on [Session options](/docs/options/browser-types).
+Useful extras: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Full options for the create body are on [Create a session](/docs/sessions/create#options).
 
 ## Reference implementation
 
@@ -71,13 +77,22 @@ import { chromium, type Browser, type Page } from "patchright";
 const API = "https://api.driver.dev";
 
 export interface CreateOptions {
-  country?: string;            // "US", "GB", "DE", …
-  duration?: number;           // seconds, 60–3600
+  type?: "hosted" | "hosted_stealth" | "hosted_privacy";
+  country?: string;            // "US", "GB", "DE", … (see Countries)
+  timezone?: string;           // IANA name from the country's list
+  language?: string;           // BCP-47 tag from the country's list
+  duration?: number;           // seconds, 60–3600, default 3600
+  url?: string;                // opened right after launch
   profile?: { name: string; persist?: boolean };
   proxyUrl?: string;           // socks5://user:pass@host:port
-  windowSize?: string;         // "1920x1080"
+  windowSize?: string;         // "1920x1040"
+  displaySize?: string;        // "1920x1080"
   captchaSolver?: boolean;
-  note?: string;
+  adblock?: boolean;
+  extensionIds?: string[];
+  nodeId?: string;
+  browserCheck?: boolean;
+  note?: string;               // up to 256 characters
 }
 
 export interface Session {
@@ -85,6 +100,17 @@ export interface Session {
   status: "starting" | "active" | "completed" | "error";
   cdpUrl: string | null;
   servedBy: string;
+  createdAt: string;
+  stoppedAt: string | null;
+  note: string | null;
+  bandwidthBytes?: number;     // on GET: 0 while running, the metered total afterwards
+}
+
+/** Every non-2xx answer: `status` is the HTTP status, `code` the machine-readable code when there is one. */
+export class DriverError extends Error {
+  constructor(public status: number, message: string, public code?: string, public retryAfter?: number) {
+    super(`Driver ${status}: ${message}`);
+  }
 }
 
 const headers = () => ({
@@ -92,40 +118,52 @@ const headers = () => ({
   "Content-Type": "application/json",
 });
 
-export async function createSession(opts: CreateOptions = {}): Promise<Session> {
-  const res = await fetch(`${API}/v1/browser/session`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(opts),
-  });
+async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API}${path}`, { method, headers: headers(), body: body ? JSON.stringify(body) : undefined });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(`Driver ${res.status}: ${body.error ?? res.statusText}`);
+    const err = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+    const retryAfter = Number(res.headers.get("retry-after")) || undefined;
+    throw new DriverError(res.status, err.error ?? res.statusText, err.code, retryAfter);
   }
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
-export async function stopSession(sessionId: string): Promise<void> {
-  await fetch(`${API}/v1/browser/session?sessionId=${encodeURIComponent(sessionId)}`, {
-    method: "DELETE",
-    headers: headers(),
-  });
+export const createSession = (opts: CreateOptions = {}) => call<Session>("POST", "/v1/browser/session", opts);
+export const getSession = (id: string) => call<Session>("GET", `/v1/browser/session?sessionId=${encodeURIComponent(id)}`);
+
+/** Idempotent; safe in a finally. */
+export async function stopSession(id: string): Promise<void> {
+  const r = await call<{ success: boolean }>("DELETE", `/v1/browser/session?sessionId=${encodeURIComponent(id)}`);
+  if (!r.success) throw new DriverError(500, "stop did not succeed");
+}
+
+/** Create normally returns an active session; this covers the rare `starting` answer. */
+async function waitForActive(s: Session, timeoutMs = 60_000): Promise<Session> {
+  const deadline = Date.now() + timeoutMs;
+  while (!(s.status === "active" && s.cdpUrl)) {
+    if (s.status === "completed" || s.status === "error") throw new DriverError(500, `session ended: ${s.status}`);
+    if (Date.now() > deadline) throw new DriverError(504, "timed out waiting for the browser");
+    await new Promise((r) => setTimeout(r, 1000));
+    s = await getSession(s.sessionId);
+  }
+  return s;
 }
 
 /** Runs `fn` against a fresh Driver session and always stops it afterwards. */
 export async function withBrowser<T>(
   opts: CreateOptions,
-  fn: (page: Page, browser: Browser) => Promise<T>,
+  fn: (page: Page, browser: Browser, session: Session) => Promise<T>,
 ): Promise<T> {
   const session = await createSession(opts);
   try {
-    const browser = await chromium.connectOverCDP(session.cdpUrl!);
+    const active = await waitForActive(session);
+    const browser = await chromium.connectOverCDP(active.cdpUrl!);
     try {
       const context = browser.contexts()[0] ?? (await browser.newContext());
       const page = context.pages()[0] ?? (await context.newPage());
-      return await fn(page, browser);
+      return await fn(page, browser, active);
     } finally {
-      await browser.close();
+      await browser.close(); // your connection only
     }
   } finally {
     await stopSession(session.sessionId);
@@ -135,28 +173,61 @@ export async function withBrowser<T>(
 
 ```python driver.py
 import os
+import time
 from contextlib import contextmanager
+
 import requests
 from patchright.sync_api import sync_playwright
 
 API = "https://api.driver.dev"
 
 
+class DriverError(RuntimeError):
+    """Every non-2xx answer: .status is the HTTP status, .code the machine-readable code when there is one."""
+
+    def __init__(self, status, message, code=None, retry_after=None):
+        super().__init__(f"Driver {status}: {message}")
+        self.status, self.code, self.retry_after = status, code, retry_after
+
+
 def _headers():
     return {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 
-def create_session(**opts):
-    """opts: country, duration, profile={"name": …, "persist": True}, proxyUrl,
-    windowSize, captchaSolver, note."""
-    r = requests.post(f"{API}/v1/browser/session", headers=_headers(), json=opts)
+def _call(method, path, **kwargs):
+    r = requests.request(method, f"{API}{path}", headers=_headers(), timeout=200, **kwargs)
     if not r.ok:
-        raise RuntimeError(f"Driver {r.status_code}: {r.json().get('error', r.reason)}")
+        body = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+        raise DriverError(r.status_code, body.get("error", r.reason), body.get("code"), r.headers.get("Retry-After"))
     return r.json()
 
 
-def stop_session(session_id: str):
-    requests.delete(f"{API}/v1/browser/session", headers=_headers(), params={"sessionId": session_id})
+def create_session(**opts):
+    """opts: type, country, timezone, language, duration, url, profile={"name": …, "persist": True},
+    proxyUrl, windowSize, displaySize, captchaSolver, adblock, extensionIds, nodeId, browserCheck, note."""
+    return _call("POST", "/v1/browser/session", json=opts)
+
+
+def get_session(session_id):
+    return _call("GET", "/v1/browser/session", params={"sessionId": session_id})
+
+
+def stop_session(session_id):
+    """Idempotent; safe in a finally."""
+    _call("DELETE", "/v1/browser/session", params={"sessionId": session_id})
+
+
+def wait_for_active(session, timeout=60):
+    """Create normally returns an active session; this covers the rare 'starting' answer."""
+    deadline = time.time() + timeout
+    while not (session["status"] == "active" and session.get("cdpUrl")):
+        if session["status"] in ("completed", "error"):
+            raise DriverError(500, f"session ended: {session['status']}")
+        if time.time() > deadline:
+            raise DriverError(504, "timed out waiting for the browser")
+        time.sleep(1)
+        session = get_session(session["sessionId"])
+    return session
 
 
 @contextmanager
@@ -164,6 +235,7 @@ def browser_page(**opts):
     """with browser_page(country="US") as page: ...  — always stops the session."""
     session = create_session(**opts)
     try:
+        session = wait_for_active(session)
         with sync_playwright() as p:
             browser = p.chromium.connect_over_cdp(session["cdpUrl"])
             context = browser.contexts[0] if browser.contexts else browser.new_context()
@@ -171,7 +243,7 @@ def browser_page(**opts):
             try:
                 yield page
             finally:
-                browser.close()
+                browser.close()  # your connection only
     finally:
         stop_session(session["sessionId"])
 ```
@@ -184,9 +256,10 @@ def browser_page(**opts):
 - [ ] The first context and page are reused.
 - [ ] The session is stopped in a `finally`.
 - [ ] `DRIVER_API_KEY` comes from the environment and is not committed.
-- [ ] 402 and 503 are reported to the user, not retried in a loop.
+- [ ] 402 and 403 are reported to the user; 503 is backed off with a cap, never looped.
+- [ ] The result was verified through `GET /v1/browser/session` (status `completed`), not assumed.
 
 ## Machine-readable resources
 
-- `https://docs.driver.dev/llms.txt` lists every page of these docs.
+- `https://docs.driver.dev/llms.txt` lists every page of these docs; `https://docs.driver.dev/llms-full.txt` is all of them in one file. Any page is available as Markdown by appending `.md` to its URL.
 - `https://api.driver.dev/doc` is the live OpenAPI document; `https://api.driver.dev/scalar` renders it.

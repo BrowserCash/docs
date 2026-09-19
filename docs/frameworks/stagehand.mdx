@@ -19,11 +19,13 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-const session = await fetch(`${API}/v1/browser/session`, {
+const res = await fetch(`${API}/v1/browser/session`, {
   method: "POST",
   headers,
   body: JSON.stringify({ country: "US" }),
-}).then((r) => r.json());
+});
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json()).error}`);
+const session = await res.json();
 
 try {
   // Attach to Driver's Chrome; Stagehand never launches or closes a browser it did not start.
@@ -56,5 +58,6 @@ Stagehand reads no environment variables itself: pass the model provider key in 
 ## Notes
 
 - This is the v4 API (`localBrowser.connect`, `Stagehand.create`). Stagehand 2.x used `new Stagehand({ env: "LOCAL", localBrowserLaunchOptions: { cdpUrl } })`; if you are on 2.x, that is the equivalent.
-- Stagehand instruments the page to work (it loads its own extension and drives the browser over CDP), which is the kind of signal protected sites look for. On those sites, prefer plain [Patchright](/docs/frameworks/patchright) with your own extraction, or keep Stagehand to the parts of a flow that are not behind bot protection.
+- Stagehand instruments the page to work (it injects scripts and drives the browser over CDP), which is the kind of signal protected sites look for. On those sites, prefer plain [Patchright](/docs/frameworks/patchright) with explicit selectors.
+- Pin the Stagehand version you tested with; the connect API changed between 2.x and v4.
 - Reuse the page from `browser.context.pages()` rather than opening a new one.

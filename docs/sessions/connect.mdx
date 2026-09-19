@@ -6,7 +6,7 @@ description: "Attach your automation framework to a running Driver session throu
 `cdpUrl` is a WebSocket endpoint to the session's Chrome. Any client that speaks the Chrome DevTools Protocol can attach to it. You attach to a running browser; you never launch one.
 
 <Warning>
-Use [Patchright](/docs/frameworks/patchright) rather than stock Playwright or Puppeteer. Same API, minus the CDP calls that anti-bot systems fingerprint. Sessions driven by stock frameworks get blocked on sites that look for automation.
+Use [Patchright](/docs/frameworks/patchright) rather than stock Playwright or Puppeteer. It is Playwright's API minus the CDP calls that anti-bot systems fingerprint, so Playwright code moves over by changing one import; Puppeteer code needs porting. Sessions driven by stock frameworks get blocked on sites that look for automation.
 </Warning>
 
 ## Patchright (recommended)
@@ -65,6 +65,8 @@ Closing your client (`browser.close()` in Patchright and Playwright, `browser.di
 ## Reconnecting
 
 If your process crashes, fetch the session with [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session): while `status` is `active` the `cdpUrl` is still valid and you can attach again. Profiles with `persist: true` also carry state into a brand-new session if the old one has ended.
+
+Several clients can be attached at once (your script and the [live view](/docs/sessions/live-view), for instance). Two scripts driving the same tab will fight each other, so keep it to one automation client per session. `cdpUrl` is a credential: anyone who has it can drive the browser while the session is active.
 
 ## Timeouts and waits
 

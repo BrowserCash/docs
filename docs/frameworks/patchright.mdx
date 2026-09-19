@@ -40,21 +40,25 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-const session = await fetch(`${API}/v1/browser/session`, {
+const res = await fetch(`${API}/v1/browser/session`, {
   method: "POST",
   headers,
   body: JSON.stringify({ country: "US" }),
-}).then((r) => r.json());
+});
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json()).error}`);
+const session = await res.json();
 
 try {
   const browser = await chromium.connectOverCDP(session.cdpUrl);
-  const context = browser.contexts()[0] ?? (await browser.newContext());
-  const page = context.pages()[0] ?? (await context.newPage());
+  try {
+    const context = browser.contexts()[0] ?? (await browser.newContext());
+    const page = context.pages()[0] ?? (await context.newPage());
 
-  await page.goto("https://example.com");
-  console.log(await page.title());
-
-  await browser.close();
+    await page.goto("https://example.com");
+    console.log(await page.title());
+  } finally {
+    await browser.close(); // your connection only; the session keeps running until you stop it
+  }
 } finally {
   await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
     method: "DELETE",
@@ -70,7 +74,8 @@ API = "https://api.driver.dev"
 headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"})
-    session = session.json()
+session.raise_for_status()
+session = session.json()
 try:
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp(session["cdpUrl"])
@@ -94,6 +99,7 @@ headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 async def main():
     session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"})
+    session.raise_for_status()
     session = session.json()
     try:
         async with async_playwright() as p:
@@ -105,8 +111,10 @@ async def main():
             await browser.close()
     finally:
         requests.delete(
-        f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
-    )
+            f"{API}/v1/browser/session",
+            headers=headers,
+            params={"sessionId": session["sessionId"]},
+        )
 
 asyncio.run(main())
 ```
@@ -127,6 +135,8 @@ Change the import. That is the whole migration.
 ```
 
 Remove any `chromium.launch()` and any `playwright install` step: Driver provides the browser.
+
+Coming from Puppeteer is a rewrite, not a rename: Patchright has Playwright's API. Either keep Puppeteer with the [connect-only setup](/docs/frameworks/puppeteer) and accept its fingerprint, or port to Patchright.
 
 ## Things Patchright does not fix
 

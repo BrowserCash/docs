@@ -18,7 +18,9 @@ headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 
 async def main():
-    session = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"}).json()
+    r = requests.post(f"{API}/v1/browser/session", headers=headers, json={"country": "US"})
+    r.raise_for_status()
+    session = r.json()
     try:
         config = BrowserConfig(browser_mode="custom", cdp_url=session["cdpUrl"], use_managed_browser=True)
         async with AsyncWebCrawler(config=config) as crawler:
@@ -35,5 +37,7 @@ asyncio.run(main())
 
 ## Notes
 
-- `browser_mode="custom"` with `cdp_url` tells Crawl4AI to attach to the browser you give it instead of launching one; `use_managed_browser=True` keeps control over CDP.
+- `browser_mode="custom"` with `cdp_url` tells Crawl4AI to attach to the browser you give it instead of launching one; `use_managed_browser=True` makes it drive that browser over CDP rather than through a Playwright launch. Leaving the `async with` block closes Crawl4AI's connection only; the session runs until you stop it.
+- Crawl4AI is Playwright underneath and injects its own scripts, so it carries the stock-Playwright fingerprint. Use it for sites that do not challenge automation.
+- Pin the `crawl4ai` version you tested with. Its post-install step downloads a browser you will not use; that is harmless.
 - Crawl several URLs in one session; creating the session is the expensive step.
