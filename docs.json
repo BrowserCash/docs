@@ -67,6 +67,7 @@
             "pages": [
               "docs/options/browser-types",
               "docs/options/location",
+              "docs/options/countries",
               "docs/options/window-size",
               "docs/options/proxies",
               "docs/options/profiles",

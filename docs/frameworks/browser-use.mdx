@@ -18,9 +18,11 @@ headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
 
 
 async def main():
-    session = requests.post(
+    r = requests.post(
         f"{API}/v1/browser/session", headers=headers, json={"country": "US", "duration": 900}
-    ).json()
+    )
+    r.raise_for_status()
+    session = r.json()
     try:
         browser = Browser(cdp_url=session["cdpUrl"])
         agent = Agent(
@@ -42,5 +44,6 @@ asyncio.run(main())
 ## Notes
 
 - Agents take many steps; set `duration` to cover the task (up to 3600 seconds) and stop the session in `finally`.
-- Browser Use uses CDP directly and does not go through Playwright, so the [Patchright](/docs/frameworks/patchright) recommendation does not apply to it.
+- Browser Use drives the browser over CDP directly rather than through Playwright, so Patchright is not in the picture. The fingerprint concern is the same, though: it comes from the CDP commands a client issues, and an agent framework issues more of them than a plain script. Expect challenges on protected sites.
+- Pin the `browser-use` version you tested with; its `Browser`/`Agent` constructors have changed between releases. Passing `cdp_url` is what stops it from launching or downloading a browser of its own.
 - Watch the agent through the session's [live view](/docs/sessions/live-view); it is the fastest way to see where an agent goes wrong.

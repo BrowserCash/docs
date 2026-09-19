@@ -25,8 +25,16 @@ absent: `scripts/sync-openapi.mjs` drops them from the generated reference, and 
 npm install          # Mintlify CLI
 npm run sync         # refresh api-reference/openapi.json from the live API
 npm run dev          # http://localhost:3000
-npm run check        # broken links
+npm run check        # broken links (reports every link as broken on Windows; a CLI path bug, not the docs)
+npm run countries    # regenerate docs/options/countries.mdx from scripts/data/ (the gateway's locale catalog)
 ```
 
 Old URLs redirect to their new homes (see `redirects` in `docs.json`), so links from the dashboard and the landing
 page keep working.
+
+## Battle-tested
+
+On 2026-09-19 five fresh agents (Node, Python, REST-only, framework migration, coding-agent handoff) integrated Driver
+from this folder alone and reported every gap; the fixes are in the git history of that day. Re-run the exercise after
+big changes: the reports live in the dashboard repo's docs/STATUS-LOG.md entry for that date. also corrects four things the generator gets wrong (duration bound, negative balances, PATCH 400, branding); keep
+those corrections when the source changes.

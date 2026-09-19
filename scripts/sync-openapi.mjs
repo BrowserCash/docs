@@ -68,6 +68,26 @@ const fixExamples = (node) => {
 }
 fixExamples(doc)
 
+// Corrections to what the generator emits, verified against the gateway and session service source:
+// - duration: zod's .positive().min(60) renders as minimum 60 + exclusiveMinimum true, but 60 is accepted.
+// - balance_cents can go negative (the wallet may be overdrawn), so the minimum is wrong.
+// - PATCH answers 400 for a session that has ended; the generator does not declare it.
+// - the security description, external docs and contact name the old brand.
+const create = doc.paths['/v1/browser/session']
+const duration = create?.post?.requestBody?.content?.['application/json']?.schema?.properties?.duration
+if (duration) delete duration.exclusiveMinimum
+const balanceCents = doc.paths['/v1/account/balance']?.get?.responses?.['200']?.content?.['application/json']?.schema?.properties?.balance?.properties?.balance_cents
+if (balanceCents) { delete balanceCents.minimum; balanceCents.description = `${balanceCents.description || 'Balance in cents.'} Can be negative when usage exceeds prepaid credit.` }
+if (create?.patch && !create.patch.responses['400']) {
+  create.patch.responses['400'] = {
+    description: 'The session has ended ("Cannot update a completed or errored session") or the note is longer than 256 characters.',
+    content: { 'application/json': { schema: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] } } },
+  }
+}
+if (doc.components?.securitySchemes?.Bearer) doc.components.securitySchemes.Bearer.description = 'A workspace API key from Settings → API keys in the dashboard (https://app.driver.dev), sent as a bearer token.'
+doc.externalDocs = { url: 'https://docs.driver.dev', description: 'Driver documentation' }
+if (doc.info) doc.info.contact = { name: 'Driver support', email: 'support@driver.dev' }
+
 // The source document names internal systems. Readers get product language instead. Ordered: phrases first, then words.
 const SCRUB = [
   [/ consumer_distributed is the legacy route\./g, ''],
@@ -78,8 +98,8 @@ const SCRUB = [
   [/hosted, hosted_stealth, and hosted_privacy launch on Rio; hosted_stealth enables conservative Mirage Stealth and hosted_privacy enables the preserved aggressive Stealth policy\./g, 'hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one.'],
   [/hosted uses Mirage natively, hosted_stealth uses conservative Stealth, and hosted_privacy uses the preserved aggressive Stealth policy\./g, 'hosted is the native browser, hosted_stealth applies the conservative stealth policy, and hosted_privacy the aggressive one.'],
   [/Rio\/Mirage virtual display size/g, 'Virtual display size'],
-  [/Only supported by Rio-backed hosted types\./g, 'Only supported by hosted types.'],
-  [/Supported by all Rio-backed hosted types/g, 'Supported by all hosted types'],
+  [/ Only supported by Rio-backed hosted types\./g, ''],
+  [/ Supported by all Rio-backed hosted types\.?/g, ''],
   [/Rio stores persistent profiles as portable Mirage plaintext archives\./g, 'Persistent profiles are kept between sessions.'],
   [/so Mirage uses its built-in en-US default/g, 'so the browser uses its built-in en-US default'],
   [/primary language supported by Mirage/g, 'primary language the browser supports'],
@@ -89,6 +109,11 @@ const SCRUB = [
   [/Lisa or its billing provider could not return billing details\./g, 'Billing details could not be returned.'],
   [/wss:\/\/[a-z0-9.-]+\.tera\.space\//g, 'wss://sessions.driver.dev/'],
   [/[a-z0-9.-]+\.tera\.space/g, 'driver.dev'],
+  [/Cloaked outer browser-window size/g, 'Outer browser-window size'],
+  [/ and targets managed proxy geography where the provider supports regional targeting/g, ' and, where Driver runs a managed network there, routes the session through that region'],
+  [/Forwarded to node-side launch when supported\.?/g, 'Opened right after launch.'],
+  [/\/v1\/consumer\//g, '/v1/session/'],
+  [/ \(browser or agent, they work interchangeably\)/g, ''],
   [/APIGW/g, 'Driver'],
   [/\bRio\b/g, 'Driver'],
   [/\bMirage\b/g, 'Chrome'],

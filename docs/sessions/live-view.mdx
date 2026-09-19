@@ -39,4 +39,4 @@ Anyone with the URL can drive the browser, so treat it like the API key while th
 
 After a session ends, its page in the dashboard keeps the record: status and duration, bandwidth and cost, the node that served it with its country, the network it used, how it was started (type, profile, note, which API key), and timestamps. Keep the `sessionId` in your own logs so a run can be found later.
 
-The same facts are available from [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session).
+The API keeps the essentials: [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) returns `status`, `stoppedAt` and `bandwidthBytes`, and the [list](/docs/sessions/lifecycle#list-sessions) adds `type` and `country`. Cost, network and node details are in the dashboard only.

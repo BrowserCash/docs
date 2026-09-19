@@ -3,7 +3,7 @@ title: "Billing"
 description: "Sessions are metered by bandwidth against the workspace's credits. Two endpoints expose the balance and the plan."
 ---
 
-Driver bills on **bandwidth**: the bytes a session moves, metered per megabyte and charged against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage beyond the allowance draws on purchased credits. The exact rates and plans are on the [pricing page](https://driver.dev/pricing) and under **Billing** in the dashboard.
+Driver bills on **bandwidth**: the bytes a session moves, metered per megabyte and charged against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage beyond the allowance draws on purchased credits. A running session that moves no bytes costs nothing, but it holds one of the plan's concurrent-browser slots until it stops.
 
 Keeping sessions short and stopping them when the job is done is the whole cost-control story. `duration` on create caps what a forgotten session can cost.
 
@@ -27,11 +27,11 @@ balance = balance["balance"]
 { "balance": { "balance_cents": 1250, "network_mb_remaining": 500, "status": "active" } }
 ```
 
-`network_mb_remaining` is the included allowance still unused this period. Sessions are refused with `402` once the balance is negative and the allowance is gone.
+`balance_cents` can go below zero. `network_mb_remaining` (the included allowance still unused this period) and `status` are present for workspace accounts and absent on a legacy account. Sessions are refused with `402` once the balance is negative and the allowance is gone.
 
 ## Billing details
 
-`GET /v1/account/billing` returns the full picture: the plan (`plan_key`, `display_name`, `price_monthly_cents`, `included_network_mb`, `overage_millicents_per_mb`, `concurrent_browsers`, `max_session_seconds`), the current period (`start_ms`, `end_ms`, `network_mb_used`, `network_mb_remaining`), the wallet (`balance_cents`, `balance_millicents`), and the subscription (`status`, `current_period_end`, `cancel_at_period_end`) when there is one.
+`GET /v1/account/billing` returns the full picture: `orgId`; `status` (`legacy` for an account not yet moved to workspace billing); the plan (`plan_key`, `display_name`, `price_monthly_cents`, `included_network_mb`, `overage_millicents_per_mb`, `concurrent_browsers`, `max_session_seconds`); the current period (`start_ms`, `end_ms`, `included_network_mb`, `network_mb_used`, `network_mb_remaining`); the wallet (`balance_cents`, which can be negative, and `balance_millicents`); and the subscription when there is one (`subscription_id`, `provider`, `status`, `current_period_start`, `current_period_end`, `cancel_at_period_end`). `plan`, `period` and `subscription` are `null` on a legacy account. Times ending in `_ms` and the subscription period bounds are Unix epoch milliseconds.
 
 ```bash
 curl https://api.driver.dev/v1/account/billing -H "Authorization: Bearer $DRIVER_API_KEY"

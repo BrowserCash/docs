@@ -10,11 +10,11 @@ A session moves through `starting` → `active` → `completed`, or `error` if t
 | `starting` | The machine is launching Chrome. `cdpUrl` is `null`. |
 | `active` | Chrome is reachable at `cdpUrl`. |
 | `completed` | The session was stopped or reached its duration. `stoppedAt` is set. |
-| `error` | The session failed to start or ended abnormally. |
+| `error` | The session failed to start, ended abnormally, or the machine serving it went away. `stoppedAt` is set. |
 
 ## Get a session
 
-Returns the same shape as create, plus `bandwidthBytes`: `null` while the session runs, the metered total once it has ended.
+Returns the same shape as create, plus `bandwidthBytes`: `0` while the session runs, the metered total once it has ended.
 
 <CodeGroup>
 ```bash cURL
@@ -34,7 +34,7 @@ session = requests.get(
 
 ## List sessions
 
-Paginated, newest first, with an optional `status` filter.
+Paginated, newest first, with an optional `status` filter. `page` defaults to 1 and `pageSize` to 20 (at most 100; larger values are clamped, not rejected). A `status` outside `starting`, `active`, `completed`, `error` is a `400`.
 
 <CodeGroup>
 ```bash cURL
@@ -54,7 +54,7 @@ data = requests.get(
 ```
 </CodeGroup>
 
-Each item carries `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes` and `note`.
+The response carries `sessions`, `total`, `totalPages`, `page` and `pageSize`. Each item has `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes` and `note`; `type` and `country` are the only place the API reports them, since the single-session calls do not.
 
 ## Label a session
 
@@ -84,7 +84,7 @@ requests.patch(
 ```
 </CodeGroup>
 
-Notes are at most 256 characters. Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a terminal session`).
+Returns `{ "success": true }`. Notes are at most 256 characters (longer is a `400`). Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a completed or errored session`).
 
 ## Stop a session
 
@@ -112,15 +112,18 @@ Returns `{ "success": true }`. Stopping is idempotent: a session that already en
 
 ## Duration
 
-`duration` on create is the session's lifetime in seconds, from 60 to 3600, default 3600. There is no extension call: choose a duration that covers the job, and start a new session (with a persisted [profile](/docs/options/profiles) if you need the state) when it runs out.
+`duration` on create is the session's lifetime in seconds, from 60 to 3600 inclusive, default 3600. There is no extension call: choose a duration that covers the job, and start a new session (with a persisted [profile](/docs/options/profiles) if you need the state) when it runs out.
 
 ## Waiting for `active`
 
-Create normally returns with `cdpUrl` set. If you see `starting`, poll:
+Create normally returns with `cdpUrl` set. If you see `starting`, poll (`getSession` / `get_session` are the GET call from the top of this page; the [reference client](/docs/start/for-agents#reference-implementation) has both):
 
 <CodeGroup>
 ```typescript TypeScript
-async function waitForActive(id: string, timeoutMs = 30_000) {
+const getSession = (id: string) =>
+  fetch(`https://api.driver.dev/v1/browser/session?sessionId=${id}`, { headers }).then((r) => r.json());
+
+async function waitForActive(id: string, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const s = await getSession(id);
@@ -134,7 +137,16 @@ async function waitForActive(id: string, timeoutMs = 30_000) {
 }
 ```
 ```python Python
-def wait_for_active(session_id, timeout=30):
+import time
+
+
+def get_session(session_id):
+    return requests.get(
+        "https://api.driver.dev/v1/browser/session", headers=headers, params={"sessionId": session_id}
+    ).json()
+
+
+def wait_for_active(session_id, timeout=60):
     deadline = time.time() + timeout
     while time.time() < deadline:
         s = get_session(session_id)

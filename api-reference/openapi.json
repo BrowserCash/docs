@@ -5,21 +5,20 @@
     "title": "Driver API",
     "description": "API for interacting with the Driver.dev browser network.",
     "contact": {
-      "name": "Contact Us",
-      "email": "hello@driver.dev",
-      "url": "https://driver.dev"
+      "name": "Driver support",
+      "email": "support@driver.dev"
     }
   },
   "externalDocs": {
-    "url": "https://dash.browser.cash/docs",
-    "description": "Learn more"
+    "url": "https://docs.driver.dev",
+    "description": "Driver documentation"
   },
   "components": {
     "securitySchemes": {
       "Bearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Your Driver.dev API token (browser or agent, they work interchangeably). Get one at https://app.driver.dev"
+        "description": "A workspace API key from Settings → API keys in the dashboard (https://app.driver.dev), sent as a bearer token."
       }
     },
     "schemas": {
@@ -291,7 +290,7 @@
                   "url": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Initial URL opened by the browser after launch. Optional. Forwarded to node-side launch when supported.",
+                    "description": "Initial URL opened by the browser after launch. Optional. Opened right after launch.",
                     "example": "https://example.com"
                   },
                   "proxyUrl": {
@@ -301,19 +300,19 @@
                   },
                   "windowSize": {
                     "type": "string",
-                    "description": "Cloaked outer browser-window size in WIDTHxHEIGHT format. Width must be 320–16384 and height 200–16384.",
+                    "description": "Outer browser-window size in WIDTHxHEIGHT format. Width must be 320–16384 and height 200–16384.",
                     "example": "1920x1040"
                   },
                   "displaySize": {
                     "type": "string",
-                    "description": "Virtual display size in WIDTHxHEIGHT format. Width must be 320–16384 and height 200–16384. Only supported by hosted types.",
+                    "description": "Virtual display size in WIDTHxHEIGHT format. Width must be 320–16384 and height 200–16384.",
                     "example": "1920x1080"
                   },
                   "timezone": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 128,
-                    "description": "IANA timezone for the browser. It must be listed for the selected country. When omitted, Driver selects a dominant regional timezone and targets managed proxy geography where the provider supports regional targeting.",
+                    "description": "IANA timezone for the browser. It must be listed for the selected country. When omitted, Driver selects a dominant regional timezone and, where Driver runs a managed network there, routes the session through that region.",
                     "example": "America/New_York"
                   },
                   "language": {
@@ -326,7 +325,6 @@
                   "duration": {
                     "type": "integer",
                     "minimum": 60,
-                    "exclusiveMinimum": true,
                     "maximum": 3600,
                     "description": "The duration of the browser session in seconds. Optional. Default is 3600 seconds (1 hour). Cannot be greater than 3600 seconds (1 hour). Cannot be less than 60 seconds (1 minute).",
                     "example": 600
@@ -366,7 +364,7 @@
                     "items": {
                       "type": "string"
                     },
-                    "description": "Internal extension IDs returned by the extensions API. Supported by all hosted types. Requires account-level extension access.",
+                    "description": "Internal extension IDs returned by the extensions API. Requires account-level extension access.",
                     "example": [
                       "abc123def456"
                     ]
@@ -453,7 +451,7 @@
                     "servedBy": "this-node-id",
                     "createdAt": "2025-11-20T01:51:25.000Z",
                     "stoppedAt": null,
-                    "cdpUrl": "wss://sessions.driver.dev/v1/consumer/example-session-id/devtools/browser/uuid",
+                    "cdpUrl": "wss://sessions.driver.dev/v1/session/example-session-id/devtools/browser/uuid",
                     "note": null
                   }
                 }
@@ -710,7 +708,7 @@
                     "createdAt": "2025-11-20T01:51:25.000Z",
                     "stoppedAt": null,
                     "bandwidthBytes": 1048576,
-                    "cdpUrl": "wss://sessions.driver.dev/v1/consumer/example-session-id/devtools/browser/uuid",
+                    "cdpUrl": "wss://sessions.driver.dev/v1/session/example-session-id/devtools/browser/uuid",
                     "note": null
                   }
                 }
@@ -987,6 +985,24 @@
                   "example": {
                     "success": true
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The session has ended (\"Cannot update a completed or errored session\") or the note is longer than 256 characters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -1526,8 +1542,7 @@
                       "properties": {
                         "balance_cents": {
                           "type": "integer",
-                          "minimum": 0,
-                          "description": "The current account balance in cents."
+                          "description": "The current account balance in cents. Can be negative when usage exceeds prepaid credit."
                         },
                         "network_mb_remaining": {
                           "type": "integer",

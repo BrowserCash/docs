@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "mint dev",
     "sync": "node scripts/sync-openapi.mjs",
-    "check": "mint broken-links"
+    "check": "mint broken-links",
+    "countries": "node scripts/gen-countries.mjs"
   },
   "devDependencies": {
     "mint": "latest"

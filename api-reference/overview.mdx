@@ -22,7 +22,9 @@ Authorization: Bearer $DRIVER_API_KEY
 - Request and response bodies are JSON, except extension uploads, which are `multipart/form-data`.
 - Identifiers that select a resource go in the query string (`?sessionId=…`, `?profileName=…`), not the path, except for extensions.
 - Errors are `{ "error": "message" }` with a meaningful HTTP status; some carry a `code`. See [Errors](/docs/sessions/errors).
-- Timestamps are ISO 8601 strings; money is in cents (and millicents where exactness matters); bandwidth is bytes on sessions and megabytes on billing.
+- Session timestamps are ISO 8601 strings; billing periods use Unix epoch milliseconds (fields ending in `_ms`, and the subscription period bounds). Money is in cents (and millicents where exactness matters); bandwidth is bytes on sessions and megabytes on billing.
+- Unknown fields in a request body are rejected with `400`.
+- Create answers `200` with the session; only the extension upload answers `201`.
 
 ## Endpoints
 
@@ -37,6 +39,6 @@ Authorization: Bearer $DRIVER_API_KEY
 
 These reference pages are generated from the API's own OpenAPI document, served live at `https://api.driver.dev/doc` and rendered at [api.driver.dev/scalar](https://api.driver.dev/scalar). If a page here and the live document ever disagree, the live document wins.
 
-## SDK
+## Client code
 
-`@browsercash/sdk` on npm wraps these endpoints for TypeScript; set `baseURL: "https://api.driver.dev"`. Python users call the endpoints directly with `requests`; the [For agents](/docs/start/for-agents) page has a small client module for both.
+There is no SDK to install. The endpoints are plain HTTP; the [For agents](/docs/start/for-agents#reference-implementation) page has a small client module for TypeScript and Python that you can copy.

@@ -21,13 +21,13 @@ session = create_session(country="DE")
 
 ## Overriding timezone and language
 
-Set `timezone` (IANA name) or `language` (BCP-47) when the default choice for the country is not what you want. Both must be valid for the chosen country, or the request is rejected with `400`.
+Set `timezone` (IANA name) or `language` (BCP-47) when the default choice for the country is not what you want. Both must come from the chosen country's lists on [Countries](/docs/options/countries), or the request is rejected with `400` (`Unsupported timezone "Europe/Berlin" for country US.`). An unknown `country` is rejected the same way (`Unsupported country "XX".`). When you leave `timezone` out, Driver picks the country's dominant zone and, where it runs a managed network there, routes the session's traffic through that region so the network and the clock agree.
 
 ```json
 { "country": "CA", "timezone": "America/Vancouver", "language": "fr-CA" }
 ```
 
-US sessions accept only `en-US`, and omit both language fields so Chrome uses its built-in default. For other countries, Driver picks the likely primary language when you leave `language` out. Chrome reports the nearest variant it ships: a session created with `fr-CA` reported `navigator.language` as `fr-FR` with `fr` and `en-US` as fallbacks, and the requested timezone exactly.
+US sessions always use `en-US` (any other `language` is rejected). For other countries, Driver picks the country's primary language when you leave `language` out. Chrome reports the nearest variant it ships: a session created with `fr-CA` reported `navigator.language` as `fr-FR` with `fr` and `en-US` as fallbacks.
 
 Hosted sessions also provision matching text-to-speech voices where available, and disable Web Speech when a coherent voice is not, so that surface never contradicts the rest.
 
@@ -37,9 +37,10 @@ If you supply a `proxyUrl` without `timezone` or `language`, Driver geolocates t
 
 ## Availability
 
-Placement is by available machines. If nothing is available in the requested country you get a `503`; back off and retry, or pick another country.
+Placement is by available machines. If nothing is available in the requested country you get a `503` (with `Retry-After: 2`): back off with a cap, then tell the user or pick another country.
 
 ## Related
 
+- [Countries](/docs/options/countries): every supported country with its timezones and languages
 - [Browser types](/docs/options/browser-types)
 - [Best practices](/docs/start/best-practices): do not override timezone or locale from your script
