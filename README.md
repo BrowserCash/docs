@@ -36,5 +36,6 @@ page keep working.
 
 On 2026-09-19 five fresh agents (Node, Python, REST-only, framework migration, coding-agent handoff) integrated Driver
 from this folder alone and reported every gap; the fixes are in the git history of that day. Re-run the exercise after
-big changes: the reports live in the dashboard repo's docs/STATUS-LOG.md entry for that date. also corrects four things the generator gets wrong (duration bound, negative balances, PATCH 400, branding); keep
+big changes: the reports live in the dashboard repo's docs/STATUS-LOG.md entry for that date. `scripts/sync-openapi.mjs`
+also corrects four things the generator gets wrong (duration bound, negative balances, PATCH 400, branding); keep
 those corrections when the source changes.
