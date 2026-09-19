@@ -33,7 +33,7 @@ const res = await fetch("https://api.driver.dev/v1/browser/session", {
     note: "price check, client X",
   }),
 });
-if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json()).error}`);
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json().catch(() => ({}))).error ?? res.statusText}`);
 const session = await res.json();
 ```
 ```python Python

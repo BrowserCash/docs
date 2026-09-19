@@ -45,7 +45,7 @@ const res = await fetch(`${API}/v1/browser/session`, {
   headers,
   body: JSON.stringify({ country: "US" }),
 });
-if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json()).error}`);
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json().catch(() => ({}))).error ?? res.statusText}`);
 const session = await res.json();
 
 try {
