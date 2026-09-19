@@ -22,7 +22,7 @@ This page is written for an AI coding agent (Claude Code, Cursor, Codex, or simi
 - **Minimal logic wins.** The shortest script that reaches the outcome is the most reliable and the least detectable. Go to the page, do the action, read the result. Do not add retries, waits, listeners, request routing or "stealth" helpers unless a specific failure on a specific site demands them, and then add the smallest thing that fixes it.
 - **Fast and accurate, in that order of effort.** Before writing browser steps, ask whether the outcome is reachable faster: a direct URL instead of clicking through navigation, one session doing several pages instead of one session per page, a persisted [profile](/docs/options/profiles) instead of logging in every run. Then keep the browser steps short: no fixed sleeps, rely on the framework's auto-waiting, stop the session the moment the result is in hand.
 - **Test the automation for real, every time.** Run it against the live target through Driver and check the result, not just that the script exits. Confirm the data is right, the action happened, and the session was stopped: `GET /v1/browser/session?sessionId=…` shows `status: "completed"`, a `stoppedAt` and the metered `bandwidthBytes` (the same record is under Telemetry → Sessions in the dashboard). A run that "worked" but read the wrong element is worse than one that failed loudly.
-- **Unattended jobs clean up after earlier runs.** A crash before `finally` leaves a session running until its `duration`. At start-up, `GET /v1/browser/sessions?status=active`, stop the ones your job created (match on `note`), then start the new one.
+- **Unattended jobs clean up after earlier runs.** A crash before `finally` leaves a session running until its `duration`. At start-up, list `status=active` and `status=starting` (`listSessions` / `list_sessions` in the reference client), stop the ones your job created (match on `note`), then start the new one. Exit non-zero when the result was not verified, so the scheduler reports the failure.
 - **Do not pollute the session.** Every extra CDP feature you switch on, every injected script, every overridden property is a signal. If you did not need it to reach the outcome, take it out.
 
 ## Handoff prompt
@@ -58,7 +58,7 @@ Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into t
 
 ## The three calls
 
-Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DRIVER_API_KEY`. Store the key in an environment variable named `DRIVER_API_KEY`; never commit it.
+Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DRIVER_API_KEY`. Store the key in an environment variable named `DRIVER_API_KEY`; never commit it. Node's global `fetch` has no timeout, which is right for the create call; if you add one, allow three minutes.
 
 | Step | Call | Notes |
 |---|---|---|
@@ -128,25 +128,57 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   return res.json() as Promise<T>;
 }
 
-export const createSession = (opts: CreateOptions = {}) => call<Session>("POST", "/v1/browser/session", opts);
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * The error policy from the Errors page: 402 and 403 are reported at once; 503 backs off from Retry-After
+ * with jitter and a cap; 504 and 500 are retried once; 429 backs off a few times.
+ */
+export async function createSession(opts: CreateOptions = {}): Promise<Session> {
+  let attempt = 0;
+  for (;;) {
+    try {
+      return await call<Session>("POST", "/v1/browser/session", opts);
+    } catch (e) {
+      if (!(e instanceof DriverError)) throw e;
+      attempt++;
+      if (e.status === 503 && attempt <= 5) { await sleep((e.retryAfter ?? 2) * 1000 * attempt + Math.random() * 1000); continue; }
+      if ((e.status === 504 || e.status === 500) && attempt <= 1) continue;
+      if (e.status === 429 && attempt <= 3) { await sleep(2000 * attempt + Math.random() * 1000); continue; }
+      throw e; // 400, 401, 402, 403, or out of attempts: a person has to act
+    }
+  }
+}
+
 export const getSession = (id: string) => call<Session>("GET", `/v1/browser/session?sessionId=${encodeURIComponent(id)}`);
 
-/** Idempotent; safe in a finally. */
+export const listSessions = (status?: Session["status"], page = 1, pageSize = 20) =>
+  call<{ sessions: Array<Session & { type: string | null; country: string | null }>; total: number; totalPages: number; page: number; pageSize: number }>(
+    "GET", `/v1/browser/sessions?page=${page}&pageSize=${pageSize}${status ? `&status=${status}` : ""}`);
+
+/**
+ * Idempotent. In a finally, a failed stop must not replace the error you are already handling, so this
+ * logs instead of throwing; the session ends on its own at `duration` anyway.
+ */
 export async function stopSession(id: string): Promise<void> {
-  const r = await call<{ success: boolean }>("DELETE", `/v1/browser/session?sessionId=${encodeURIComponent(id)}`);
-  if (!r.success) throw new DriverError(500, "stop did not succeed");
+  try {
+    const r = await call<{ success: boolean }>("DELETE", `/v1/browser/session?sessionId=${encodeURIComponent(id)}`);
+    if (!r.success) console.error(`Driver: stop of ${id} did not succeed`);
+  } catch (e) {
+    console.error(`Driver: stop of ${id} failed: ${(e as Error).message}`);
+  }
 }
 
 /** Create normally returns an active session; this covers the rare `starting` answer. */
-async function waitForActive(s: Session, timeoutMs = 60_000): Promise<Session> {
+async function waitForActive(s: Session, timeoutMs = 60_000): Promise<Session & { cdpUrl: string }> {
   const deadline = Date.now() + timeoutMs;
   while (!(s.status === "active" && s.cdpUrl)) {
     if (s.status === "completed" || s.status === "error") throw new DriverError(500, `session ended: ${s.status}`);
     if (Date.now() > deadline) throw new DriverError(504, "timed out waiting for the browser");
-    await new Promise((r) => setTimeout(r, 1000));
+    await sleep(1000);
     s = await getSession(s.sessionId);
   }
-  return s;
+  return s as Session & { cdpUrl: string };
 }
 
 /** Runs `fn` against a fresh Driver session and always stops it afterwards. */
@@ -157,7 +189,7 @@ export async function withBrowser<T>(
   const session = await createSession(opts);
   try {
     const active = await waitForActive(session);
-    const browser = await chromium.connectOverCDP(active.cdpUrl!);
+    const browser = await chromium.connectOverCDP(active.cdpUrl);
     try {
       const context = browser.contexts()[0] ?? (await browser.newContext());
       const page = context.pages()[0] ?? (await context.newPage());
@@ -173,6 +205,7 @@ export async function withBrowser<T>(
 
 ```python driver.py
 import os
+import random
 import time
 from contextlib import contextmanager
 
@@ -204,17 +237,42 @@ def _call(method, path, **kwargs):
 
 def create_session(**opts):
     """opts: type, country, timezone, language, duration, url, profile={"name": …, "persist": True},
-    proxyUrl, windowSize, displaySize, captchaSolver, adblock, extensionIds, nodeId, browserCheck, note."""
-    return _call("POST", "/v1/browser/session", json=opts)
+    proxyUrl, windowSize, displaySize, captchaSolver, adblock, extensionIds, nodeId, browserCheck, note.
+    Applies the error policy from the Errors page: 402/403 raise at once; 503 backs off with a cap;
+    504/500 retry once; 429 backs off a few times."""
+    attempt = 0
+    while True:
+        try:
+            return _call("POST", "/v1/browser/session", json=opts)
+        except DriverError as e:
+            attempt += 1
+            if e.status == 503 and attempt <= 5:
+                time.sleep(float(e.retry_after or 2) * attempt + random.random())
+            elif e.status in (504, 500) and attempt <= 1:
+                pass
+            elif e.status == 429 and attempt <= 3:
+                time.sleep(2 * attempt + random.random())
+            else:
+                raise  # 400, 401, 402, 403, or out of attempts: a person has to act
 
 
 def get_session(session_id):
     return _call("GET", "/v1/browser/session", params={"sessionId": session_id})
 
 
+def list_sessions(status=None, page=1, page_size=20):
+    params = {"page": page, "pageSize": page_size}
+    if status:
+        params["status"] = status
+    return _call("GET", "/v1/browser/sessions", params=params)
+
+
 def stop_session(session_id):
-    """Idempotent; safe in a finally."""
-    _call("DELETE", "/v1/browser/session", params={"sessionId": session_id})
+    """Idempotent. In a finally, a failed stop must not replace the error you are handling, so this logs."""
+    try:
+        _call("DELETE", "/v1/browser/session", params={"sessionId": session_id})
+    except DriverError as e:
+        print(f"Driver: stop of {session_id} failed: {e}")
 
 
 def wait_for_active(session, timeout=60):
@@ -256,7 +314,7 @@ def browser_page(**opts):
 - [ ] The first context and page are reused.
 - [ ] The session is stopped in a `finally`.
 - [ ] `DRIVER_API_KEY` comes from the environment and is not committed.
-- [ ] 402 and 403 are reported to the user; 503 is backed off with a cap, never looped.
+- [ ] 402 and 403 are reported to the user; 503 is retried only with a cap and a growing delay.
 - [ ] The result was verified through `GET /v1/browser/session` (status `completed`), not assumed.
 
 ## Machine-readable resources

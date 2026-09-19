@@ -14,7 +14,7 @@ A session moves through `starting` → `active` → `completed`, or `error` if t
 
 ## Get a session
 
-Returns the same shape as create, plus `bandwidthBytes`: `0` while the session runs, the metered total once it has ended.
+Returns the same shape as create, plus `bandwidthBytes`: `0` while the session runs, the metered total once it has ended. The total is final by the time a stop call returns.
 
 <CodeGroup>
 ```bash cURL
@@ -88,7 +88,7 @@ Returns `{ "success": true }`. Notes are at most 256 characters (longer is a `40
 
 ## Stop a session
 
-Stopping releases the browser and ends billing for the session. Always do it in a `finally`.
+Stopping releases the browser and ends billing for the session. Always do it in a `finally`. A session that is still `starting` can be stopped too.
 
 <CodeGroup>
 ```bash cURL
