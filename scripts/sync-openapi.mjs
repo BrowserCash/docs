@@ -163,7 +163,7 @@ const flush = doc.paths['/v1/browser/pools/{poolId}/flush']?.post
 if (flush) flush.description = 'Stop every ready browser and warm fresh ones. Leased browsers are not touched. Answers how many were stopped.'
 if (doc.components?.securitySchemes?.Bearer) doc.components.securitySchemes.Bearer.description = 'A workspace API key from Settings → API keys in the dashboard (https://app.driver.dev), sent as a bearer token.'
 doc.externalDocs = { url: 'https://docs.driver.dev', description: 'Driver documentation' }
-if (doc.info) doc.info.contact = { name: 'Driver support', email: 'support@driver.dev' }
+if (doc.info) doc.info.contact = { name: 'Driver support', email: 'alex@driver.dev' }
 
 // The source document names internal systems. Readers get product language instead. Ordered: phrases first, then words.
 const SCRUB = [
