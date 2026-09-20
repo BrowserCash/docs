@@ -3,7 +3,7 @@ title: "Create a session"
 description: "POST /v1/browser/session starts a real Chrome and returns its CDP URL once it is reachable."
 ---
 
-A session is one browser on one machine for up to an hour. Create it with the options you need; every field is optional and the defaults give you a hosted Chrome in the US.
+A session is one browser on one machine for up to an hour. Create it with the options you need; every field is optional and the defaults give you a hosted Chrome in the US. When a few seconds of start-up per browser is too slow, keep a [browser pool](/docs/sessions/pools) warm with the same options and acquire from it instead.
 
 <CodeGroup>
 ```bash cURL
@@ -111,3 +111,4 @@ Retry guidance per status is on [Errors](/docs/sessions/errors).
 
 - [Connect over CDP](/docs/sessions/connect)
 - [Lifecycle](/docs/sessions/lifecycle) to get, list, label and stop sessions
+- [Browser pools](/docs/sessions/pools) for warm browsers with these options preset

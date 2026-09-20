@@ -15,6 +15,7 @@ Before writing browser steps, ask whether the outcome is reachable faster:
 
 - Go straight to the URL that has the result instead of clicking through navigation.
 - Do several pages in one session rather than one session per page. Creating a session is the expensive step.
+- When the start-up itself is the bottleneck (a request handler, an agent loop), keep a [browser pool](/docs/sessions/pools) warm and acquire from it: under a second instead of a few.
 - Sign in once on a persisted [profile](/docs/options/profiles) and reuse it instead of logging in on every run.
 - Never use fixed sleeps. Rely on the framework's auto-waiting and stop the session the moment the result is in hand.
 
@@ -88,7 +89,7 @@ finally:
 ```
 </CodeGroup>
 
-Set a `duration` that matches the job. Sessions end on their own at the duration (one hour by default), which caps the cost of anything you forget.
+Set a `duration` that matches the job. Sessions end on their own at the duration (one hour by default), which caps the cost of anything you forget. A browser taken from a [pool](/docs/sessions/pools) is released the same way, with the release call in the `finally`; its lease timeout plays the role of `duration`.
 
 ## Reuse logins with profiles
 

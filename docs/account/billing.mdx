@@ -5,7 +5,7 @@ description: "Sessions are metered by bandwidth against the workspace's credits.
 
 Driver bills on **bandwidth**: the bytes a session moves, metered per megabyte and charged against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage beyond the allowance draws on purchased credits. A running session that moves no bytes costs nothing, but it holds one of the plan's concurrent-browser slots until it stops.
 
-Keeping sessions short and stopping them when the job is done is the whole cost-control story. `duration` on create caps what a forgotten session can cost.
+Keeping sessions short and stopping them when the job is done is the whole cost-control story. `duration` on create caps what a forgotten session can cost. Warm browsers in a [pool](/docs/sessions/pools) are not billed and hold no concurrency slot; a browser becomes a billed, counted session when it is acquired, and its lease timeout caps how long it can be held.
 
 ## Balance
 

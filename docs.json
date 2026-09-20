@@ -58,6 +58,7 @@
               "docs/sessions/create",
               "docs/sessions/connect",
               "docs/sessions/lifecycle",
+              "docs/sessions/pools",
               "docs/sessions/live-view",
               "docs/sessions/errors"
             ]
@@ -115,6 +116,20 @@
               "GET /v1/browser/sessions",
               "PATCH /v1/browser/session",
               "DELETE /v1/browser/session"
+            ]
+          },
+          {
+            "group": "Pools",
+            "openapi": "api-reference/openapi.json",
+            "pages": [
+              "POST /v1/browser/pools",
+              "GET /v1/browser/pools",
+              "GET /v1/browser/pools/{poolId}",
+              "PATCH /v1/browser/pools/{poolId}",
+              "DELETE /v1/browser/pools/{poolId}",
+              "POST /v1/browser/pools/{poolId}/acquire",
+              "POST /v1/browser/pools/{poolId}/release",
+              "POST /v1/browser/pools/{poolId}/flush"
             ]
           },
           {

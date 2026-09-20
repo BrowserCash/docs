@@ -3,7 +3,7 @@ title: "Lifecycle"
 description: "Get, list, label and stop sessions. What each status means and how long a session lives."
 ---
 
-A session moves through `starting` → `active` → `completed`, or `error` if the browser failed. It ends when you stop it, when it reaches its `duration`, or when the machine serving it goes away.
+A session moves through `starting` → `active` → `completed`, or `error` if the browser failed. It ends when you stop it, when it reaches its `duration`, or when the machine serving it goes away. A session acquired from a [browser pool](/docs/sessions/pools) is the same object once acquired (`createdAt` is when the browser was warmed); it also ends when its lease is released or expires.
 
 | Status | Meaning |
 |---|---|
