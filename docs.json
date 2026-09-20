@@ -167,7 +167,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@driver.dev"
+        "href": "mailto:alex@driver.dev"
       },
       {
         "label": "Status",
@@ -195,7 +195,8 @@
   "footer": {
     "socials": {
       "github": "https://github.com/BrowserCash",
-      "x": "https://x.com/driverdev"
+      "x": "https://x.com/driverdotdev",
+      "linkedin": "https://www.linkedin.com/company/driverdev"
     }
   },
   "redirects": [
