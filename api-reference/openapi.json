@@ -2406,6 +2406,2019 @@
         ],
         "summary": "Delete an extension"
       }
+    },
+    "/v1/browser/pools": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Create a browser pool and begin warming ordinary browser sessions.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "description": "Unique in the workspace, 1 to 64 characters."
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "description": "Browsers to keep ready. All pools together may keep 30 warm per account."
+                  },
+                  "browser": {
+                    "type": "object",
+                    "properties": {
+                      "nodeId": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 2
+                      },
+                      "proxyUrl": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "windowSize": {
+                        "type": "string",
+                        "pattern": "^\\d+x\\d+$/i"
+                      },
+                      "displaySize": {
+                        "type": "string",
+                        "pattern": "^\\d+x\\d+$/i"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "timezone": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "profile": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "persist": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "adblock": {
+                        "type": "boolean"
+                      },
+                      "captchaSolver": {
+                        "type": "boolean"
+                      },
+                      "extensionIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "note": {
+                        "type": "string",
+                        "maxLength": 256
+                      },
+                      "gpu": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "default": {},
+                    "additionalProperties": false,
+                    "description": "The create options every browser in the pool starts with (same fields as POST /v1/browser/session, without type, duration and browserCheck). Values are not validated on create. As of 2026-09-20 country and proxyUrl are not applied to warm browsers (they egress from the default US network); url and note are."
+                  },
+                  "leaseTimeoutSeconds": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 86400,
+                    "description": "How long an acquired browser may be held, in seconds (30 to 86400, default 900). The session is stopped when the lease expires."
+                  },
+                  "maxReadyAgeSeconds": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 86400,
+                    "description": "How long a browser may wait ready before it is replaced with a fresh one, in seconds (30 to 86400, default 3600)."
+                  }
+                },
+                "required": [
+                  "name",
+                  "size"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pool created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 6,
+                      "maxLength": 80,
+                      "example": "pool_8ca73065e49d44f3a7825743745b2948"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "warming",
+                        "ready",
+                        "degraded",
+                        "paused",
+                        "deleting"
+                      ]
+                    },
+                    "ready": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "starting": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "leased": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "browser": {
+                      "type": "object",
+                      "properties": {
+                        "nodeId": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string",
+                          "minLength": 2,
+                          "maxLength": 2
+                        },
+                        "proxyUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "windowSize": {
+                          "type": "string",
+                          "pattern": "^\\d+x\\d+$/i"
+                        },
+                        "displaySize": {
+                          "type": "string",
+                          "pattern": "^\\d+x\\d+$/i"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "language": {
+                          "type": "string"
+                        },
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "persist": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "adblock": {
+                          "type": "boolean"
+                        },
+                        "captchaSolver": {
+                          "type": "boolean"
+                        },
+                        "extensionIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "note": {
+                          "type": "string",
+                          "maxLength": 256
+                        },
+                        "gpu": {
+                          "type": "string"
+                        },
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "leaseTimeoutSeconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "maxReadyAgeSeconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "lastError": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "size",
+                    "status",
+                    "ready",
+                    "starting",
+                    "leased",
+                    "browser",
+                    "leaseTimeoutSeconds",
+                    "maxReadyAgeSeconds",
+                    "lastError",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A pool with that name already exists, or the size would exceed the warm-browser cap of the account (\"Pool capacity 32 exceeds your pool limit of 30\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Create a pool"
+      },
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "List browser pools.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 6,
+                            "maxLength": 80,
+                            "example": "pool_8ca73065e49d44f3a7825743745b2948"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "warming",
+                              "ready",
+                              "degraded",
+                              "paused",
+                              "deleting"
+                            ]
+                          },
+                          "ready": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "starting": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "leased": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "browser": {
+                            "type": "object",
+                            "properties": {
+                              "nodeId": {
+                                "type": "string"
+                              },
+                              "country": {
+                                "type": "string",
+                                "minLength": 2,
+                                "maxLength": 2
+                              },
+                              "proxyUrl": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "windowSize": {
+                                "type": "string",
+                                "pattern": "^\\d+x\\d+$/i"
+                              },
+                              "displaySize": {
+                                "type": "string",
+                                "pattern": "^\\d+x\\d+$/i"
+                              },
+                              "url": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "timezone": {
+                                "type": "string"
+                              },
+                              "language": {
+                                "type": "string"
+                              },
+                              "profile": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "persist": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "name"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "adblock": {
+                                "type": "boolean"
+                              },
+                              "captchaSolver": {
+                                "type": "boolean"
+                              },
+                              "extensionIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "note": {
+                                "type": "string",
+                                "maxLength": 256
+                              },
+                              "gpu": {
+                                "type": "string"
+                              },
+                              "tags": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "leaseTimeoutSeconds": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          },
+                          "maxReadyAgeSeconds": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          },
+                          "lastError": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "size",
+                          "status",
+                          "ready",
+                          "starting",
+                          "leased",
+                          "browser",
+                          "leaseTimeoutSeconds",
+                          "maxReadyAgeSeconds",
+                          "lastError",
+                          "createdAt",
+                          "updatedAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "pools"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pool state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "List pools"
+      }
+    },
+    "/v1/browser/pools/{poolId}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Get browser pool state.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 80,
+              "example": "pool_8ca73065e49d44f3a7825743745b2948"
+            },
+            "required": true,
+            "name": "poolId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 6,
+                      "maxLength": 80,
+                      "example": "pool_8ca73065e49d44f3a7825743745b2948"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "warming",
+                        "ready",
+                        "degraded",
+                        "paused",
+                        "deleting"
+                      ]
+                    },
+                    "ready": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "starting": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "leased": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "browser": {
+                      "type": "object",
+                      "properties": {
+                        "nodeId": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string",
+                          "minLength": 2,
+                          "maxLength": 2
+                        },
+                        "proxyUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "windowSize": {
+                          "type": "string",
+                          "pattern": "^\\d+x\\d+$/i"
+                        },
+                        "displaySize": {
+                          "type": "string",
+                          "pattern": "^\\d+x\\d+$/i"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "language": {
+                          "type": "string"
+                        },
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "persist": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "adblock": {
+                          "type": "boolean"
+                        },
+                        "captchaSolver": {
+                          "type": "boolean"
+                        },
+                        "extensionIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "note": {
+                          "type": "string",
+                          "maxLength": 256
+                        },
+                        "gpu": {
+                          "type": "string"
+                        },
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "leaseTimeoutSeconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "maxReadyAgeSeconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "lastError": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "size",
+                    "status",
+                    "ready",
+                    "starting",
+                    "leased",
+                    "browser",
+                    "leaseTimeoutSeconds",
+                    "maxReadyAgeSeconds",
+                    "lastError",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pool state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Get a pool"
+      },
+      "patch": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Resize, pause, resume, or reconfigure a browser pool.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 80,
+              "example": "pool_8ca73065e49d44f3a7825743745b2948"
+            },
+            "required": true,
+            "name": "poolId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "browser": {
+                    "type": "object",
+                    "properties": {
+                      "nodeId": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 2
+                      },
+                      "proxyUrl": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "windowSize": {
+                        "type": "string",
+                        "pattern": "^\\d+x\\d+$/i"
+                      },
+                      "displaySize": {
+                        "type": "string",
+                        "pattern": "^\\d+x\\d+$/i"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "timezone": {
+                        "type": "string"
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "profile": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "persist": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "adblock": {
+                        "type": "boolean"
+                      },
+                      "captchaSolver": {
+                        "type": "boolean"
+                      },
+                      "extensionIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "note": {
+                        "type": "string",
+                        "maxLength": 256
+                      },
+                      "gpu": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "default": {},
+                    "additionalProperties": false,
+                    "description": "Replaces the whole browser template; include every option to keep. Changing it restarts the warm browsers."
+                  },
+                  "leaseTimeoutSeconds": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 86400
+                  },
+                  "maxReadyAgeSeconds": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 86400
+                  },
+                  "paused": {
+                    "type": "boolean",
+                    "description": "true stops the warm browsers and refuses acquires; false warms them again."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 6,
+                      "maxLength": 80,
+                      "example": "pool_8ca73065e49d44f3a7825743745b2948"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "warming",
+                        "ready",
+                        "degraded",
+                        "paused",
+                        "deleting"
+                      ]
+                    },
+                    "ready": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "starting": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "leased": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "browser": {
+                      "type": "object",
+                      "properties": {
+                        "nodeId": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string",
+                          "minLength": 2,
+                          "maxLength": 2
+                        },
+                        "proxyUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "windowSize": {
+                          "type": "string",
+                          "pattern": "^\\d+x\\d+$/i"
+                        },
+                        "displaySize": {
+                          "type": "string",
+                          "pattern": "^\\d+x\\d+$/i"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "language": {
+                          "type": "string"
+                        },
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "persist": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "adblock": {
+                          "type": "boolean"
+                        },
+                        "captchaSolver": {
+                          "type": "boolean"
+                        },
+                        "extensionIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "note": {
+                          "type": "string",
+                          "maxLength": 256
+                        },
+                        "gpu": {
+                          "type": "string"
+                        },
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "leaseTimeoutSeconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "maxReadyAgeSeconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "lastError": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "size",
+                    "status",
+                    "ready",
+                    "starting",
+                    "leased",
+                    "browser",
+                    "leaseTimeoutSeconds",
+                    "maxReadyAgeSeconds",
+                    "lastError",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pool state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Update a pool"
+      },
+      "delete": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Delete a pool. Active leases require force=true.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 80,
+              "example": "pool_8ca73065e49d44f3a7825743745b2948"
+            },
+            "required": true,
+            "name": "poolId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "force",
+            "in": "query",
+            "description": "Pass true to stop leased browsers too. Without it a pool with active leases answers 409 (\"Pool has active leases; pass force=true to stop them\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The pool has active leases and force was not passed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Delete a pool"
+      }
+    },
+    "/v1/browser/pools/{poolId}/acquire": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Take a ready browser. From here on the session belongs to the workspace like any other; the pool warms a replacement. Its createdAt is when the browser was warmed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 80,
+              "example": "pool_8ca73065e49d44f3a7825743745b2948"
+            },
+            "required": true,
+            "name": "poolId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "waitMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 30000,
+                    "default": 0,
+                    "description": "How long to wait for a browser to become ready when none is, in milliseconds (0 to 30000). Send {} for no wait; the body is required."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poolId": {
+                      "type": "string",
+                      "minLength": 6,
+                      "maxLength": 80,
+                      "example": "pool_8ca73065e49d44f3a7825743745b2948"
+                    },
+                    "leaseId": {
+                      "type": "string"
+                    },
+                    "acquiredAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "session": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "description": "The session id: an opaque string; do not validate its format."
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "servedBy": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "stoppedAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "cdpUrl": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "sessionId",
+                        "status",
+                        "servedBy",
+                        "createdAt",
+                        "stoppedAt",
+                        "cdpUrl",
+                        "note"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "poolId",
+                    "leaseId",
+                    "acquiredAt",
+                    "expiresAt",
+                    "session"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No browser became ready within waitMs (\"No browser is currently ready in this pool\"), or the pool is paused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Acquire a browser"
+      }
+    },
+    "/v1/browser/pools/{poolId}/release": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "End a leased browser. The session is stopped; the answer carries status \"ended\". Idempotent: releasing the same lease again answers the same body.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 80,
+              "example": "pool_8ca73065e49d44f3a7825743745b2948"
+            },
+            "required": true,
+            "name": "poolId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "leaseId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "leaseId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "poolId": {
+                      "type": "string",
+                      "minLength": 6,
+                      "maxLength": 80,
+                      "example": "pool_8ca73065e49d44f3a7825743745b2948"
+                    },
+                    "leaseId": {
+                      "type": "string"
+                    },
+                    "sessionId": {
+                      "type": "string",
+                      "description": "The session id: an opaque string; do not validate its format."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "returned",
+                        "ended"
+                      ]
+                    },
+                    "returnedAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "poolId",
+                    "leaseId",
+                    "sessionId",
+                    "status",
+                    "returnedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown pool, or a lease that does not belong to it (\"Pool lease not found\").",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pool state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Release a browser"
+      }
+    },
+    "/v1/browser/pools/{poolId}/flush": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "description": "Stop every ready browser and warm fresh ones. Leased browsers are not touched. Answers how many were stopped.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 80,
+              "example": "pool_8ca73065e49d44f3a7825743745b2948"
+            },
+            "required": true,
+            "name": "poolId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "stopped": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "stopped"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pool state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Browser service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Flush warm browsers"
+      }
     }
   },
   "servers": [
@@ -2426,6 +4439,9 @@
     },
     {
       "name": "Extensions"
+    },
+    {
+      "name": "Pools"
     }
   ]
 }

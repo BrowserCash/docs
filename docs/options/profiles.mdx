@@ -3,7 +3,7 @@ title: "Profiles"
 description: "Save a session's cookies and browser state under a name, and start later sessions already signed in."
 ---
 
-A profile is a full browser profile stored under a name you choose. Start a session with `profile: { name, persist: true }`, sign in, stop the session: the state is saved. Start another session with the same name and it opens signed in.
+A profile is a full browser profile stored under a name you choose. Start a session with `profile: { name, persist: true }`, sign in, stop the session: the state is saved. Start another session with the same name and it opens signed in. A [browser pool](/docs/sessions/pools) can load a profile into every warm browser too; keep `persist` off there, since several browsers writing the same profile would overwrite one another.
 
 <CodeGroup>
 ```json Request

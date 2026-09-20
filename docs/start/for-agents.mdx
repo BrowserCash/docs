@@ -16,7 +16,8 @@ This page is written for an AI coding agent (Claude Code, Cursor, Codex, or simi
 7. **Keep the `sessionId`.** Log it with the run. Every session has a record in the dashboard under Telemetry → Sessions with node, network, timing and cost. If the person wants to watch, print `https://viewer.driver.dev?ws=<cdpUrl>` as soon as the session exists; see [Live view](/docs/sessions/live-view).
 8. **Report what a person must fix; retry only what time fixes.** `402` (out of credits) and `403` (concurrency or plan limit): report, never loop. `503` (no capacity; the response carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`): back off with jitter, cap the attempts, then report. `504` (Chrome did not start in time) and `500`: retry once. `429`: back off. The full table is on [Errors](/docs/sessions/errors).
 9. **Stay under the workspace's concurrency limit.** `GET /v1/account/billing` reports it as `plan.concurrent_browsers`; sessions beyond it are refused with 403.
-10. **When a site challenges or blocks, escalate in this order.** Remove every hook and tactic; then create with `type: "hosted_stealth"`, then `"hosted_privacy"`, then add `captchaSolver: true`; when a step genuinely needs a person, give them the live view URL. See [Browser types](/docs/options/browser-types) and [CAPTCHA solving](/docs/options/captcha-and-adblock).
+10. **Use a browser pool when start-up latency matters.** A [pool](/docs/sessions/pools) keeps browsers warm with fixed options; `POST /v1/browser/pools/{poolId}/acquire` with `{ "waitMs": 10000 }` answers in under a second with `{ leaseId, session }`, and `session` is an ordinary session from then on. Release it with `POST /v1/browser/pools/{poolId}/release` `{ leaseId }` in the same `finally` where you would stop a session. Do not create pools on the person's behalf without asking: they hold warm browsers against an account-wide cap.
+11. **When a site challenges or blocks, escalate in this order.** Remove every hook and tactic; then create with `type: "hosted_stealth"`, then `"hosted_privacy"`, then add `captchaSolver: true`; when a step genuinely needs a person, give them the live view URL. See [Browser types](/docs/options/browser-types) and [CAPTCHA solving](/docs/options/captcha-and-adblock).
 
 ## How to write the automation
 
@@ -54,6 +55,10 @@ Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into t
   hand them the live view.
 - Live view: https://viewer.driver.dev?ws=<cdpUrl> — print it as soon as the session exists so
   the user can watch; it works until the session ends.
+- If a browser pool exists for the job (GET /v1/browser/pools, or the dashboard's Browser pools
+  page), take a browser from it instead of creating one: POST /v1/browser/pools/<poolId>/acquire
+  with {"waitMs": 10000} returns { leaseId, session }; release it in the finally with
+  POST /v1/browser/pools/<poolId>/release {"leaseId": ...}. Do not create pools unasked.
 - Check whether the outcome can be reached faster: direct URLs, one session for many pages,
   a persisted profile instead of logging in. Avoid slow browser logic and fixed sleeps.
 - Always stop the session in a finally: DELETE /v1/browser/session?sessionId=<id>.
@@ -75,7 +80,7 @@ Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DR
 | Use | `chromium.connectOverCDP(cdpUrl)` | From Patchright. Reuse the first context and page. |
 | Stop | `DELETE /v1/browser/session?sessionId=<id>` | Returns `{ success: true }`. |
 
-Useful extras: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Full options for the create body are on [Create a session](/docs/sessions/create#options).
+Useful extras: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Full options for the create body are on [Create a session](/docs/sessions/create#options). When a [pool](/docs/sessions/pools) exists, `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path.
 
 ## Reference implementation
 
@@ -175,6 +180,27 @@ export async function stopSession(id: string): Promise<void> {
     if (!r.success) console.error(`Driver: stop of ${id} did not succeed`);
   } catch (e) {
     console.error(`Driver: stop of ${id} failed: ${(e as Error).message}`);
+  }
+}
+
+/**
+ * Browser pools (see Browser pools in the docs): a warm browser in under a second. The returned session is an
+ * ordinary session; release it (or stop it) in a finally. A 409 means nothing became ready within waitMs.
+ */
+export interface PoolLease {
+  poolId: string;
+  leaseId: string;
+  acquiredAt: string;
+  expiresAt: string;   // the session is stopped at this time unless released earlier
+  session: Session & { cdpUrl: string };
+}
+export const acquireFromPool = (poolId: string, waitMs = 10_000) =>
+  call<PoolLease>("POST", `/v1/browser/pools/${encodeURIComponent(poolId)}/acquire`, { waitMs });
+export async function releaseLease(poolId: string, leaseId: string): Promise<void> {
+  try {
+    await call("POST", `/v1/browser/pools/${encodeURIComponent(poolId)}/release`, { leaseId });
+  } catch (e) {
+    console.error(`Driver: release of ${leaseId} failed: ${(e as Error).message}`);
   }
 }
 
@@ -291,6 +317,20 @@ def stop_session(session_id):
         print(f"Driver: stop of {session_id} failed: {e}")
 
 
+def acquire_from_pool(pool_id, wait_ms=10000):
+    """Browser pools: a warm browser in under a second. Returns {poolId, leaseId, acquiredAt, expiresAt, session};
+    the session is an ordinary session. A 409 means nothing became ready within wait_ms."""
+    return _call("POST", f"/v1/browser/pools/{pool_id}/acquire", json={"waitMs": wait_ms})
+
+
+def release_lease(pool_id, lease_id):
+    """Ends the leased session. Idempotent; logs instead of raising, for use in a finally."""
+    try:
+        _call("POST", f"/v1/browser/pools/{pool_id}/release", json={"leaseId": lease_id})
+    except DriverError as e:
+        print(f"Driver: release of {lease_id} failed: {e}")
+
+
 def wait_for_active(session, timeout=60):
     """Create normally returns an active session; this covers the rare 'starting' answer."""
     deadline = time.time() + timeout
@@ -337,6 +377,7 @@ def browser_page(**opts):
 - [ ] `DRIVER_API_KEY` comes from the environment and is not committed.
 - [ ] 402 and 403 are reported to the user; 503 is retried only with a cap and a growing delay.
 - [ ] The result was verified through `GET /v1/browser/session` (status `completed`), not assumed.
+- [ ] A browser taken from a pool is released (or stopped) in the same `finally`; no pool was created without asking.
 
 ## Machine-readable resources
 

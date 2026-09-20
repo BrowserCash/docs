@@ -20,6 +20,7 @@ const dropDeprecatedType = (node) => {
 dropDeprecatedType(doc)
 
 const tagFor = (path) => path.startsWith('/v1/browser/session') ? 'Sessions'
+  : path.startsWith('/v1/browser/pools') ? 'Pools'
   : path.startsWith('/v1/browser/profile') ? 'Profiles'
   : path.startsWith('/v1/browser/extensions') ? 'Extensions'
   : path.startsWith('/v1/account') ? 'Account'
@@ -42,6 +43,14 @@ const summaries = {
   'GET /v1/browser/extensions/{extensionId}': 'Get an extension',
   'PUT /v1/browser/extensions/{extensionId}': 'Update an extension',
   'DELETE /v1/browser/extensions/{extensionId}': 'Delete an extension',
+  'POST /v1/browser/pools': 'Create a pool',
+  'GET /v1/browser/pools': 'List pools',
+  'GET /v1/browser/pools/{poolId}': 'Get a pool',
+  'PATCH /v1/browser/pools/{poolId}': 'Update a pool',
+  'DELETE /v1/browser/pools/{poolId}': 'Delete a pool',
+  'POST /v1/browser/pools/{poolId}/acquire': 'Acquire a browser',
+  'POST /v1/browser/pools/{poolId}/release': 'Release a browser',
+  'POST /v1/browser/pools/{poolId}/flush': 'Flush warm browsers',
 }
 const tags = new Set()
 for (const [path, ops] of Object.entries(doc.paths)) {
@@ -111,6 +120,47 @@ if (create503) {
   const code = create503.content?.['application/json']?.schema?.properties?.code
   if (code) { code.enum = ['browser_capacity_unavailable']; code.description = 'Machine-readable cause; present when no browser capacity is available.' }
 }
+// Pools, verified live 2026-09-20: create answers 201 (the generator lists 200 as well); the browser template is
+// validated when browsers start, not on create; acquire needs a JSON body; the 409s have fixed messages.
+const pools = doc.paths['/v1/browser/pools']
+const poolCreate = pools?.post
+if (poolCreate) {
+  if (poolCreate.responses['201'] && poolCreate.responses['200']) delete poolCreate.responses['200']
+  const props = poolCreate.requestBody?.content?.['application/json']?.schema?.properties
+  if (props) {
+    props.name.description = 'Unique in the workspace, 1 to 64 characters.'
+    props.size.description = 'Browsers to keep ready. All pools together may keep 30 warm per account.'
+    props.browser.description = 'The create options every browser in the pool starts with (same fields as POST /v1/browser/session, without type, duration and browserCheck). Values are not validated on create. As of 2026-09-20 country and proxyUrl are not applied to warm browsers (they egress from the default US network); url and note are.'
+    props.leaseTimeoutSeconds.description = 'How long an acquired browser may be held, in seconds (30 to 86400, default 900). The session is stopped when the lease expires.'
+    props.maxReadyAgeSeconds.description = 'How long a browser may wait ready before it is replaced with a fresh one, in seconds (30 to 86400, default 3600).'
+  }
+  poolCreate.responses['409'].description = 'A pool with that name already exists, or the size would exceed the warm-browser cap of the account ("Pool capacity 32 exceeds your pool limit of 30").'
+}
+const poolPatch = doc.paths['/v1/browser/pools/{poolId}']?.patch
+if (poolPatch) {
+  const props = poolPatch.requestBody?.content?.['application/json']?.schema?.properties
+  if (props?.browser) props.browser.description = 'Replaces the whole browser template; include every option to keep. Changing it restarts the warm browsers.'
+  if (props?.paused) props.paused.description = 'true stops the warm browsers and refuses acquires; false warms them again.'
+}
+const poolDelete = doc.paths['/v1/browser/pools/{poolId}']?.delete
+if (poolDelete) {
+  for (const p of poolDelete.parameters || []) if (p.name === 'force') p.description = 'Pass true to stop leased browsers too. Without it a pool with active leases answers 409 ("Pool has active leases; pass force=true to stop them").'
+  poolDelete.responses['409'].description = 'The pool has active leases and force was not passed.'
+}
+const acquire = doc.paths['/v1/browser/pools/{poolId}/acquire']?.post
+if (acquire) {
+  const body = acquire.requestBody?.content?.['application/json']?.schema
+  if (body?.properties?.waitMs) { body.properties.waitMs.default = 0; body.properties.waitMs.description = 'How long to wait for a browser to become ready when none is, in milliseconds (0 to 30000). Send {} for no wait; the body is required.' }
+  acquire.responses['409'].description = 'No browser became ready within waitMs ("No browser is currently ready in this pool"), or the pool is paused.'
+  acquire.description = 'Take a ready browser. From here on the session belongs to the workspace like any other; the pool warms a replacement. Its createdAt is when the browser was warmed.'
+}
+const release = doc.paths['/v1/browser/pools/{poolId}/release']?.post
+if (release) {
+  release.description = 'End a leased browser. The session is stopped; the answer carries status "ended". Idempotent: releasing the same lease again answers the same body.'
+  release.responses['404'].description = 'Unknown pool, or a lease that does not belong to it ("Pool lease not found").'
+}
+const flush = doc.paths['/v1/browser/pools/{poolId}/flush']?.post
+if (flush) flush.description = 'Stop every ready browser and warm fresh ones. Leased browsers are not touched. Answers how many were stopped.'
 if (doc.components?.securitySchemes?.Bearer) doc.components.securitySchemes.Bearer.description = 'A workspace API key from Settings → API keys in the dashboard (https://app.driver.dev), sent as a bearer token.'
 doc.externalDocs = { url: 'https://docs.driver.dev', description: 'Driver documentation' }
 if (doc.info) doc.info.contact = { name: 'Driver support', email: 'support@driver.dev' }
