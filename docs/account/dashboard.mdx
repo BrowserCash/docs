@@ -7,11 +7,11 @@ The [dashboard](https://app.driver.dev) is the other half of the API. Everything
 
 | Area | What's there |
 |---|---|
-| **Overview** | Running browsers against the plan limit, today's sessions, bandwidth this period, credits, a 30-day chart. **Launch browser** starts a session with options and opens its live view. No code needed. |
-| **Workbench** | Script editor, live browser, output log. Pick a template, set country, network, profile, CAPTCHA solver and proxy, press Run. Try options here before writing them into code. |
+| **Overview** | Running browsers against the plan limit, today's sessions, bandwidth this period, credits, a 30-day chart. **Launch browser** takes the same options as [`POST /v1/browser/session`](/docs/sessions/create#options) (network or proxy, country with its timezone and language, browser type, length, profile, CAPTCHA solver, ad blocking, extensions, start URL, window size, node, note), or a warm browser from a pool, and opens the live view. |
+| **Workbench** | Script editor, live browser, output log. Pick a template, set the session options (the same fields as the create call), press Run. The options reach the script's session exactly as the API receives them, so what works here works in code. |
 | **Profiles** | The workspace's saved [profiles](/docs/options/profiles). Launch a session on one to sign in by hand. |
 | **Browser pools** | [Pools](/docs/sessions/pools) of warm browsers: size, country, profile, start URL, lease timeout. Pause, flush or delete them; see how many are ready and in use. **Launch browser** on the Overview can take a browser from any ready pool. |
-| **Network** | Reserve and manage [dedicated IPs](/docs/options/proxies#dedicated-ips): country, quantity, TCP profile, label; release one; launch a session on it. |
+| **Network** | Reserve and manage [dedicated IPs](/docs/options/proxies#dedicated-ips): country, quantity, TCP profile, label; the Renews switch per address; launch a session on one. |
 | **Sessions** (Telemetry) | Every session, filterable by status. Each record: live view while running, then node, country, network, bandwidth, cost and timestamps. Stop one, or stop all. |
 | **Workspace** | Name, members, invitations. Admins manage members, keys and billing. |
 | **API keys** | The root key and named keys: create, roll, delete. Also a ready-to-paste briefing for your coding agent. |
