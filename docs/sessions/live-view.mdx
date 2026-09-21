@@ -35,6 +35,6 @@ Anyone with the URL can drive the browser; treat it like the API key. It stops w
 
 ## The session record
 
-After a session ends its dashboard page keeps: status and duration, bandwidth and cost, node and country, network, how it was started (type, profile, note, API key), timestamps. Log the `sessionId` so you can find a run later.
+After a session ends its dashboard page keeps: status and duration, bandwidth and cost, node and country, how it was started (type, profile, note, API key), timestamps. Log the `sessionId` so you can find a run later.
 
 The API keeps the essentials: [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) has `status`, `stoppedAt` and `bandwidthBytes`; the [list](/docs/sessions/lifecycle#list-sessions) adds `type` and `country`. Cost, network and node details are dashboard-only.
