@@ -17,6 +17,8 @@ Common bodies: `401` `Unauthorized: Missing or invalid Authorization header` or 
 
 ## Status codes
 
+<Note>The dedicated-IP codes here (`invalid_spec`, `dedicated_ip_not_owned`, `no_dedicated_ip`, `dedicated_ip_unhealthy`) arrive with the next gateway release, alongside `dedicated://` in `proxyUrl`. The dashboard resolves the address before the create call, so Launch browser never returns them.</Note>
+
 | Status | Meaning | Retry? |
 |---|---|---|
 | `400` | Invalid or incompatible options, an unknown field on create, a missing `sessionId`, an update to an ended session, or a malformed dedicated IP spec (`code: invalid_spec`). The message names the problem. | No. Fix the request. |

@@ -55,7 +55,6 @@ Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into t
   hand them the live view.
 - Live view: https://viewer.driver.dev?ws=<cdpUrl> — print it as soon as the session exists so
   the user can watch; it works until the session ends.
-- If the workspace owns dedicated IPs (GET /v1/network/ips), pass proxyUrl "dedicated://any" (or "dedicated://<ip>") instead of a country; the address decides country and timezone.
 - If a browser pool exists for the job (GET /v1/browser/pools, or the dashboard's Browser pools
   page), take a browser from it instead of creating one: POST /v1/browser/pools/<poolId>/acquire
   with {"waitMs": 10000} returns { leaseId, session }; release it in the finally with
@@ -81,7 +80,7 @@ Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DR
 | Use | `chromium.connectOverCDP(cdpUrl)` | From Patchright. Reuse the first context and page. |
 | Stop | `DELETE /v1/browser/session?sessionId=<id>` | Returns `{ success: true }`. |
 
-Also useful: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Every create option is on [Create a session](/docs/sessions/create#options). With a [pool](/docs/sessions/pools), `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path. `GET /v1/network/ips` lists the workspace's [dedicated IPs](/docs/options/proxies#dedicated-ips); pass one as `proxyUrl: "dedicated://<ip>"` (or `"dedicated://any"`) and leave `country` out.
+Also useful: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Every create option is on [Create a session](/docs/sessions/create#options). With a [pool](/docs/sessions/pools), `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path. Dedicated IPs are reserved and used from the dashboard today; the API takes them with the next gateway release.
 
 ## Reference implementation
 
