@@ -7,10 +7,6 @@ A pool keeps browsers running with the options you chose. Acquire hands you one 
 
 Pools are also in the [dashboard](https://app.driver.dev/pools) under **Browsers → Browser pools**; **Launch browser** on the Overview can take one from any ready pool.
 
-<Warning>
-**Network options aren't applied to pooled browsers yet.** A pool records `country` and the session list reports it, but as of 2026-09-20 every warm browser egresses from the default US network (GB and JP pools both answered with a US address and `America/New_York`; a plain create with the same `country` egressed correctly). An unreachable `proxyUrl` or a nonexistent country still warms and reports `ready`. Until this is fixed, use pools for jobs that are fine on the US network and [create sessions](/docs/sessions/create) for geo-specific or proxied ones. `url` and `note` are applied.
-</Warning>
-
 ## Create a pool
 
 <CodeGroup>
@@ -88,7 +84,7 @@ Answers `201` at once with the pool `warming`; measured, it was `ready` two to f
 | `leaseTimeoutSeconds` | integer | `900` | How long an acquired browser may be held, 30 to 86400. The session is stopped when the lease expires. |
 | `maxReadyAgeSeconds` | integer | `3600` | How long a browser may sit ready before it's swapped for a fresh one, 30 to 86400. The swap takes two to three seconds, during which `ready` is one lower. |
 
-Unknown fields, top-level or inside `browser`, are a `400` (`bogus is not supported by this endpoint`). Values inside `browser` aren't checked the way a create body is: `country: "ZZ"` or an unreachable `proxyUrl` is accepted and the pool reports `ready` (see the warning). `lastError` is set when browsers fail to start.
+Unknown fields, top-level or inside `browser`, are a `400` (`bogus is not supported by this endpoint`), and so is a country the platform doesn't serve (`Unsupported country "ZZ"`). Pool responses echo the template with what the platform resolved for it (`timezone`, and a `proxyUrl` with the credentials redacted). `lastError` is set when browsers fail to start.
 
 `profile` works as on a session. Leave `persist` off (the default) so every browser loads it read-only; several browsers writing one profile would overwrite each other.
 
@@ -226,7 +222,7 @@ requests.post(
 |---|---|
 | `GET /v1/browser/pools` | `{ "pools": [ … ] }`, every pool in the workspace with its counters. |
 | `GET /v1/browser/pools/{poolId}` | One pool. |
-| `PATCH /v1/browser/pools/{poolId}` | Change `name`, `size`, `browser`, `leaseTimeoutSeconds`, `maxReadyAgeSeconds` or `paused` (`true` stops the warm browsers and refuses acquires; `false` warms them again). Every update restarts the warm browsers (`warming` for a few seconds; leased ones untouched). Always send the whole `browser` template: an update without it resets the template to `{}`, so a bare rename or resize drops the country, start URL and everything else. |
+| `PATCH /v1/browser/pools/{poolId}` | Change `name`, `size`, `browser`, `leaseTimeoutSeconds`, `maxReadyAgeSeconds` or `paused` (`true` stops the warm browsers and refuses acquires; `false` warms them again). Send only what changes. A new `browser` replaces the template as a whole and the warm browsers are replaced with ones built from it; a rename, resize or timeout change leaves the ready browsers alone (a resize up warms more, a resize down stops the surplus). |
 | `POST /v1/browser/pools/{poolId}/flush` | Stops every ready browser and warms fresh ones. Answers `{ "success": true, "stopped": n }`. Leased browsers are untouched. |
 | `DELETE /v1/browser/pools/{poolId}` | Stops the warm browsers and removes the pool. With leased browsers: `409` `Pool has active leases; pass force=true to stop them`; `?force=true` (literal `true`; `1` is a `400`) stops those sessions too. Afterwards the pool is `404`. |
 

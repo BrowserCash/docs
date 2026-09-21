@@ -130,7 +130,7 @@ if (poolCreate) {
   if (props) {
     props.name.description = 'Unique in the workspace, 1 to 64 characters.'
     props.size.description = 'Browsers to keep ready. All pools together may keep 30 warm per account.'
-    props.browser.description = 'The create options every browser in the pool starts with (same fields as POST /v1/browser/session, without type, duration and browserCheck). Values are not validated on create. As of 2026-09-20 country and proxyUrl are not applied to warm browsers (they egress from the default US network); url and note are.'
+    props.browser.description = 'The create options every browser in the pool starts with (same fields as POST /v1/browser/session, without type, duration and browserCheck). Validated like a create body (an unsupported country is a 400). Responses echo the template with the resolved timezone and a redacted proxyUrl.'
     props.leaseTimeoutSeconds.description = 'How long an acquired browser may be held, in seconds (30 to 86400, default 900). The session is stopped when the lease expires.'
     props.maxReadyAgeSeconds.description = 'How long a browser may wait ready before it is replaced with a fresh one, in seconds (30 to 86400, default 3600).'
   }
@@ -139,7 +139,7 @@ if (poolCreate) {
 const poolPatch = doc.paths['/v1/browser/pools/{poolId}']?.patch
 if (poolPatch) {
   const props = poolPatch.requestBody?.content?.['application/json']?.schema?.properties
-  if (props?.browser) props.browser.description = 'Replaces the whole browser template; include every option to keep. Changing it restarts the warm browsers.'
+  if (props?.browser) props.browser.description = 'Replaces the browser template as a whole and rebuilds the warm browsers from it. Leave it out to keep the current template.'
   if (props?.paused) props.paused.description = 'true stops the warm browsers and refuses acquires; false warms them again.'
 }
 const poolDelete = doc.paths['/v1/browser/pools/{poolId}']?.delete
