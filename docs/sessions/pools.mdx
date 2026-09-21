@@ -1,14 +1,14 @@
 ---
 title: "Browser pools"
-description: "Keep browsers warm and take one in under a second. Create a pool, acquire a lease, release or stop the session."
+description: "Keep browsers warm and take one in under a second. Create a pool, acquire a lease, release or stop."
 ---
 
-A pool keeps a number of browsers already running with the options you chose, so a job can take one instead of waiting for a create call. Acquiring from a ready pool answers in well under a second with an ordinary session; the pool warms a replacement behind it. Use a pool when start-up latency matters (an agent loop, a request handler, a burst of short jobs) or when every job needs the same start page loaded, profile attached or country. For a nightly batch that can wait a few seconds per browser, plain [create](/docs/sessions/create) is simpler.
+A pool keeps browsers running with the options you chose. Acquire hands you one in under a second as an ordinary session, and the pool warms a replacement. Use one when start-up latency matters (an agent loop, a request handler, a burst of short jobs) or when every job wants the same start page, profile or country. A nightly batch that can wait a few seconds per browser is fine with plain [create](/docs/sessions/create).
 
-Pools also live in the [dashboard](https://app.driver.dev/pools) under **Browsers → Browser pools**, where **Launch browser** on the Overview can take a browser from any ready pool.
+Pools are also in the [dashboard](https://app.driver.dev/pools) under **Browsers → Browser pools**; **Launch browser** on the Overview can take one from any ready pool.
 
 <Warning>
-**Network options are not applied to pooled browsers yet.** A pool records the `country` you set and the session list reports it, but in our runs on 2026-09-20 every warm browser egressed from the default US network (a GB pool and a JP pool both answered with a US address and `America/New_York`), while a plain create with the same `country` egressed correctly. A `proxyUrl` that cannot be reached, or a country that does not exist, still warms and reports `ready`. Until this is fixed, use pools for jobs that are fine on the US network and [create sessions](/docs/sessions/create) for geo-specific or proxied ones. `url` and `note` are applied.
+**Network options aren't applied to pooled browsers yet.** A pool records `country` and the session list reports it, but as of 2026-09-20 every warm browser egresses from the default US network (GB and JP pools both answered with a US address and `America/New_York`; a plain create with the same `country` egressed correctly). An unreachable `proxyUrl` or a nonexistent country still warms and reports `ready`. Until this is fixed, use pools for jobs that are fine on the US network and [create sessions](/docs/sessions/create) for geo-specific or proxied ones. `url` and `note` are applied.
 </Warning>
 
 ## Create a pool
@@ -58,7 +58,7 @@ pool = r.json()  # pool["id"] is what the other calls take
 ```
 </CodeGroup>
 
-The call answers `201` at once with the pool in `warming`; the browsers come up in the background and in our runs the pool was `ready` two to five seconds later.
+Answers `201` at once with the pool `warming`; measured, it was `ready` two to five seconds later.
 
 ```json
 {
@@ -83,26 +83,26 @@ The call answers `201` at once with the pool in `warming`; the browsers come up 
 | Field | Type | Default | What it does |
 |---|---|---|---|
 | `name` | string | required | 1 to 64 characters, unique in the workspace (`409` `A pool with that name already exists`). |
-| `size` | integer | required | How many browsers to keep ready, at least 1. All pools together may keep 30 browsers warm per account (`409` `Pool capacity 32 exceeds your pool limit of 30`); write to support to raise it. Paused pools count too, and a resize that would cross the cap is refused the same way. |
-| `browser` | object | `{}` | The create options every browser in the pool starts with: `country`, `timezone`, `language`, `url`, `windowSize`, `displaySize`, `proxyUrl`, `profile`, `adblock`, `captchaSolver`, `extensionIds`, `nodeId`, `note`. Same meaning as on [Create a session](/docs/sessions/create#options). `type`, `duration` and `browserCheck` are not accepted. |
-| `leaseTimeoutSeconds` | integer | `900` | How long an acquired browser may be held, 30 to 86400. When the lease expires the session is stopped. |
-| `maxReadyAgeSeconds` | integer | `3600` | How long a browser may sit ready before the pool replaces it with a fresh one, 30 to 86400. The swap takes two to three seconds, during which `ready` is one lower. |
+| `size` | integer | required | Browsers to keep ready, at least 1. 30 warm per account across all pools, paused ones included (`409` `Pool capacity 32 exceeds your pool limit of 30`, also on a resize); write to support to raise it. |
+| `browser` | object | `{}` | The create options every browser starts with: `country`, `timezone`, `language`, `url`, `windowSize`, `displaySize`, `proxyUrl`, `profile`, `adblock`, `captchaSolver`, `extensionIds`, `nodeId`, `note`. Same meaning as on [Create a session](/docs/sessions/create#options). `type`, `duration` and `browserCheck` aren't accepted. |
+| `leaseTimeoutSeconds` | integer | `900` | How long an acquired browser may be held, 30 to 86400. The session is stopped when the lease expires. |
+| `maxReadyAgeSeconds` | integer | `3600` | How long a browser may sit ready before it's swapped for a fresh one, 30 to 86400. The swap takes two to three seconds, during which `ready` is one lower. |
 
-Unknown fields, at the top level or inside `browser`, are `400` (`bogus is not supported by this endpoint`), as on create. The values inside `browser` are not checked the way a create body is: a pool with `country: "ZZ"` or an unreachable `proxyUrl` is created and reports `ready` (see the warning above). `lastError` is set when browsers fail to start.
+Unknown fields, top-level or inside `browser`, are a `400` (`bogus is not supported by this endpoint`). Values inside `browser` aren't checked the way a create body is: `country: "ZZ"` or an unreachable `proxyUrl` is accepted and the pool reports `ready` (see the warning). `lastError` is set when browsers fail to start.
 
-A pool's browsers use `profile` the way a session does. With `persist: false` (the default) every browser loads the profile read-only, which is what you want in a pool: several browsers writing the same profile at once would overwrite one another.
+`profile` works as on a session. Leave `persist` off (the default) so every browser loads it read-only; several browsers writing one profile would overwrite each other.
 
 ## Status and counters
 
 | `status` | Meaning |
 |---|---|
-| `warming` | Just created or resumed; browsers are starting and none is ready yet. |
+| `warming` | Just created or resumed; browsers are starting, none ready yet. |
 | `ready` | `ready` equals `size`. |
-| `degraded` | Fewer ready browsers than `size`: normal right after an acquire, a flush, or a lease expiring, while replacements start. A pool that cannot start browsers stays here with `lastError` set. |
-| `paused` | Warm browsers stopped and no new ones started. Acquire is refused. |
+| `degraded` | Fewer ready than `size`: normal right after an acquire, a flush or a lease expiring, while replacements start. A pool that can't start browsers stays here with `lastError` set. |
+| `paused` | Warm browsers stopped, none started. Acquire is refused. |
 | `deleting` | Being torn down. |
 
-`ready`, `starting` and `leased` count the browsers in each state. Ready browsers are not sessions of the workspace yet: `GET /v1/browser/sessions` does not list them, and they hold none of the workspace's concurrency slots until acquired.
+`ready`, `starting` and `leased` count browsers in each state. Ready browsers aren't sessions yet: `GET /v1/browser/sessions` doesn't list them and they hold no concurrency slot until acquired.
 
 ## Acquire a browser
 
@@ -149,9 +149,9 @@ lease_id, session = lease["leaseId"], lease["session"]
 }
 ```
 
-`waitMs` (0 to 30000, default 0) is how long the call may wait for a browser to become ready when none is; a replacement takes two to three seconds to warm, so a wait of a few seconds usually succeeds. The body is required: send `{}` for no wait (no body is a `400` `Malformed JSON in request body`). When nothing is ready by then the answer is `409` `No browser is currently ready in this pool`; a paused pool answers `409` `Pool is paused` at once. Treat the first like a `503` on create: back off briefly, cap the attempts, then fall back to a plain create or report.
+`waitMs` (0 to 30000, default 0) is how long to wait when nothing is ready; a replacement warms in two to three seconds, so a few seconds is enough. The body is required: `{}` for no wait (no body is a `400` `Malformed JSON in request body`). Nothing ready in time: `409` `No browser is currently ready in this pool`. Paused pool: `409` `Pool is paused` at once. Treat the first like a create `503`: back off, cap, then fall back to a plain create or report.
 
-From the acquire call on, `session` is an ordinary session of the workspace: it appears in `GET /v1/browser/sessions`, `GET /v1/browser/session?sessionId=…` works, it counts as a running browser, and the [live view](/docs/sessions/live-view) works on its `cdpUrl`. Its `createdAt` is when the browser was warmed, not when you acquired it, and the page is already on the pool's `url`. Connect to it exactly like any other session, with Patchright:
+From here `session` is an ordinary session: listed, readable with `GET /v1/browser/session?sessionId=…`, counted as a running browser, watchable in the [live view](/docs/sessions/live-view). `createdAt` is when the browser was warmed, not when you acquired it, and the page is already on the pool's `url`. Connect with Patchright as usual:
 
 <CodeGroup>
 ```typescript TypeScript
@@ -187,17 +187,17 @@ finally:
 ```
 </CodeGroup>
 
-`acquire` and `release` here are the two calls on this page; the [reference client](/docs/start/for-agents#reference-implementation) has both.
+`acquire` and `release` are the two calls on this page; the [reference client](/docs/start/for-agents#reference-implementation) has both.
 
 ## Release or stop
 
-A leased browser ends one of three ways, and the pool warms a replacement in every case:
+A leased browser ends one of three ways; the pool warms a replacement each time.
 
-- **Release** it: `POST /v1/browser/pools/{poolId}/release` with `{ "leaseId": "…" }`. The session is stopped and the answer is `{ "poolId", "leaseId", "sessionId", "status": "ended", "returnedAt" }`. Do this in a `finally`, the way you would stop a session.
-- **Stop** the session with `DELETE /v1/browser/session?sessionId=…`. Same effect; the lease closes on its own within a few seconds.
-- **Let the lease expire.** At `expiresAt` (`leaseTimeoutSeconds` after acquire) the session is stopped whether or not you are done, so pick a lease that covers the job, or stop early.
+- **Release**: `POST /v1/browser/pools/{poolId}/release` with `{ "leaseId": "…" }`. Stops the session; answers `{ "poolId", "leaseId", "sessionId", "status": "ended", "returnedAt" }`. Do it in a `finally`.
+- **Stop** it with `DELETE /v1/browser/session?sessionId=…`. Same effect; the lease closes within a few seconds.
+- **Let the lease expire.** At `expiresAt` (`leaseTimeoutSeconds` after acquire) the session is stopped whether or not you're done. Pick a lease that covers the job.
 
-Releasing is what ends billing for the session, exactly like stopping one. Releasing is idempotent (a second release of the same lease answers the same body); an unknown lease, or one from another pool, is `404` `Pool lease not found`. A browser is never handed back to the pool for another job: the next acquire always gets a fresh one.
+Release ends billing, like a stop. It's idempotent (same body twice); an unknown lease, or one from another pool, is `404` `Pool lease not found`. A browser is never handed back for another job; the next acquire gets a fresh one.
 
 <CodeGroup>
 ```bash cURL
@@ -226,11 +226,11 @@ requests.post(
 |---|---|
 | `GET /v1/browser/pools` | `{ "pools": [ … ] }`, every pool in the workspace with its counters. |
 | `GET /v1/browser/pools/{poolId}` | One pool. |
-| `PATCH /v1/browser/pools/{poolId}` | Change `name`, `size`, `browser`, `leaseTimeoutSeconds`, `maxReadyAgeSeconds`, or `paused` (`true` stops the warm browsers and refuses acquires; `false` warms them again). Every update restarts the pool's warm browsers (the pool goes back to `warming` for a few seconds; leased browsers are untouched). Always send the whole `browser` template with every option you want to keep: an update without `browser` resets the template to `{}`, so a rename or a resize on its own silently drops the country, start URL and everything else. |
-| `POST /v1/browser/pools/{poolId}/flush` | Stops every ready browser and warms fresh ones. Answers `{ "success": true, "stopped": n }`. Use it after changing something browsers pick up only at start. Leased browsers are not touched. |
-| `DELETE /v1/browser/pools/{poolId}` | Stops the warm browsers and removes the pool. With leased browsers the answer is `409` `Pool has active leases; pass force=true to stop them`; `?force=true` (the literal `true`; `1` is a `400`) stops those sessions too. A deleted pool is `404` afterwards. |
+| `PATCH /v1/browser/pools/{poolId}` | Change `name`, `size`, `browser`, `leaseTimeoutSeconds`, `maxReadyAgeSeconds` or `paused` (`true` stops the warm browsers and refuses acquires; `false` warms them again). Every update restarts the warm browsers (`warming` for a few seconds; leased ones untouched). Always send the whole `browser` template: an update without it resets the template to `{}`, so a bare rename or resize drops the country, start URL and everything else. |
+| `POST /v1/browser/pools/{poolId}/flush` | Stops every ready browser and warms fresh ones. Answers `{ "success": true, "stopped": n }`. Leased browsers are untouched. |
+| `DELETE /v1/browser/pools/{poolId}` | Stops the warm browsers and removes the pool. With leased browsers: `409` `Pool has active leases; pass force=true to stop them`; `?force=true` (literal `true`; `1` is a `400`) stops those sessions too. Afterwards the pool is `404`. |
 
-Pool ids go in the path, unlike session ids, which go in the query string.
+Pool ids go in the path. Session ids go in the query string.
 
 ## Errors
 
@@ -239,17 +239,17 @@ Pool ids go in the path, unlike session ids, which go in the query string.
 | `400` | names the field | A missing or out-of-range field (`size: Too small: expected number to be >0`, `leaseTimeoutSeconds: Too small: expected number to be >=30`), or an unknown field. |
 | `404` | `Browser pool not found` | Unknown pool id, or one belonging to another workspace. |
 | `409` | `A pool with that name already exists` | Names are unique per workspace. |
-| `409` | `Pool capacity 32 exceeds your pool limit of 30` | The new size would put the account's warm browsers over its cap. |
+| `409` | `Pool capacity 32 exceeds your pool limit of 30` | The new size would put the account over its warm-browser cap. |
 | `409` | `No browser is currently ready in this pool` | Acquire waited `waitMs` and nothing became ready. Back off, cap, then fall back or report. |
 | `409` | `Pool has active leases; pass force=true to stop them` | Delete while browsers are leased. |
 | `503` | | The browser service is unavailable. Back off as for a create `503`. |
 
 ## Cost and limits
 
-Warm browsers are not sessions of the workspace: they are not listed, not billed and hold no concurrency slot until acquired. Once acquired, a browser is a session like any other: it counts toward the workspace's concurrent-browser limit and its bandwidth is metered until it is released, stopped or its lease expires. The account-wide cap of 30 warm browsers across all pools is separate from the concurrency limit.
+Warm browsers aren't sessions: not listed, not billed, no concurrency slot. Acquired, a browser is a session like any other: it counts toward the concurrency limit and its bandwidth is metered until release, stop or lease expiry. The 30-warm cap per account is separate from the concurrency limit.
 
 ## Next
 
-- [Lifecycle](/docs/sessions/lifecycle) for what you can do with the acquired session.
-- [Create a session](/docs/sessions/create#options) for every option the `browser` template accepts.
+- [Lifecycle](/docs/sessions/lifecycle): what you can do with the acquired session.
+- [Create a session](/docs/sessions/create#options): every option the `browser` template accepts.
 - [For agents](/docs/start/for-agents#reference-implementation): the reference client has `acquireFromPool` and `releaseLease`.

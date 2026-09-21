@@ -1,9 +1,9 @@
 ---
 title: "Create a session"
-description: "POST /v1/browser/session starts a real Chrome and returns its CDP URL once it is reachable."
+description: "POST /v1/browser/session starts a Chrome and returns its CDP URL once it's reachable."
 ---
 
-A session is one browser on one machine for up to an hour. Create it with the options you need; every field is optional and the defaults give you a hosted Chrome in the US. When a few seconds of start-up per browser is too slow, keep a [browser pool](/docs/sessions/pools) warm with the same options and acquire from it instead.
+One browser on one machine for up to an hour. Every field is optional; the defaults give you a hosted Chrome in the US. If a few seconds of start-up is too slow, acquire from a [browser pool](/docs/sessions/pools) instead.
 
 <CodeGroup>
 ```bash cURL
@@ -67,48 +67,52 @@ session = r.json()
 }
 ```
 
-The call waits until Chrome is reachable, so `cdpUrl` is normally set in the response and `status` is `active`; in our runs that took two to three seconds. It gives up after 20 seconds on most machines and after three minutes on the newest hosted machines, then answers `504`; give the create call a client timeout of at least three minutes (other calls answer within seconds). The browser opens on `about:blank` (or the `url` you passed) with one context and one tab. If you ever see `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears. Session ids are opaque strings (32 hexadecimal characters today); do not validate their format. Treat `cdpUrl` as a secret, since anyone holding it can drive the browser.
+The call blocks until Chrome is reachable (measured: two to three seconds), so `cdpUrl` is set and `status` is `active`. It gives up after 20 seconds on most machines, three minutes on the newest, with a `504`. Set a client timeout of at least three minutes on this call; everything else answers within seconds.
+
+The browser opens on `about:blank`, or your `url`, with one context and one tab. If you get `starting`, poll [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) until `cdpUrl` appears.
+
+Session ids are opaque (32 hex characters today); don't validate the format. `cdpUrl` is a credential: anyone holding it can drive the browser.
 
 ## Options
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `type` | string | `hosted` | Browser class: `hosted`, `hosted_stealth` or `hosted_privacy`. See [Browser types](/docs/options/browser-types). |
-| `country` | string | `US` | Two-letter code, one of the 249 on [Countries](/docs/options/countries). Placement, network and locale follow it. See [Location](/docs/options/location). |
+| `type` | string | `hosted` | `hosted`, `hosted_stealth` or `hosted_privacy`. See [Browser types](/docs/options/browser-types). |
+| `country` | string | `US` | Two-letter code from [Countries](/docs/options/countries). Placement, network and locale follow it. See [Location](/docs/options/location). |
 | `timezone` | string | chosen for the country | IANA name from that country's list on [Countries](/docs/options/countries). |
 | `language` | string | chosen for the country | BCP-47 tag from that country's list on [Countries](/docs/options/countries). US sessions are always `en-US`. |
-| `duration` | integer | `3600` | Seconds before the session stops on its own, 60 to 3600 inclusive. |
-| `url` | string | | A URL to open right after launch. |
-| `windowSize` | string | node default | Outer window size as `WIDTHxHEIGHT`. See [Window size](/docs/options/window-size). |
-| `displaySize` | string | | Virtual display size as `WIDTHxHEIGHT`. |
+| `duration` | integer | `3600` | Seconds until the session stops on its own, 60 to 3600 inclusive. |
+| `url` | string | | Opened right after launch. |
+| `windowSize` | string | node default | Outer window size, `WIDTHxHEIGHT`. See [Window size](/docs/options/window-size). |
+| `displaySize` | string | | Virtual display size, `WIDTHxHEIGHT`. |
 | `proxyUrl` | string | Driver's network | Your own `socks5://`, `socks5h://` or `tcperfect://` URL. See [Proxies](/docs/options/proxies). |
-| `profile` | object | | `{ "name": "…", "persist": true }` to load and save browser state; `persist` defaults to `false` (load only). See [Profiles](/docs/options/profiles). |
-| `captchaSolver` | boolean | `false` | Load Driver's CAPTCHA solver into the session. |
-| `adblock` | boolean | `false` | Block ads in the session. |
-| `extensionIds` | string[] | | Uploaded extension ids to load. Requires extension access. See [Extensions](/docs/options/extensions). |
+| `profile` | object | | `{ "name": "…", "persist": true }` loads and saves browser state. `persist` defaults to `false` (load only). See [Profiles](/docs/options/profiles). |
+| `captchaSolver` | boolean | `false` | Load Driver's CAPTCHA solver. |
+| `adblock` | boolean | `false` | Block ads. |
+| `extensionIds` | string[] | | Uploaded extension ids to load. Needs extension access. See [Extensions](/docs/options/extensions). |
 | `nodeId` | string | | Run on the machine that served an earlier session. Overrides `country` and `type`. See [Node reuse](/docs/options/node-reuse). |
 | `browserCheck` | boolean | `false` | Run a browser validation check during creation. |
 | `note` | string | | Up to 256 characters, shown in the dashboard. |
 
-Unknown fields are rejected with `400` (`window_size is not supported by this endpoint`). Out-of-range values name the field and the bound (`duration: Too small: expected number to be >=60`, `note: Too big: expected string to have <=256 characters`). Options that contradict each other are rejected with `400` and a message naming the field. The common ones: a `timezone` or `language` not listed for the `country` (`Unsupported timezone "Europe/Berlin" for country US.`), a `country` that does not match a supplied proxy's exit, a proxy that cannot be reached, and out-of-range `duration`, `windowSize` or `note`.
+Unknown fields are a `400` (`window_size is not supported by this endpoint`), as are out-of-range values (`duration: Too small: expected number to be >=60`, `note: Too big: expected string to have <=256 characters`) and options that contradict each other: a `timezone` or `language` not listed for the `country` (`Unsupported timezone "Europe/Berlin" for country US.`), a `country` that doesn't match your proxy's exit, a proxy that can't be reached. The message names the field.
 
 ## Errors
 
 | Status | Meaning |
 |---|---|
-| `400` | Invalid or incompatible options. The message names the field. |
+| `400` | Invalid or incompatible options; the message names the field. |
 | `401` | Missing or invalid API key. |
 | `402` | The workspace is out of credits. |
-| `403` | Session or account limit reached (concurrency, or a feature your plan does not include). |
+| `403` | Concurrency limit, or a feature your plan doesn't include. |
 | `429` | Too many requests. |
 | `500` | Something failed on Driver's side. |
-| `503` | No browser capacity right now. The response carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. |
-| `504` | A machine was selected but Chrome was not reachable before the startup deadline (20 s, up to 3 min on some machines). |
+| `503` | No browser capacity. Carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. |
+| `504` | A machine was selected but Chrome wasn't reachable before the startup deadline (20 s, up to 3 min on some machines). |
 
-Retry guidance per status is on [Errors](/docs/sessions/errors).
+What to retry is on [Errors](/docs/sessions/errors).
 
 ## Next
 
 - [Connect over CDP](/docs/sessions/connect)
-- [Lifecycle](/docs/sessions/lifecycle) to get, list, label and stop sessions
-- [Browser pools](/docs/sessions/pools) for warm browsers with these options preset
+- [Lifecycle](/docs/sessions/lifecycle): get, list, label and stop sessions
+- [Browser pools](/docs/sessions/pools): warm browsers with these options preset

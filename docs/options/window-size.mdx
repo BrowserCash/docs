@@ -3,12 +3,12 @@ title: "Window and display size"
 description: "windowSize sets the outer browser window; displaySize sets the virtual display behind it."
 ---
 
-Two fields, both `WIDTHxHEIGHT`, width 320 to 16384 and height 200 to 16384.
+Both fields take `WIDTHxHEIGHT`, width 320 to 16384, height 200 to 16384.
 
 | Field | What it sets | Notes |
 |---|---|---|
-| `windowSize` | The outer Chrome window, as the page will see it through `window.outerWidth/Height`. | The default depends on the machine. |
-| `displaySize` | The virtual display the window sits on. | Usually leave it alone; set it when a site needs a screen larger than the window. |
+| `windowSize` | The outer Chrome window, what the page sees as `window.outerWidth/Height`. | Default depends on the machine. |
+| `displaySize` | The virtual display the window sits on. | Leave it alone unless a site needs a screen larger than the window. |
 
 <CodeGroup>
 ```json Request
@@ -29,11 +29,11 @@ session = create_session(windowSize="1920x1040")
 | `1920x1040` | Full HD desktop with a taskbar |
 | `1536x864` | Scaled 1080p laptop |
 | `1440x900` | 13-inch MacBook |
-| `1366x768` | Common budget laptop |
-| `390x844` | Phone-sized window (the browser is still desktop Chrome) |
+| `1366x768` | Budget laptop |
+| `390x844` | Phone-sized window (still desktop Chrome) |
 
-Pick a size that fits the screen the session's machine would plausibly have. A `windowSize` larger than the display is clamped.
+Pick a size the session's machine would plausibly have. A `windowSize` larger than the display is clamped.
 
 ## Resizing after connecting
 
-Prefer setting the size on create. Changing the viewport from your framework (`page.setViewportSize` in Playwright, `page.setViewport` in Puppeteer) resizes only the content area and leaves `outerWidth` where it was, which is one of the mismatches sites look for. Puppeteer applies an 800x600 viewport on connect unless you pass `defaultViewport: null`, so always pass it.
+Set the size on create. `page.setViewportSize` (Playwright) and `page.setViewport` (Puppeteer) resize only the content area and leave `outerWidth` alone, a mismatch sites look for. Puppeteer applies an 800x600 viewport on connect unless you pass `defaultViewport: null`, so always pass it.

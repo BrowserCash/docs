@@ -1,12 +1,12 @@
 ---
 title: "Connect over CDP"
-description: "Attach your automation framework to a running Driver session through its cdpUrl."
+description: "Attach your framework to a running session through its cdpUrl."
 ---
 
-`cdpUrl` is a WebSocket endpoint to the session's Chrome. Any client that speaks the Chrome DevTools Protocol can attach to it. You attach to a running browser; you never launch one.
+`cdpUrl` is a WebSocket endpoint to the session's Chrome. Any CDP client can attach. You never launch a browser.
 
 <Warning>
-Use [Patchright](/docs/frameworks/patchright) rather than stock Playwright or Puppeteer. It is Playwright's API minus the CDP calls that anti-bot systems fingerprint, so Playwright code moves over by changing one import; Puppeteer code needs porting. Sessions driven by stock frameworks get blocked on sites that look for automation.
+Use [Patchright](/docs/frameworks/patchright), not stock Playwright or Puppeteer. It's Playwright's API minus the CDP calls anti-bot systems fingerprint; Playwright code moves over by changing one import, Puppeteer code needs porting. Stock frameworks get blocked on sites that look for automation.
 </Warning>
 
 ## Patchright (recommended)
@@ -22,7 +22,7 @@ const page = context.pages()[0] ?? (await context.newPage());
 await page.goto("https://example.com");
 console.log(await page.title());
 
-await browser.close(); // closes your connection; the session keeps running until you stop it
+await browser.close(); // your connection only; the session runs until you stop it
 ```
 ```python Python
 from patchright.sync_api import sync_playwright
@@ -49,25 +49,25 @@ with sync_playwright() as p:
 
 ## Reuse the context and tab
 
-The browser opens with one context and one tab. Reuse them. A session that opens fresh incognito contexts and blank pages behaves differently from a person's Chrome, and sites notice.
+The browser opens with one context and one tab. Reuse them; fresh incognito contexts and blank pages don't look like a person's Chrome.
 
 ```typescript
 const context = browser.contexts()[0] ?? (await browser.newContext());
 const page = context.pages()[0] ?? (await context.newPage());
 ```
 
-If your task genuinely needs several tabs, open them from the existing context with `context.newPage()`.
+Need more tabs? `context.newPage()` on the existing context.
 
 ## Disconnecting versus stopping
 
-Closing your client (`browser.close()` in Patchright and Playwright, `browser.disconnect()` in Puppeteer) ends your connection. The session keeps running, and billing continues, until you call [`DELETE /v1/browser/session`](/docs/sessions/lifecycle#stop-a-session) or the session reaches its `duration`. You can disconnect and reconnect to the same `cdpUrl` as often as you like while the session is active.
+`browser.close()` (Patchright, Playwright) and `browser.disconnect()` (Puppeteer) end your connection only. The session runs, and bills, until [`DELETE /v1/browser/session`](/docs/sessions/lifecycle#stop-a-session) or its `duration`. Reconnect to the same `cdpUrl` as often as you like while it's active.
 
 ## Reconnecting
 
-If your process crashes, fetch the session with [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session): while `status` is `active` the `cdpUrl` is still valid and you can attach again. Profiles with `persist: true` also carry state into a brand-new session if the old one has ended.
+If your process crashes, [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session): while `status` is `active` the `cdpUrl` still works. If the session ended, a profile with `persist: true` carries the state into a new one.
 
-Several clients can be attached at once (your script and the [live view](/docs/sessions/live-view), for instance). Two scripts driving the same tab will fight each other, so keep it to one automation client per session. `cdpUrl` is a credential: anyone who has it can drive the browser while the session is active. Its hostname is a relay near the machine, not the session's network; the egress country is the one you asked for regardless of the host you connect to.
+Several clients can attach at once (your script and the [live view](/docs/sessions/live-view), say), but two scripts driving one tab fight each other: one automation client per session. `cdpUrl` is a credential. Its hostname is a relay near the machine, not the session's network; egress is from the country you asked for whatever host you connect to.
 
 ## Timeouts and waits
 
-Driver browsers are real machines on real networks, so page loads take real-world time. Rely on your framework's auto-waiting (`page.click`, `locator.waitFor`) rather than fixed sleeps, and raise the navigation timeout for slow sites instead of retrying in a loop.
+Real machines on real networks: page loads take real time. Use the framework's auto-waiting (`page.click`, `locator.waitFor`), not fixed sleeps, and raise the navigation timeout for slow sites instead of retrying in a loop.

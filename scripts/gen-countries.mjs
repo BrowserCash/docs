@@ -21,9 +21,9 @@ title: "Countries"
 description: "Every country you can pass on create, with the timezones and languages it accepts. Generated from the API's locale catalog."
 ---
 
-\`country\` accepts any of the ${codes.length} two-letter codes below. \`timezone\` must be one of that country's timezones and \`language\` one of its languages, or the request is rejected with \`400\`. Leave both out and Driver picks the first-listed timezone (or a managed-network region where it has one) and the country's primary language. US sessions always use \`en-US\`. See [Location](/docs/options/location) for how the three stay coherent.
+\`country\` accepts any of the ${codes.length} codes below. \`timezone\` must be one of that country's timezones and \`language\` one of its languages, or the request is a \`400\`. Leave both out and you get the first-listed timezone (or a managed-network region where Driver has one) and the country's primary language. US sessions are always \`en-US\`. [Location](/docs/options/location) covers how the three stay coherent.
 
-Availability of machines varies by country; a country with no machine free at the moment answers \`503\`.
+Machine availability varies by country. No free machine in a country is a \`503\`.
 
 | Code | Country | Timezones | Languages |
 |---|---|---|---|

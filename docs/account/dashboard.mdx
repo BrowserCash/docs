@@ -1,22 +1,22 @@
 ---
 title: "Dashboard"
-description: "What lives in the dashboard: sessions and live view, the Workbench, profiles, keys, workspace members and billing."
+description: "Sessions and live view, the Workbench, profiles, pools, keys, members and billing."
 ---
 
-The [dashboard](https://app.driver.dev) is the other half of the API. Everything below is per workspace; switch workspaces at the top of the sidebar.
+The [dashboard](https://app.driver.dev) is the other half of the API. Everything is per workspace; switch at the top of the sidebar.
 
-| Area | What you do there |
+| Area | What's there |
 |---|---|
-| **Overview** | Running browsers against the plan limit, today's sessions, bandwidth this period, credits, and a 30-day chart. **Launch browser** starts a session with options and opens its live view without writing code. |
-| **Workbench** | A script editor next to a live browser and an output log. Pick a template, set country, network, profile, CAPTCHA solver and proxy, press Run. The quickest way to try options before committing them to code. |
-| **Profiles** | The workspace's saved [profiles](/docs/options/profiles). Launch a session on a profile to sign in by hand. |
-| **Browser pools** | Create and manage [pools](/docs/sessions/pools) of warm browsers: size, country, profile, start URL, lease timeout; pause, flush or delete them; see how many are ready and in use. **Launch browser** on the Overview can take a browser from any ready pool. |
-| **Sessions** (Telemetry) | Every session, filterable by status, with a record page per session: live view while running, then node, country, network, bandwidth, cost and timestamps. Stop one, or stop all running. |
-| **Workspace** | Name, members and invitations. Admins manage members, keys and billing. |
+| **Overview** | Running browsers against the plan limit, today's sessions, bandwidth this period, credits, a 30-day chart. **Launch browser** starts a session with options and opens its live view. No code needed. |
+| **Workbench** | Script editor, live browser, output log. Pick a template, set country, network, profile, CAPTCHA solver and proxy, press Run. Try options here before writing them into code. |
+| **Profiles** | The workspace's saved [profiles](/docs/options/profiles). Launch a session on one to sign in by hand. |
+| **Browser pools** | [Pools](/docs/sessions/pools) of warm browsers: size, country, profile, start URL, lease timeout. Pause, flush or delete them; see how many are ready and in use. **Launch browser** on the Overview can take a browser from any ready pool. |
+| **Sessions** (Telemetry) | Every session, filterable by status. Each record: live view while running, then node, country, network, bandwidth, cost and timestamps. Stop one, or stop all. |
+| **Workspace** | Name, members, invitations. Admins manage members, keys and billing. |
 | **API keys** | The root key and named keys: create, roll, delete. Also a ready-to-paste briefing for your coding agent. |
-| **Billing** | Plan, credits, auto top-up, credit history, the billing portal for invoices and cards. |
+| **Billing** | Plan, credits, auto top-up, credit history, and the billing portal for invoices and cards. |
 | **Support** | Book a call or write to the team. |
 
 ## Hand off to an agent
 
-The Overview and API keys pages carry a **Copy agent prompt** button. It produces a briefing for Claude Code, Cursor or any coding agent with the endpoints, the rules and, if you opt in, your API key. Pair it with the [For agents](/docs/start/for-agents) page here.
+**Copy agent prompt** on the Overview and API keys pages gives Claude Code, Cursor or any coding agent the endpoints, the rules and, if you opt in, your API key. Pair it with [For agents](/docs/start/for-agents).

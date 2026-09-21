@@ -1,11 +1,11 @@
 ---
 title: "Billing"
-description: "Sessions are metered by bandwidth against the workspace's credits. Two endpoints expose the balance and the plan."
+description: "Sessions are metered by bandwidth against the workspace's credits. Two endpoints expose balance and plan."
 ---
 
-Driver bills on **bandwidth**: the bytes a session moves, metered per megabyte and charged against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage beyond the allowance draws on purchased credits. A running session that moves no bytes costs nothing, but it holds one of the plan's concurrent-browser slots until it stops.
+Driver bills on **bandwidth**: bytes a session moves, metered per megabyte against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage past the allowance draws on purchased credits. A session that moves no bytes costs nothing but holds a concurrency slot until it stops.
 
-Keeping sessions short and stopping them when the job is done is the whole cost-control story. `duration` on create caps what a forgotten session can cost. Warm browsers in a [pool](/docs/sessions/pools) are not billed and hold no concurrency slot; a browser becomes a billed, counted session when it is acquired, and its lease timeout caps how long it can be held.
+Cost control is short sessions, stopped when the job is done. `duration` on create caps what a forgotten session can cost. Warm browsers in a [pool](/docs/sessions/pools) aren't billed and hold no slot; a browser becomes a billed, counted session when acquired, and the lease timeout caps how long it can be held.
 
 ## Balance
 
@@ -27,18 +27,18 @@ balance = balance["balance"]
 { "balance": { "balance_cents": 1250, "network_mb_remaining": 500, "status": "active" } }
 ```
 
-`balance_cents` can go below zero. `network_mb_remaining` (the included allowance still unused this period) and `status` (the plan key, for example `free`) are present for workspace accounts and absent on a legacy account. Sessions are refused with `402` once the balance is negative and the allowance is gone.
+`balance_cents` can go below zero. `network_mb_remaining` (allowance left this period) and `status` (the plan key, for example `free`) are present on workspace accounts and absent on legacy accounts. Sessions are refused with `402` once the balance is negative and the allowance is gone.
 
 ## Billing details
 
-`GET /v1/account/billing` returns the full picture: `orgId`; `status` (`legacy` for an account not yet moved to workspace billing); the plan (`plan_key`, `display_name`, `price_monthly_cents`, `included_network_mb`, `overage_millicents_per_mb`, `concurrent_browsers`, `max_session_seconds`); the current period (`start_ms`, `end_ms`, `included_network_mb`, `network_mb_used`, `network_mb_remaining`); the wallet (`balance_cents`, which can be negative, and `balance_millicents`); and the subscription when there is one (`subscription_id`, `provider`, `status`, `current_period_start`, `current_period_end`, `cancel_at_period_end`). `plan`, `period` and `subscription` are `null` on a legacy account. Times ending in `_ms` and the subscription period bounds are Unix epoch milliseconds.
+`GET /v1/account/billing` returns everything: `orgId`; `status` (`legacy` for an account not yet on workspace billing); the plan (`plan_key`, `display_name`, `price_monthly_cents`, `included_network_mb`, `overage_millicents_per_mb`, `concurrent_browsers`, `max_session_seconds`); the current period (`start_ms`, `end_ms`, `included_network_mb`, `network_mb_used`, `network_mb_remaining`); the wallet (`balance_cents`, can be negative, and `balance_millicents`); and the subscription if there is one (`subscription_id`, `provider`, `status`, `current_period_start`, `current_period_end`, `cancel_at_period_end`). `plan`, `period` and `subscription` are `null` on a legacy account. Fields ending in `_ms` and the subscription period bounds are Unix epoch milliseconds.
 
 ```bash
 curl https://api.driver.dev/v1/account/billing -H "Authorization: Bearer $DRIVER_API_KEY"
 ```
 
-Use it to show usage in your own tooling or to stop launching sessions before you hit the limit. Amounts are cents; `millicents` fields are for exact arithmetic (1000 millicents = 1 cent).
+Use it for usage in your own tooling, or to stop launching before you hit the limit. Amounts are cents; `millicents` fields are for exact arithmetic (1000 millicents = 1 cent).
 
 ## Where to change things
 
-Plan changes, adding credits, auto top-up, invoices and the card on file all live under **Billing** in the [dashboard](https://app.driver.dev/settings/billing). There is no API for payments.
+Plan changes, credits, auto top-up, invoices and the card on file are under **Billing** in the [dashboard](https://app.driver.dev/settings/billing). There's no API for payments.

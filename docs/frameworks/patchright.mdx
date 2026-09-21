@@ -1,19 +1,19 @@
 ---
 title: "Patchright"
-description: "The recommended client for Driver: Playwright's API with the automation fingerprints removed. Node and Python."
+description: "Playwright with the automation fingerprints removed. Use it for every Driver integration. Node and Python."
 ---
 
-[Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) is a patched build of Playwright. Same API, same docs, same selectors; the difference is what it sends over CDP. Use it for every Driver integration.
+[Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) is a patched build of Playwright. Same API, same docs, same selectors. The difference is what it sends over CDP.
 
 ## Why Patchright
 
-Stock Playwright (and Puppeteer) drive the browser through CDP calls that a normal Chrome never makes on its own, and anti-bot vendors look for exactly those:
+Stock Playwright and Puppeteer drive the browser with CDP calls a normal Chrome never makes on its own. Anti-bot vendors look for exactly those:
 
-- `Runtime.enable`, which makes every page's JavaScript world observable and leaves detectable traces in the page.
+- `Runtime.enable`, which exposes every page's JavaScript world and leaves traces in the page.
 - Console and binding hooks (`Runtime.addBinding`, `Page.addScriptToEvaluateOnNewDocument`) that Playwright installs for its own bookkeeping.
-- Command-line switches and the `navigator.webdriver` flag in launched browsers (not relevant when connecting to Driver, but Patchright removes them anyway).
+- Command-line switches and `navigator.webdriver` in launched browsers. Not relevant when connecting to Driver, but Patchright removes them anyway.
 
-Driver gives you a real Chrome on real hardware and a residential network. If the client then announces itself through CDP, that work is wasted and the session gets challenged or blocked. Patchright removes those signals while keeping the Playwright API, so the switch costs nothing.
+Driver gives you real Chrome on real hardware. If the client then announces itself over CDP, the session gets challenged anyway. Patchright removes those signals and keeps the Playwright API.
 
 ## Install
 
@@ -26,7 +26,7 @@ pip install patchright
 ```
 </CodeGroup>
 
-No browser download is needed; you connect to Driver's Chrome.
+No browser download. You connect to Driver's Chrome.
 
 ## Connect
 
@@ -57,7 +57,7 @@ try {
     await page.goto("https://example.com");
     console.log(await page.title());
   } finally {
-    await browser.close(); // your connection only; the session keeps running until you stop it
+    await browser.close(); // your connection only; the session runs until you stop it
   }
 } finally {
   await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
@@ -122,7 +122,7 @@ asyncio.run(main())
 
 ## Migrating from Playwright
 
-Change the import. That is the whole migration.
+Change the import. That's the whole migration.
 
 ```diff
 - import { chromium } from "playwright";
@@ -134,10 +134,10 @@ Change the import. That is the whole migration.
 + from patchright.sync_api import sync_playwright
 ```
 
-Remove any `chromium.launch()` and any `playwright install` step: Driver provides the browser.
+Delete any `chromium.launch()` and any `playwright install` step. Driver provides the browser.
 
-Coming from Puppeteer is a rewrite, not a rename: Patchright has Playwright's API. Either keep Puppeteer with the [connect-only setup](/docs/frameworks/puppeteer) and accept its fingerprint, or port to Patchright.
+Coming from Puppeteer is a rewrite, not a rename: Patchright has Playwright's API. Either keep Puppeteer with the [connect-only setup](/docs/frameworks/puppeteer) and accept its fingerprint, or port.
 
-## Things Patchright does not fix
+## What Patchright doesn't fix
 
-Patchright removes the client's fingerprints. It cannot undo choices in your script that look automated: fresh contexts for every page, broad `page.route` interception, injected init scripts, overridden `navigator` properties, or clicking a thousand things per minute. The [best practices](/docs/start/best-practices) cover those.
+Patchright fixes the client, not your script. A fresh context per page, broad `page.route` interception, injected init scripts, overridden `navigator` properties or a thousand clicks a minute still look like a bot. See [best practices](/docs/start/best-practices).

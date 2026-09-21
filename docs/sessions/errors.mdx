@@ -3,7 +3,7 @@ title: "Errors"
 description: "Every status the API returns, what it means, and whether retrying helps."
 ---
 
-Errors from the API are JSON with an `error` message; one carries a machine-readable `code` as well, the create call's `503`. A `429` or `502` from the edge in front of the API may carry a non-JSON body, so read the status first and parse the body defensively.
+Errors are JSON with an `error` message; the create call's `503` also has a `code`. A `429` or `502` from the edge in front of the API may not be JSON, so read the status first and parse the body defensively.
 
 ```json
 { "error": "Insufficient balance" }
@@ -13,38 +13,38 @@ Errors from the API are JSON with an `error` message; one carries a machine-read
 { "error": "No eligible node found", "code": "browser_capacity_unavailable" }
 ```
 
-The bodies you will see most: `401` `Unauthorized: Missing or invalid Authorization header` or `Unauthorized: Invalid token`; `402` `Insufficient balance`; `403` `Session limit reached` (concurrency) or `Extensions API is not enabled for this account`; `400` names the field, for example `Unsupported timezone "Europe/Berlin" for country US.` or `windowSize must be WIDTHxHEIGHT with width 320–16384 and height 200–16384`. Unknown fields in a body are rejected with `400` too.
+Common bodies: `401` `Unauthorized: Missing or invalid Authorization header` or `Unauthorized: Invalid token`; `402` `Insufficient balance`; `403` `Session limit reached` (concurrency) or `Extensions API is not enabled for this account`; `400` names the field, for example `Unsupported timezone "Europe/Berlin" for country US.` or `windowSize must be WIDTHxHEIGHT with width 320–16384 and height 200–16384`. Unknown fields in a body are a `400` too.
 
 ## Status codes
 
 | Status | Meaning | Retry? |
 |---|---|---|
-| `400` | Invalid or incompatible options, an unknown field on create, a missing `sessionId`, or an update to a session that has ended. The message names the problem. | No. Fix the request. |
+| `400` | Invalid or incompatible options, an unknown field on create, a missing `sessionId`, or an update to an ended session. The message names the problem. | No. Fix the request. |
 | `401` | Missing or invalid API key. | No. Check `Authorization: Bearer …`. |
 | `402` | The workspace is out of credits. | No. Add credits in the dashboard. |
-| `403` | Session or account limit reached: the workspace's concurrent-browser limit (`plan.concurrent_browsers` on `GET /v1/account/billing`; sessions that are `starting` count, and a stop frees the slot as soon as it returns), or a feature (extensions) the account is not enabled for. | Only after a session ends. Never in a loop. |
-| `404` | Session, extension, pool, lease or account not found (unknown id, or one belonging to another workspace). Deleting an unknown profile is not a 404: it answers `{ "success": true }`. | No. |
+| `403` | Concurrent-browser limit (`plan.concurrent_browsers` on `GET /v1/account/billing`; `starting` sessions count, a stop frees the slot as soon as it returns), or a feature (extensions) the account isn't enabled for. | Only after a session ends. Never in a loop. |
+| `404` | Session, extension, pool, lease or account not found: unknown id, or one belonging to another workspace. Deleting an unknown profile isn't a 404; it answers `{ "success": true }`. | No. |
 | `409` | Browser pools only: a duplicate pool name, a size over the account's warm-browser cap, an acquire that found nothing ready within `waitMs` (`No browser is currently ready in this pool`), an acquire on a paused pool, or a delete with active leases. See [Browser pools](/docs/sessions/pools#errors). | Only the acquire one, as for `503`: back off, cap, then fall back to a plain create or report. |
-| `429` | Too many requests. The API itself does not rate-limit today; a `429` comes from the edge in front of it. | Yes: a few attempts, a couple of seconds apart and growing. |
-| `502` | The edge could not reach the API. Not JSON. | Once, after a couple of seconds. |
+| `429` | Too many requests, from the edge; the API itself doesn't rate-limit today. | Yes: a few attempts, a couple of seconds apart and growing. |
+| `502` | The edge couldn't reach the API. Not JSON. | Once, after a couple of seconds. |
 | `500` | Something failed on Driver's side. | Once. |
-| `503` | No browser capacity right now. The response carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. Or the session service is unavailable. | Yes: back off with jitter, cap the attempts, then tell the user. |
-| `504` | A machine was selected but Chrome did not become reachable before the startup deadline: 20 seconds, up to three minutes on some machines. | Once. |
+| `503` | No browser capacity. Carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. Or the session service is unavailable. | Yes: back off with jitter, cap the attempts, then tell the user. |
+| `504` | A machine was selected but Chrome wasn't reachable before the startup deadline (20 s, up to 3 min on some machines). | Once. |
 
 ## Guidance for agents and automations
 
-- Do not retry `402` or `403` in a loop. Surface the message; a person has to act.
-- Treat `503` as transient: back off (start at the `Retry-After` of 2 seconds, grow with jitter), cap the attempts, then report. Retry `504` and `500` once.
-- After a `504`, the session is not running; no stop call is needed.
-- `DELETE` on a session that already ended still returns `{ "success": true }`; a `404` means the id was never a session of this workspace.
+- Never loop on `402` or `403`. Surface the message; a person has to act.
+- `503` is transient: start at the `Retry-After` of 2 seconds, grow with jitter, cap the attempts, then report. Retry `504` and `500` once.
+- After a `504` nothing is running; no stop call needed.
+- `DELETE` on an ended session still returns `{ "success": true }`. A `404` means the id was never a session of this workspace.
 
 ## Framework-side failures
 
-Some failures show up in your framework rather than as an HTTP status:
+Some failures show up in the framework, not as an HTTP status:
 
 | Symptom | Likely cause |
 |---|---|
 | `Target closed` / `Browser closed` mid-run | The session reached its `duration`, or was stopped from the dashboard. Check `GET /v1/browser/session`. |
-| Connection refused on `cdpUrl` | The session is not `active` yet or has ended. |
+| Connection refused on `cdpUrl` | The session isn't `active` yet or has ended. |
 | The site shows a challenge or block page | Framework fingerprint or automation tactics. Switch to [Patchright](/docs/frameworks/patchright) and remove CDP hooks; then escalate: `type: "hosted_stealth"`, `"hosted_privacy"`, `captchaSolver: true`, and finally a person through the [live view](/docs/sessions/live-view). |
-| `net::ERR_SOCKS_CONNECTION_FAILED` on every navigation | The session's network egress is not reachable. Stop the session and create another, in a different country if it persists; report it if it does. |
+| `net::ERR_SOCKS_CONNECTION_FAILED` on every navigation | The session's egress isn't reachable. Stop it and create another, in a different country if it persists; report it if it keeps happening. |
