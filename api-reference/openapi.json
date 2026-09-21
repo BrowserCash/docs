@@ -2466,6 +2466,15 @@
                       "language": {
                         "type": "string"
                       },
+                      "acceptLang": {
+                        "type": "string"
+                      },
+                      "ttsLanguage": {
+                        "type": "string"
+                      },
+                      "disableSpeechApi": {
+                        "type": "boolean"
+                      },
                       "profile": {
                         "type": "object",
                         "properties": {
@@ -2510,7 +2519,7 @@
                     },
                     "default": {},
                     "additionalProperties": false,
-                    "description": "The create options every browser in the pool starts with (same fields as POST /v1/browser/session, without type, duration and browserCheck). Values are not validated on create. As of 2026-09-20 country and proxyUrl are not applied to warm browsers (they egress from the default US network); url and note are."
+                    "description": "The create options every browser in the pool starts with (same fields as POST /v1/browser/session, without type, duration and browserCheck). Validated like a create body (an unsupported country is a 400). Responses echo the template with the resolved timezone and a redacted proxyUrl."
                   },
                   "leaseTimeoutSeconds": {
                     "type": "integer",
@@ -2610,6 +2619,15 @@
                         },
                         "language": {
                           "type": "string"
+                        },
+                        "acceptLang": {
+                          "type": "string"
+                        },
+                        "ttsLanguage": {
+                          "type": "string"
+                        },
+                        "disableSpeechApi": {
+                          "type": "boolean"
                         },
                         "profile": {
                           "type": "object",
@@ -2879,6 +2897,15 @@
                               },
                               "language": {
                                 "type": "string"
+                              },
+                              "acceptLang": {
+                                "type": "string"
+                              },
+                              "ttsLanguage": {
+                                "type": "string"
+                              },
+                              "disableSpeechApi": {
+                                "type": "boolean"
                               },
                               "profile": {
                                 "type": "object",
@@ -3165,6 +3192,15 @@
                         "language": {
                           "type": "string"
                         },
+                        "acceptLang": {
+                          "type": "string"
+                        },
+                        "ttsLanguage": {
+                          "type": "string"
+                        },
+                        "disableSpeechApi": {
+                          "type": "boolean"
+                        },
                         "profile": {
                           "type": "object",
                           "properties": {
@@ -3414,6 +3450,15 @@
                       "language": {
                         "type": "string"
                       },
+                      "acceptLang": {
+                        "type": "string"
+                      },
+                      "ttsLanguage": {
+                        "type": "string"
+                      },
+                      "disableSpeechApi": {
+                        "type": "boolean"
+                      },
                       "profile": {
                         "type": "object",
                         "properties": {
@@ -3456,9 +3501,8 @@
                         }
                       }
                     },
-                    "default": {},
                     "additionalProperties": false,
-                    "description": "Replaces the whole browser template; include every option to keep. Changing it restarts the warm browsers."
+                    "description": "Replaces the browser template as a whole and rebuilds the warm browsers from it. Leave it out to keep the current template."
                   },
                   "leaseTimeoutSeconds": {
                     "type": "integer",
@@ -3556,6 +3600,15 @@
                         },
                         "language": {
                           "type": "string"
+                        },
+                        "acceptLang": {
+                          "type": "string"
+                        },
+                        "ttsLanguage": {
+                          "type": "string"
+                        },
+                        "disableSpeechApi": {
+                          "type": "boolean"
                         },
                         "profile": {
                           "type": "object",
