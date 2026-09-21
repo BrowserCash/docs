@@ -51,7 +51,7 @@ API access to dedicated IPs ships with the next gateway release; the dashboard f
 A dedicated IP is a public address reserved to your workspace: no other customer can reserve or pin it, and your sessions can ask for it by address. Reserve
 them under **Browsers → Network** in the [dashboard](https://app.driver.dev/network): pick a country, a quantity
 and a TCP fingerprint profile (`windows11` by default). $5 per address per month, billed on your card as a
-subscription line; adding or releasing mid-month is prorated.
+subscription line. Adding an address mid-month is charged right away, prorated to your billing date.
 
 You never see the SOCKS5 URL behind an address. On session create, name the address:
 
@@ -92,6 +92,7 @@ address from there, or from the Network page.
 | `404` | `no_dedicated_ip` | Nothing matches: no addresses, or none in that country. |
 | `503` | `dedicated_ip_unhealthy` | The address failed its last health check. Use another one and report it. |
 
-Release an address from the Network page; the subscription drops by one seat and the address goes back to the
-pool. If a renewal payment fails, the addresses keep working for 2 days while the card is retried, then they're
-released.
+Release an address from the Network page. It stays yours until the end of the month you paid for, then leaves
+the workspace and goes back to the pool; the seat drops at that point. No refund for the current month. **Keep**
+on the Network page undoes a release before then. If a renewal payment fails, the addresses keep working for 2
+days while the card is retried, then they're released.
