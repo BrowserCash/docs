@@ -19,16 +19,16 @@ Common bodies: `401` `Unauthorized: Missing or invalid Authorization header` or 
 
 | Status | Meaning | Retry? |
 |---|---|---|
-| `400` | Invalid or incompatible options, an unknown field on create, a missing `sessionId`, or an update to an ended session. The message names the problem. | No. Fix the request. |
+| `400` | Invalid or incompatible options, an unknown field on create, a missing `sessionId`, an update to an ended session, or a malformed dedicated IP spec (`code: invalid_spec`). The message names the problem. | No. Fix the request. |
 | `401` | Missing or invalid API key. | No. Check `Authorization: Bearer …`. |
 | `402` | The workspace is out of credits. | No. Add credits in the dashboard. |
-| `403` | Concurrent-browser limit (`plan.concurrent_browsers` on `GET /v1/account/billing`; `starting` sessions count, a stop frees the slot as soon as it returns), or a feature (extensions) the account isn't enabled for. | Only after a session ends. Never in a loop. |
-| `404` | Session, extension, pool, lease or account not found: unknown id, or one belonging to another workspace. Deleting an unknown profile isn't a 404; it answers `{ "success": true }`. | No. |
+| `403` | Concurrent-browser limit (`plan.concurrent_browsers` on `GET /v1/account/billing`; `starting` sessions count, a stop frees the slot as soon as it returns), a feature (extensions) the account isn't enabled for, or a [dedicated IP](/docs/options/proxies#dedicated-ips) the workspace doesn't own (`code: dedicated_ip_not_owned`). | Only after a session ends. Never in a loop. |
+| `404` | Session, extension, pool, lease or account not found: unknown id, or one belonging to another workspace. On create, no dedicated IP matches the spec (`code: no_dedicated_ip`). Deleting an unknown profile isn't a 404; it answers `{ "success": true }`. | No. |
 | `409` | Browser pools only: a duplicate pool name, a size over the account's warm-browser cap, an acquire that found nothing ready within `waitMs` (`No browser is currently ready in this pool`), an acquire on a paused pool, or a delete with active leases. See [Browser pools](/docs/sessions/pools#errors). | Only the acquire one, as for `503`: back off, cap, then fall back to a plain create or report. |
 | `429` | Too many requests, from the edge; the API itself doesn't rate-limit today. | Yes: a few attempts, a couple of seconds apart and growing. |
 | `502` | The edge couldn't reach the API. Not JSON. | Once, after a couple of seconds. |
 | `500` | Something failed on Driver's side. | Once. |
-| `503` | No browser capacity. Carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. Or the session service is unavailable. | Yes: back off with jitter, cap the attempts, then tell the user. |
+| `503` | No browser capacity. Carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`. Or the session service is unavailable. With `code: dedicated_ip_unhealthy`, the dedicated IP failed its last health check: use another address. | Yes: back off with jitter, cap the attempts, then tell the user. |
 | `504` | A machine was selected but Chrome wasn't reachable before the startup deadline (20 s, up to 3 min on some machines). | Once. |
 
 ## Guidance for agents and automations

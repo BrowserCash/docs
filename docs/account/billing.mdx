@@ -7,6 +7,10 @@ Driver bills on **bandwidth**: bytes a session moves, metered per megabyte again
 
 Cost control is short sessions, stopped when the job is done. `duration` on create caps what a forgotten session can cost. Warm browsers in a [pool](/docs/sessions/pools) aren't billed and hold no slot; a browser becomes a billed, counted session when acquired, and the lease timeout caps how long it can be held.
 
+[Dedicated IPs](/docs/options/proxies#dedicated-ips) are the one thing not paid in credits: a subscription line on
+your card at $5 per address per month, prorated when you add or release one. Bandwidth through them is metered
+like any other session.
+
 ## Balance
 
 <CodeGroup>
