@@ -1,9 +1,9 @@
 ---
 title: "Location, timezone and language"
-description: "Ask for a country and Driver makes the network, timezone and language agree. Override timezone and language only within that country."
+description: "Pass a country; the network, timezone and language agree. Override timezone and language only within that country."
 ---
 
-Pass a two-letter `country` and Driver places the session on a machine egressing from that country, then picks a timezone and browser language that belong there. The three always agree, which is what sites check.
+Pass a two-letter `country` and the session runs on a machine egressing from that country, with a timezone and browser language that belong there. The three always agree, which is what sites check. Default `US`.
 
 <CodeGroup>
 ```json Request
@@ -17,32 +17,30 @@ session = create_session(country="DE")
 ```
 </CodeGroup>
 
-`country` defaults to `US`.
-
 ## Overriding timezone and language
 
-Set `timezone` (IANA name) or `language` (BCP-47) when the default choice for the country is not what you want. Both must come from the chosen country's lists on [Countries](/docs/options/countries), or the request is rejected with `400` (`Unsupported timezone "Europe/Berlin" for country US.`). An unknown `country` is rejected the same way (`Unsupported country "XX".`). When you leave `timezone` out, Driver picks the country's dominant zone and, where it runs a managed network there, routes the session's traffic through that region so the network and the clock agree.
+Set `timezone` (IANA name) or `language` (BCP-47) when the country's default isn't what you want. Both must come from that country's lists on [Countries](/docs/options/countries), or the request is a `400`: `Unsupported timezone "Europe/Berlin" for country US.` An unknown `country` fails the same way: `Unsupported country "XX".` Without `timezone`, you get the country's dominant zone, and where Driver runs a managed network there, traffic is routed through that region so the network and the clock agree.
 
 ```json
 { "country": "CA", "timezone": "America/Vancouver", "language": "fr-CA" }
 ```
 
-US sessions always use `en-US` (any other `language` is rejected). For other countries, Driver picks the country's primary language when you leave `language` out. Chrome reports the nearest variant it ships: a session created with `fr-CA` reported `navigator.language` as `fr-FR` with `fr` and `en-US` as fallbacks.
+US sessions are always `en-US`; any other `language` is rejected. Elsewhere, leaving `language` out gets the country's primary language. Chrome reports the nearest variant it ships: `fr-CA` came back as `navigator.language` `fr-FR`, with `fr` and `en-US` as fallbacks.
 
-The browser's `Accept-Language` header follows the same choice (a `de-DE` session sends `de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7`), so servers and scripts see one story.
+`Accept-Language` follows the same choice. A `de-DE` session sends `de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7`.
 
-Hosted sessions also provision matching text-to-speech voices where available, and disable Web Speech when a coherent voice is not, so that surface never contradicts the rest.
+Hosted sessions get matching text-to-speech voices where available; where none exists, Web Speech is disabled so that surface can't contradict the rest.
 
 ## With your own proxy
 
-If you supply a `proxyUrl` without `timezone` or `language`, Driver geolocates the proxy's exit and derives the country and timezone from it. A `country` you supply must match that exit. See [Proxies](/docs/options/proxies).
+A `proxyUrl` without `timezone` or `language` makes Driver geolocate the proxy's exit and derive country and timezone from it. A `country` you pass must match that exit. See [Proxies](/docs/options/proxies).
 
 ## Availability
 
-Placement is by available machines. If nothing is available in the requested country you get a `503` (with `Retry-After: 2`): back off with a cap, then tell the user or pick another country.
+No free machine in the requested country is a `503` with `Retry-After: 2`. Back off with a cap, then tell the user or pick another country.
 
 ## Related
 
 - [Countries](/docs/options/countries): every supported country with its timezones and languages
 - [Browser types](/docs/options/browser-types)
-- [Best practices](/docs/start/best-practices): do not override timezone or locale from your script
+- [Best practices](/docs/start/best-practices): don't override timezone or locale from your script

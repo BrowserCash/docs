@@ -1,13 +1,13 @@
 ---
 title: "Playwright"
-description: "Stock Playwright connects to Driver over CDP, with fingerprints that get sessions blocked on protected sites. Prefer Patchright."
+description: "Stock Playwright connects to Driver over CDP but carries fingerprints that get sessions blocked. Prefer Patchright."
 ---
 
 <Warning>
-Stock Playwright issues CDP commands that anti-bot systems detect (`Runtime.enable` and its bookkeeping hooks). On sites that look for automation, sessions driven by stock Playwright get challenged or blocked. Use [Patchright](/docs/frameworks/patchright) instead: same API, one import change.
+Stock Playwright issues CDP commands anti-bot systems detect (`Runtime.enable` and its bookkeeping hooks), and protected sites block the session. Use [Patchright](/docs/frameworks/patchright): same API, one import change.
 </Warning>
 
-If you have measured that your targets do not care, stock Playwright works unchanged:
+If you've measured that your targets don't care, stock Playwright works unchanged:
 
 <CodeGroup>
 ```typescript TypeScript
@@ -33,8 +33,8 @@ with sync_playwright() as p:
 ```
 </CodeGroup>
 
-Install with `npm install playwright` or `pip install playwright`. Do not run `playwright install`; the browser is Driver's.
+Install with `npm install playwright` or `pip install playwright`. Don't run `playwright install`; the browser is Driver's.
 
 ## Everything else
 
-Contexts, tabs, disconnecting versus stopping, reconnecting and timeouts are the same as for Patchright; see [Connect over CDP](/docs/sessions/connect).
+Contexts, tabs, disconnecting versus stopping, reconnecting and timeouts work the same as with Patchright. See [Connect over CDP](/docs/sessions/connect).

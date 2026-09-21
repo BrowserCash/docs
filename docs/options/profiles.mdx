@@ -1,9 +1,9 @@
 ---
 title: "Profiles"
-description: "Save a session's cookies and browser state under a name, and start later sessions already signed in."
+description: "Save a session's cookies and browser state under a name. Later sessions on that name start signed in."
 ---
 
-A profile is a full browser profile stored under a name you choose. Start a session with `profile: { name, persist: true }`, sign in, stop the session: the state is saved. Start another session with the same name and it opens signed in. A [browser pool](/docs/sessions/pools) can load a profile into every warm browser too; keep `persist` off there, since several browsers writing the same profile would overwrite one another.
+A profile is a full browser profile stored under a name you choose. Create a session with `profile: { name, persist: true }`, sign in, stop it: the state is saved. The next session with that name opens signed in. A [browser pool](/docs/sessions/pools) can load a profile into every warm browser; keep `persist` off there, or the browsers overwrite one another.
 
 <CodeGroup>
 ```json Request
@@ -27,9 +27,9 @@ next_session = create_session(profile={"name": "shop-account", "persist": True})
 | Field | Type | Meaning |
 |---|---|---|
 | `name` | string | The profile to load. Created on first use. |
-| `persist` | boolean | Save the profile when the session ends. Defaults to `false`, which loads it read-only: changes made during the session are discarded. |
+| `persist` | boolean | Save when the session ends. Default `false`: read-only, changes are discarded. |
 
-Profiles are supported on every browser type.
+Profiles work on every browser type.
 
 ## Listing and deleting
 
@@ -57,13 +57,13 @@ requests.delete(
 ```
 </CodeGroup>
 
-Deleting is idempotent: an unknown name also answers `{ "success": true }`. The list is not paginated and returns every profile in the workspace, so delete the ones you no longer need. The dashboard's **Profiles** page shows the same list, and lets you launch a session on a profile to sign in by hand through the live view.
+Delete is idempotent: an unknown name also answers `{ "success": true }`. The list isn't paginated and returns every profile in the workspace, so delete what you no longer need. The dashboard's **Profiles** page shows the same list and can launch a session on a profile so you sign in by hand through the live view.
 
 ## Practical notes
 
-- One profile, one session at a time. Two concurrent sessions on the same persisted profile will overwrite each other's state when they stop; nothing refuses the second session.
-- The profile is written as the session ends. Before starting the next session on the same name, wait until `GET /v1/browser/session` reports the previous one as `completed`.
-- Keep the same `country` for a profile across runs. A profile that signed in from Germany and returns from Brazil looks like a stolen session to the site.
-- Profiles hold everything a browser profile holds: cookies, local storage, IndexedDB, service workers. Delete a profile when the account it belongs to is no longer needed.
-- As in desktop Chrome, cookies without an expiry (session cookies) are dropped when the browser closes and do not carry over. Sites that keep you signed in set persistent cookies, which do; a login that only sets a session cookie has to be repeated each run.
-- The next session on the profile can run on a different machine; the state travels with the name.
+- One profile, one session at a time. Two concurrent sessions on the same persisted profile overwrite each other's state when they stop. Nothing refuses the second.
+- The profile is written as the session ends. Wait for `GET /v1/browser/session` to report `completed` before starting the next session on the same name.
+- Keep the same `country` across runs. A profile that signed in from Germany and comes back from Brazil looks like a stolen session.
+- A profile holds everything Chrome's does: cookies, local storage, IndexedDB, service workers. Delete it when the account is no longer needed.
+- As in desktop Chrome, cookies without an expiry (session cookies) are dropped when the browser closes. Sites that keep you signed in set persistent cookies, which carry over; a login that only sets a session cookie has to be repeated each run.
+- The next session on a profile can run on a different machine. The state travels with the name.

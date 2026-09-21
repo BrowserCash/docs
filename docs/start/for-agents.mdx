@@ -1,35 +1,35 @@
 ---
 title: "For agents"
-description: "A briefing for coding agents integrating Driver: the rules that keep sessions unblocked, the three endpoints that matter, and the mistakes to avoid."
+description: "For coding agents integrating Driver: the rules that keep sessions unblocked, the three calls, the mistakes."
 ---
 
-This page is written for an AI coding agent (Claude Code, Cursor, Codex, or similar) that has been asked to integrate Driver into a project. Humans are welcome too. The published docs also serve `/llms.txt` (an index) and `/llms-full.txt` (every page).
+Written for an AI coding agent (Claude Code, Cursor, Codex) that's been asked to integrate Driver into a project. Humans welcome. The docs also serve `/llms.txt` (index) and `/llms-full.txt` (every page).
 
 ## The rules
 
-1. **Use Patchright, not stock Playwright or Puppeteer.** Install `patchright` (npm or pip) and import `chromium` from it. It has the same API as Playwright, so existing Playwright code works unchanged. Stock Playwright issues CDP commands (`Runtime.enable`, console and binding hooks) that anti-bot systems detect, and sessions get blocked. Patchright removes them. See [Why Patchright](/docs/frameworks/patchright#why-patchright).
-2. **Never launch a browser.** Driver provides the browser. Connect to the `cdpUrl` from the create call with `chromium.connectOverCDP(cdpUrl)`. Do not call `chromium.launch()`, `launchPersistentContext()`, `puppeteer.launch()`, or run `playwright install`.
-3. **Reuse the browser's context and tab.** After connecting, use `browser.contexts()[0]` and `context.pages()[0]` (in Python they are properties: `browser.contexts[0]`, `context.pages[0]`). Only create new ones if none exist. Extra contexts and stripped-down pages look like automation.
-4. **Do not install broad CDP hooks.** Avoid `page.route`, `context.route`, `page.on('request')`, `page.exposeFunction`, `page.addInitScript` and `context.addInitScript` unless the task cannot be done otherwise, and then scope them as narrowly as possible. They change how the browser behaves and are detectable.
-5. **Do not patch fingerprints.** The browser is real Chrome on real hardware. Overriding `navigator`, the user agent, WebGL, canvas, timezone or locale makes it look fake. Set `country`, `timezone` and `language` on the create call instead.
-6. **Always stop the session.** Wrap the work in `try / finally` and call `DELETE /v1/browser/session?sessionId=…` in `finally`. Sessions are metered by bandwidth and end on their own at `duration` (one hour by default); a session left running holds one of the workspace's concurrency slots and keeps its `cdpUrl` live until then. Closing your client (`browser.close()`) does not stop the session.
-7. **Keep the `sessionId`.** Log it with the run. Every session has a record in the dashboard under Telemetry → Sessions with node, network, timing and cost. If the person wants to watch, print `https://viewer.driver.dev?ws=<cdpUrl>` as soon as the session exists; see [Live view](/docs/sessions/live-view).
-8. **Report what a person must fix; retry only what time fixes.** `402` (out of credits) and `403` (concurrency or plan limit): report, never loop. `503` (no capacity; the response carries `Retry-After: 2` and `"code": "browser_capacity_unavailable"`): back off with jitter, cap the attempts, then report. `504` (Chrome did not start in time) and `500`: retry once. `429`: back off. The full table is on [Errors](/docs/sessions/errors).
-9. **Stay under the workspace's concurrency limit.** `GET /v1/account/billing` reports it as `plan.concurrent_browsers`; sessions beyond it are refused with 403.
-10. **Use a browser pool when start-up latency matters.** A [pool](/docs/sessions/pools) keeps browsers warm with fixed options; `POST /v1/browser/pools/{poolId}/acquire` with `{ "waitMs": 10000 }` answers in under a second with `{ leaseId, session }`, and `session` is an ordinary session from then on. Release it with `POST /v1/browser/pools/{poolId}/release` `{ leaseId }` in the same `finally` where you would stop a session. Do not create pools on the person's behalf without asking: they hold warm browsers against an account-wide cap.
-11. **When a site challenges or blocks, escalate in this order.** Remove every hook and tactic; then create with `type: "hosted_stealth"`, then `"hosted_privacy"`, then add `captchaSolver: true`; when a step genuinely needs a person, give them the live view URL. See [Browser types](/docs/options/browser-types) and [CAPTCHA solving](/docs/options/captcha-and-adblock).
+1. **Patchright, not stock Playwright or Puppeteer.** Install `patchright` (npm or pip) and import `chromium` from it. Same API as Playwright, so existing code works unchanged. Stock Playwright issues CDP commands (`Runtime.enable`, console and binding hooks) that anti-bot systems detect. Patchright removes them. See [Why Patchright](/docs/frameworks/patchright#why-patchright).
+2. **Never launch a browser.** Connect to the `cdpUrl` from the create call with `chromium.connectOverCDP(cdpUrl)`. No `chromium.launch()`, `launchPersistentContext()`, `puppeteer.launch()`, no `playwright install`.
+3. **Reuse the browser's context and tab.** `browser.contexts()[0]` and `context.pages()[0]` (properties in Python: `browser.contexts[0]`, `context.pages[0]`). Create new ones only if none exist. Extra contexts look like automation.
+4. **No broad CDP hooks.** `page.route`, `context.route`, `page.on('request')`, `page.exposeFunction`, `page.addInitScript`, `context.addInitScript`: only when the task can't be done otherwise, and then as narrow as possible. They change how the browser behaves and that's detectable.
+5. **Don't patch fingerprints.** It's real Chrome on real hardware. Overriding `navigator`, the user agent, WebGL, canvas, timezone or locale makes it look fake. Set `country`, `timezone` and `language` on the create call instead.
+6. **Always stop the session.** `try / finally`, with `DELETE /v1/browser/session?sessionId=…` in the `finally`. Sessions are metered by bandwidth and end on their own at `duration` (an hour by default); until then a forgotten session holds a concurrency slot and its `cdpUrl` stays live. `browser.close()` doesn't stop it.
+7. **Keep the `sessionId`.** Log it with the run. Every session has a record under Telemetry → Sessions with node, network, timing and cost. If the person wants to watch, print `https://viewer.driver.dev?ws=<cdpUrl>` as soon as the session exists. See [Live view](/docs/sessions/live-view).
+8. **Report what a person must fix; retry only what time fixes.** `402` (out of credits) and `403` (concurrency or plan limit): report, never loop. `503` (no capacity; `Retry-After: 2`, `"code": "browser_capacity_unavailable"`): back off with jitter, cap the attempts, then report. `504` (Chrome didn't start in time) and `500`: retry once. `429`: back off. Full table on [Errors](/docs/sessions/errors).
+9. **Stay under the concurrency limit.** `GET /v1/account/billing` reports it as `plan.concurrent_browsers`; sessions beyond it get 403.
+10. **Use a pool when start-up latency matters.** A [pool](/docs/sessions/pools) keeps browsers warm with fixed options. `POST /v1/browser/pools/{poolId}/acquire` with `{ "waitMs": 10000 }` answers in under a second with `{ leaseId, session }`; `session` is an ordinary session from there. Release with `POST /v1/browser/pools/{poolId}/release` `{ leaseId }` in the same `finally` where you'd stop a session. Don't create pools without asking: they hold warm browsers against an account-wide cap.
+11. **When a site challenges or blocks, escalate in this order.** Remove every hook and tactic. Then `type: "hosted_stealth"`, then `"hosted_privacy"`, then `captchaSolver: true`. When a step needs a person, give them the live view URL. See [Browser types](/docs/options/browser-types) and [CAPTCHA solving](/docs/options/captcha-and-adblock).
 
 ## How to write the automation
 
-- **Minimal logic wins.** The shortest script that reaches the outcome is the most reliable and the least detectable. Go to the page, do the action, read the result. Do not add retries, waits, listeners, request routing or "stealth" helpers unless a specific failure on a specific site demands them, and then add the smallest thing that fixes it.
-- **Fast and accurate, in that order of effort.** Before writing browser steps, ask whether the outcome is reachable faster: a direct URL instead of clicking through navigation, one session doing several pages instead of one session per page, a persisted [profile](/docs/options/profiles) instead of logging in every run. Then keep the browser steps short: no fixed sleeps, rely on the framework's auto-waiting, stop the session the moment the result is in hand.
-- **Test the automation for real, every time.** Run it against the live target through Driver and check the result, not just that the script exits. Confirm the data is right, the action happened, and the session was stopped: `GET /v1/browser/session?sessionId=…` shows `status: "completed"`, a `stoppedAt` and the metered `bandwidthBytes` (the same record is under Telemetry → Sessions in the dashboard). A run that "worked" but read the wrong element is worse than one that failed loudly.
-- **Unattended jobs clean up after earlier runs.** A crash before `finally` leaves a session running until its `duration`. At start-up, list `status=active` and `status=starting` (`listSessions` / `list_sessions` in the reference client), stop the ones your job created (match on `note`), then start the new one. Exit non-zero when the result was not verified, so the scheduler reports the failure.
-- **Do not pollute the session.** Every extra CDP feature you switch on, every injected script, every overridden property is a signal. If you did not need it to reach the outcome, take it out.
+- **Minimal logic wins.** Go to the page, do the action, read the result. No retries, waits, listeners, request routing or "stealth" helpers until a specific failure on a specific site demands one, and then the smallest thing that fixes it.
+- **Fast first.** Before writing browser steps: is there a direct URL? Can one session do several pages? Can a persisted [profile](/docs/options/profiles) replace logging in every run? Then keep the steps short: no fixed sleeps, use the framework's auto-waiting, stop the session the moment you have the result.
+- **Test for real, every time.** Run against the live target through Driver and check the result, not the exit code: the data is right, the action happened, the session was stopped (`GET /v1/browser/session?sessionId=…` shows `status: "completed"`, `stoppedAt`, `bandwidthBytes`). A run that "worked" but read the wrong element is worse than one that failed loudly.
+- **Unattended jobs clean up after earlier runs.** A crash before `finally` leaves a session running until its `duration`. At start-up, list `status=active` and `status=starting` (`listSessions` / `list_sessions` in the reference client), stop the ones your job created (match on `note`), then start the new one. Exit non-zero when the result wasn't verified.
+- **Don't pollute the session.** Every CDP feature you switch on, every injected script, every overridden property is a signal. If you didn't need it, take it out.
 
 ## Handoff prompt
 
-Give this to a coding agent along with the target and the outcome you want. It is enough to start; the rest of this page fills in the details an agent needs once it is writing code.
+Give this to a coding agent with the target and the outcome you want. It's enough to start; the rest of this page is for once it's writing code.
 
 ```text
 Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into this project.
@@ -72,15 +72,15 @@ Integrate Driver (driver.dev), hosted real-Chrome browser infrastructure, into t
 
 ## The three calls
 
-Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DRIVER_API_KEY`. Store the key in an environment variable named `DRIVER_API_KEY`; never commit it. Node's global `fetch` has no timeout, which is right for the create call; if you add one, allow three minutes.
+Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DRIVER_API_KEY`. Keep the key in an environment variable named `DRIVER_API_KEY`. Node's global `fetch` has no timeout, which suits the create call; if you add one, allow three minutes.
 
 | Step | Call | Notes |
 |---|---|---|
-| Create | `POST /v1/browser/session` with a JSON body | All fields optional. Returns `{ sessionId, status, cdpUrl, servedBy, createdAt, stoppedAt, note }`. The call waits for Chrome (up to 20 s, on some machines up to 3 min), so `cdpUrl` is normally set and `status` is `active`; if you ever get `starting`, poll `GET` until `cdpUrl` appears. |
+| Create | `POST /v1/browser/session` with a JSON body | All fields optional. Returns `{ sessionId, status, cdpUrl, servedBy, createdAt, stoppedAt, note }`. The call waits for Chrome (up to 20 s, up to 3 min on some machines), so `cdpUrl` is set and `status` is `active`. If you get `starting`, poll `GET` until `cdpUrl` appears. |
 | Use | `chromium.connectOverCDP(cdpUrl)` | From Patchright. Reuse the first context and page. |
 | Stop | `DELETE /v1/browser/session?sessionId=<id>` | Returns `{ success: true }`. |
 
-Useful extras: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Full options for the create body are on [Create a session](/docs/sessions/create#options). When a [pool](/docs/sessions/pools) exists, `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path.
+Also useful: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Every create option is on [Create a session](/docs/sessions/create#options). With a [pool](/docs/sessions/pools), `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path.
 
 ## Reference implementation
 
@@ -374,12 +374,12 @@ def browser_page(**opts):
 - [ ] No `launch()` anywhere; the only browser entry point is `connectOverCDP(cdpUrl)`.
 - [ ] The first context and page are reused.
 - [ ] The session is stopped in a `finally`.
-- [ ] `DRIVER_API_KEY` comes from the environment and is not committed.
-- [ ] 402 and 403 are reported to the user; 503 is retried only with a cap and a growing delay.
+- [ ] `DRIVER_API_KEY` comes from the environment and isn't committed.
+- [ ] 402 and 403 are reported; 503 is retried with a cap and a growing delay.
 - [ ] The result was verified through `GET /v1/browser/session` (status `completed`), not assumed.
-- [ ] A browser taken from a pool is released (or stopped) in the same `finally`; no pool was created without asking.
+- [ ] A browser from a pool is released (or stopped) in the same `finally`; no pool was created without asking.
 
 ## Machine-readable resources
 
-- `https://docs.driver.dev/llms.txt` lists every page of these docs; `https://docs.driver.dev/llms-full.txt` is all of them in one file. Any page is available as Markdown by appending `.md` to its URL.
+- `https://docs.driver.dev/llms.txt` lists every page; `https://docs.driver.dev/llms-full.txt` is all of them in one file. Any page is Markdown with `.md` appended to its URL.
 - `https://api.driver.dev/doc` is the live OpenAPI document; `https://api.driver.dev/scalar` renders it.

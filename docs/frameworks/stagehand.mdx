@@ -3,7 +3,7 @@ title: "Stagehand"
 description: "Natural-language act and extract on a Driver browser: connect Stagehand v4 to the session's cdpUrl."
 ---
 
-[Stagehand](https://docs.stagehand.dev) adds `act`, `extract` and `observe` on top of a browser it attaches to. With Stagehand v4, connect it to a Driver session's `cdpUrl` through `localBrowser.connect`.
+[Stagehand](https://docs.stagehand.dev) adds `act`, `extract` and `observe` on top of a browser it attaches to. With v4, connect it to a Driver session's `cdpUrl` through `localBrowser.connect`.
 
 ```bash
 npm install @browserbasehq/stagehand zod@~4.4.3
@@ -28,7 +28,7 @@ if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json().catch(()
 const session = await res.json();
 
 try {
-  // Attach to Driver's Chrome; Stagehand never launches or closes a browser it did not start.
+  // Attach to Driver's Chrome. Stagehand never launches or closes a browser it didn't start.
   const browser = await localBrowser.connect({ cdpUrl: session.cdpUrl });
   const stagehand = await Stagehand.create({
     browser,
@@ -53,11 +53,11 @@ try {
 }
 ```
 
-Stagehand reads no environment variables itself: pass the model provider key in `model.apiKey`.
+Stagehand reads no environment variables. Pass the model provider key in `model.apiKey`.
 
 ## Notes
 
-- This is the v4 API (`localBrowser.connect`, `Stagehand.create`). Stagehand 2.x used `new Stagehand({ env: "LOCAL", localBrowserLaunchOptions: { cdpUrl } })`; if you are on 2.x, that is the equivalent.
-- Stagehand instruments the page to work (it injects scripts and drives the browser over CDP), which is the kind of signal protected sites look for. On those sites, prefer plain [Patchright](/docs/frameworks/patchright) with explicit selectors.
-- Pin the Stagehand version you tested with; the connect API changed between 2.x and v4.
-- Reuse the page from `browser.context.pages()` rather than opening a new one.
+- This is the v4 API (`localBrowser.connect`, `Stagehand.create`). On 2.x the equivalent is `new Stagehand({ env: "LOCAL", localBrowserLaunchOptions: { cdpUrl } })`.
+- Stagehand injects scripts and drives the browser over CDP, which is what protected sites look for. On those sites use plain [Patchright](/docs/frameworks/patchright) with explicit selectors.
+- Pin the Stagehand version you tested with. The connect API changed between 2.x and v4.
+- Reuse the page from `browser.context.pages()` instead of opening a new one.

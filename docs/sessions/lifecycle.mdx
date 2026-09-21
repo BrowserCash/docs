@@ -3,18 +3,18 @@ title: "Lifecycle"
 description: "Get, list, label and stop sessions. What each status means and how long a session lives."
 ---
 
-A session moves through `starting` → `active` → `completed`, or `error` if the browser failed. It ends when you stop it, when it reaches its `duration`, or when the machine serving it goes away. A session acquired from a [browser pool](/docs/sessions/pools) is the same object once acquired (`createdAt` is when the browser was warmed); it also ends when its lease is released or expires.
+`starting` → `active` → `completed`, or `error` if the browser failed. A session ends when you stop it, at its `duration`, or when its machine goes away. One acquired from a [browser pool](/docs/sessions/pools) is the same object (`createdAt` is when the browser was warmed) and also ends when its lease is released or expires.
 
 | Status | Meaning |
 |---|---|
 | `starting` | The machine is launching Chrome. `cdpUrl` is `null`. |
 | `active` | Chrome is reachable at `cdpUrl`. |
-| `completed` | The session was stopped or reached its duration. `stoppedAt` is set. |
-| `error` | The session failed to start, ended abnormally, or the machine serving it went away. `stoppedAt` is set. |
+| `completed` | Stopped, or reached its duration. `stoppedAt` is set. |
+| `error` | Failed to start, ended abnormally, or the machine went away. `stoppedAt` is set. |
 
 ## Get a session
 
-Returns the same shape as create, plus `bandwidthBytes`: `null` while the session runs, the metered total once it has ended (final by the time a stop call returns; `0` for a session that moved no bytes). `cdpUrl` is `null` once the session has ended.
+Same shape as create, plus `bandwidthBytes`: `null` while running, the metered total after (final by the time a stop returns; `0` if nothing moved). `cdpUrl` is `null` after the session ends.
 
 <CodeGroup>
 ```bash cURL
@@ -34,7 +34,7 @@ session = requests.get(
 
 ## List sessions
 
-Paginated, newest first, with an optional `status` filter that matches exactly one status (`starting` sessions are not in `?status=active`). `page` defaults to 1 and `pageSize` to 20 (at most 100; larger values are clamped, not rejected). A `status` outside `starting`, `active`, `completed`, `error` is a `400`.
+Newest first. `status` matches exactly (`starting` isn't in `?status=active`); anything outside `starting`, `active`, `completed`, `error` is a `400`. `page` defaults to 1, `pageSize` to 20, max 100 (larger is clamped).
 
 <CodeGroup>
 ```bash cURL
@@ -54,11 +54,11 @@ data = requests.get(
 ```
 </CodeGroup>
 
-The response carries `sessions`, `total`, `totalPages`, `page` and `pageSize`. Each item has `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes` and `note`; the list is the only place the API reports `country` (`type` is `null` for sessions created with the default type), since the single-session calls do not.
+Response: `sessions`, `total`, `totalPages`, `page`, `pageSize`. Items: `sessionId`, `status`, `servedBy`, `type`, `country`, `createdAt`, `stoppedAt`, `bandwidthBytes`, `note`. This is the only place the API reports `country`; `type` is `null` for the default type.
 
 ## Label a session
 
-Notes show up in the dashboard's session list and record. Set one on create, or afterwards:
+Notes show in the dashboard's session list and record. Set one on create, or later:
 
 <CodeGroup>
 ```bash cURL
@@ -84,11 +84,11 @@ requests.patch(
 ```
 </CodeGroup>
 
-Returns `{ "success": true }`. Notes are at most 256 characters (longer is a `400`). Send an empty string to clear one. A session that has ended cannot be updated (`400`, `Cannot update a terminal session`).
+Returns `{ "success": true }`. Max 256 characters (longer is a `400`); an empty string clears it. An ended session can't be updated (`400`, `Cannot update a terminal session`).
 
 ## Stop a session
 
-Stopping releases the browser and ends billing for the session. Always do it in a `finally`. A session that is still `starting` can be stopped too.
+Releases the browser and ends billing. Do it in a `finally`. A `starting` session can be stopped too.
 
 <CodeGroup>
 ```bash cURL
@@ -108,15 +108,15 @@ requests.delete(
 ```
 </CodeGroup>
 
-Returns `{ "success": true }`. Stopping is idempotent: a session that already ended answers the same `{ "success": true }`, so a stop in a `finally` is always safe.
+Returns `{ "success": true }`, also for a session that already ended, so a stop in a `finally` is always safe.
 
 ## Duration
 
-`duration` on create is the session's lifetime in seconds, from 60 to 3600 inclusive, default 3600. There is no extension call: choose a duration that covers the job, and start a new session (with a persisted [profile](/docs/options/profiles) if you need the state) when it runs out.
+`duration` is the lifetime in seconds, 60 to 3600 inclusive, default 3600. There's no extension call: pick one that covers the job, and start a new session (with a persisted [profile](/docs/options/profiles) if you need the state) when it runs out.
 
 ## Waiting for `active`
 
-Create normally returns with `cdpUrl` set. If you see `starting`, poll (`getSession` / `get_session` are the GET call from the top of this page; the [reference client](/docs/start/for-agents#reference-implementation) has both):
+Create returns with `cdpUrl` set. If you see `starting`, poll. The [reference client](/docs/start/for-agents#reference-implementation) has both of these.
 
 <CodeGroup>
 ```typescript TypeScript

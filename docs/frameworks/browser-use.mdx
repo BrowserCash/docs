@@ -1,9 +1,9 @@
 ---
 title: "Browser Use"
-description: "Run Browser Use agents on a Driver browser by handing the agent the session's cdpUrl."
+description: "Run Browser Use agents on a Driver browser by passing the session's cdpUrl."
 ---
 
-[Browser Use](https://browser-use.com) builds autonomous agents on top of a Chromium it controls. Give it a Driver session's `cdpUrl` and the agent drives real Chrome on a residential network instead of a local headless browser.
+[Browser Use](https://browser-use.com) runs autonomous agents on a Chromium it controls. Pass it a Driver session's `cdpUrl` and it drives real Chrome on a residential network instead.
 
 ```bash
 pip install browser-use requests
@@ -39,11 +39,11 @@ async def main():
 asyncio.run(main())
 ```
 
-`ChatBrowserUse` uses a Browser Use Cloud model key (`BROWSER_USE_API_KEY`); any LangChain-style chat model works in its place.
+`ChatBrowserUse` takes a Browser Use Cloud model key (`BROWSER_USE_API_KEY`). Any LangChain-style chat model works in its place.
 
 ## Notes
 
-- Agents take many steps; set `duration` to cover the task (up to 3600 seconds) and stop the session in `finally`.
-- Browser Use drives the browser over CDP directly rather than through Playwright, so Patchright is not in the picture. The fingerprint concern is the same, though: it comes from the CDP commands a client issues, and an agent framework issues more of them than a plain script. Expect challenges on protected sites.
-- Pin the `browser-use` version you tested with; its `Browser`/`Agent` constructors have changed between releases. Passing `cdp_url` is what stops it from launching or downloading a browser of its own.
-- Watch the agent through the session's [live view](/docs/sessions/live-view); it is the fastest way to see where an agent goes wrong.
+- Agents take many steps. Set `duration` to cover the task (up to 3600 seconds) and stop the session in `finally`.
+- Browser Use talks CDP directly, not through Playwright, so Patchright doesn't apply. The fingerprint problem is the same, and an agent framework issues more CDP commands than a plain script. Expect challenges on protected sites.
+- Pin the `browser-use` version you tested with. The `Browser` and `Agent` constructors have changed between releases. Passing `cdp_url` is what stops it from launching or downloading its own browser.
+- Watch the agent through the session's [live view](/docs/sessions/live-view). It's the fastest way to see where it goes wrong.

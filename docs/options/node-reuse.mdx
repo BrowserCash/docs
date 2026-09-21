@@ -3,7 +3,7 @@ title: "Node reuse"
 description: "nodeId runs a session on the machine that served an earlier one. Rarely needed; overrides country and type."
 ---
 
-Every session response includes `servedBy`, the id of the machine that ran it. Pass that value as `nodeId` on a later create to land on the same machine again.
+Every session response includes `servedBy`, the id of the machine that ran it. Pass it as `nodeId` on a later create to land on the same machine.
 
 <CodeGroup>
 ```typescript TypeScript
@@ -20,12 +20,12 @@ again = create_session(nodeId=first["servedBy"])
 
 ## When it helps
 
-- A site keyed something to the machine (rare; most keying is by cookies, which [profiles](/docs/options/profiles) handle better).
+- A site keyed something to the machine. Rare; most keying is by cookies, which [profiles](/docs/options/profiles) handle better.
 - Reproducing a problem that only happens on one machine.
 
 ## Rules
 
-- `nodeId` takes precedence over `country` and `type`. You get that machine, wherever it is.
-- If the machine is busy or gone, the request fails instead of falling back to another machine.
+- `nodeId` overrides `country` and `type`. You get that machine, wherever it is.
+- If the machine is busy or gone, the request fails. No fallback to another machine.
 
-For most workloads, leave `nodeId` out and let placement pick a machine in the country you asked for.
+For most workloads leave `nodeId` out and let placement pick a machine in the country you asked for.
