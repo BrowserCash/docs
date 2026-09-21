@@ -1,0 +1,73 @@
+---
+title: "Connect over CDP"
+description: "Attach your framework to a running session through its cdpUrl."
+---
+
+`cdpUrl` is a WebSocket endpoint to the session's Chrome. Any CDP client can attach. You never launch a browser.
+
+<Warning>
+Use [Patchright](/docs/frameworks/patchright), not stock Playwright or Puppeteer. It's Playwright's API minus the CDP calls anti-bot systems fingerprint; Playwright code moves over by changing one import, Puppeteer code needs porting. Stock frameworks get blocked on sites that look for automation.
+</Warning>
+
+## Patchright (recommended)
+
+<CodeGroup>
+```typescript TypeScript
+import { chromium } from "patchright";
+
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+const context = browser.contexts()[0] ?? (await browser.newContext());
+const page = context.pages()[0] ?? (await context.newPage());
+
+await page.goto("https://example.com");
+console.log(await page.title());
+
+await browser.close(); // your connection only; the session runs until you stop it
+```
+```python Python
+from patchright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    context = browser.contexts[0] if browser.contexts else browser.new_context()
+    page = context.pages[0] if context.pages else context.new_page()
+
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+```
+</CodeGroup>
+
+## Other clients
+
+<CardGroup cols={2}>
+  <Card title="Playwright" href="/docs/frameworks/playwright" icon="masks-theater">Works, with the caveats above.</Card>
+  <Card title="Puppeteer" href="/docs/frameworks/puppeteer" icon="puppet">`puppeteer-core` with `browserWSEndpoint`.</Card>
+  <Card title="Browser Use" href="/docs/frameworks/browser-use" icon="robot">Agents on a Driver browser.</Card>
+  <Card title="Stagehand" href="/docs/frameworks/stagehand" icon="wand-magic-sparkles">Natural-language actions over CDP.</Card>
+</CardGroup>
+
+## Reuse the context and tab
+
+The browser opens with one context and one tab. Reuse them; fresh incognito contexts and blank pages don't look like a person's Chrome.
+
+```typescript
+const context = browser.contexts()[0] ?? (await browser.newContext());
+const page = context.pages()[0] ?? (await context.newPage());
+```
+
+Need more tabs? `context.newPage()` on the existing context.
+
+## Disconnecting versus stopping
+
+`browser.close()` (Patchright, Playwright) and `browser.disconnect()` (Puppeteer) end your connection only. The session runs, and bills, until [`DELETE /v1/browser/session`](/docs/sessions/lifecycle#stop-a-session) or its `duration`. Reconnect to the same `cdpUrl` as often as you like while it's active.
+
+## Reconnecting
+
+If your process crashes, [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session): while `status` is `active` the `cdpUrl` still works. If the session ended, a profile with `persist: true` carries the state into a new one.
+
+Several clients can attach at once (your script and the [live view](/docs/sessions/live-view), say), but two scripts driving one tab fight each other: one automation client per session. `cdpUrl` is a credential. Its hostname is a relay near the machine, not the session's network; egress is from the country you asked for whatever host you connect to.
+
+## Timeouts and waits
+
+Real machines on real networks: page loads take real time. Use the framework's auto-waiting (`page.click`, `locator.waitFor`), not fixed sleeps, and raise the navigation timeout for slow sites instead of retrying in a loop.

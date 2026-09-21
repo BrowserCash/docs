@@ -1,0 +1,46 @@
+---
+title: "API overview"
+description: "Base URL, authentication, conventions, and the live OpenAPI document these pages come from."
+---
+
+## Base URL
+
+```text
+https://api.driver.dev
+```
+
+## Authentication
+
+Every endpoint takes a workspace API key as a bearer token. Keys come from **Settings → API keys** in the [dashboard](https://app.driver.dev).
+
+```bash
+Authorization: Bearer $DRIVER_API_KEY
+```
+
+## Conventions
+
+- Bodies are JSON, except extension uploads (`multipart/form-data`).
+- Identifiers go in the query string (`?sessionId=…`, `?profileName=…`), not the path. Extensions and pools are the exception (`/v1/browser/pools/{poolId}`).
+- Errors are `{ "error": "message" }` with a meaningful HTTP status. The create call's `503` also carries a `code`. Pools answer `409` for state conflicts: duplicate name, over the warm cap, nothing ready, active leases. See [Errors](/docs/sessions/errors).
+- Session timestamps are ISO 8601. Billing periods are Unix epoch milliseconds (fields ending in `_ms`, plus the subscription period bounds). Money is cents, or millicents where exactness matters. Bandwidth is bytes on sessions and megabytes on billing.
+- Unknown fields in the create body are a `400`. The update call ignores them.
+- Create answers `200` with the session. Extension upload and pool create answer `201`.
+
+## Endpoints
+
+| Group | Endpoints |
+|---|---|
+| Sessions | `POST/GET/PATCH/DELETE /v1/browser/session`, `GET /v1/browser/sessions` |
+| Pools | `POST/GET /v1/browser/pools`, `GET/PATCH/DELETE /v1/browser/pools/{poolId}`, `POST /v1/browser/pools/{poolId}/acquire`, `…/release`, `…/flush` |
+| Profiles | `GET /v1/browser/profiles`, `DELETE /v1/browser/profile` |
+| Network | `GET /v1/network/ips` (dedicated IPs; next gateway release) |
+| Account | `GET /v1/account/balance`, `GET /v1/account/billing` |
+| Extensions | `POST/GET /v1/browser/extensions`, `GET/PUT/DELETE /v1/browser/extensions/{extensionId}` |
+
+## Source of truth
+
+These pages are generated from the live OpenAPI document at `https://api.driver.dev/doc` (rendered at [api.driver.dev/scalar](https://api.driver.dev/scalar)), with corrections where the generator is wrong: `duration` accepts 60 (the live document says strictly more), `balance_cents` can be negative, `PATCH` answers `400` for an ended session, `GET /v1/browser/sessions` answers `400` for a bad status filter, the `503` carries `Retry-After` and a `code`, paging has defaults and a maximum, and pool create answers `201` only. On those points this reference is right. On everything else the live document wins.
+
+## Client code
+
+There's no SDK. The endpoints are plain HTTP; [For agents](/docs/start/for-agents#reference-implementation) has a small client module for TypeScript and Python you can copy.

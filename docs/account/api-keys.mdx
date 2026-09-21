@@ -1,0 +1,25 @@
+---
+title: "API keys"
+description: "Keys are per workspace, created in the dashboard, sent as a bearer token."
+---
+
+Every workspace has a root key and can create named keys under **Settings → API keys** in the [dashboard](https://app.driver.dev). All keys of a workspace share its plan, credits and concurrency limit.
+
+```bash
+Authorization: Bearer $DRIVER_API_KEY
+```
+
+## Handling keys
+
+- Keep the key in an environment variable named `DRIVER_API_KEY`. Don't commit it or paste it into prompts, tickets or logs.
+- One key per integration, so a leaked key can be rolled without touching the others. Rolling invalidates the old value immediately.
+- The root key can't be deleted, only rolled.
+- Keys belong to the workspace, not the person. Removing someone from the workspace doesn't invalidate keys they created. Roll them if that matters.
+
+## Which workspace am I in
+
+A key belongs to one workspace. Every session it creates is billed to that workspace and listed under its Telemetry. If you're in several workspaces, check the switcher at the top of the dashboard before creating a key.
+
+## Errors
+
+`401`: the key is missing, malformed or rolled. `402` and `403` are about the workspace's credits and plan, not the key. See [Errors](/docs/sessions/errors).

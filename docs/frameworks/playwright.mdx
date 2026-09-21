@@ -1,0 +1,40 @@
+---
+title: "Playwright"
+description: "Stock Playwright connects to Driver over CDP but carries fingerprints that get sessions blocked. Prefer Patchright."
+---
+
+<Warning>
+Stock Playwright issues CDP commands anti-bot systems detect (`Runtime.enable` and its bookkeeping hooks), and protected sites block the session. Use [Patchright](/docs/frameworks/patchright): same API, one import change.
+</Warning>
+
+If you've measured that your targets don't care, stock Playwright works unchanged:
+
+<CodeGroup>
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+const context = browser.contexts()[0] ?? (await browser.newContext());
+const page = context.pages()[0] ?? (await context.newPage());
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+```
+```python Python
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    context = browser.contexts[0] if browser.contexts else browser.new_context()
+    page = context.pages[0] if context.pages else context.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+```
+</CodeGroup>
+
+Install with `npm install playwright` or `pip install playwright`. Don't run `playwright install`; the browser is Driver's.
+
+## Everything else
+
+Contexts, tabs, disconnecting versus stopping, reconnecting and timeouts work the same as with Patchright. See [Connect over CDP](/docs/sessions/connect).

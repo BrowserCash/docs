@@ -1,0 +1,801 @@
+{
+  "AD": [
+    "ca-ES"
+  ],
+  "AE": [
+    "ar-SA"
+  ],
+  "AF": [
+    "en-GB"
+  ],
+  "AG": [
+    "en-US"
+  ],
+  "AI": [
+    "en-US"
+  ],
+  "AL": [
+    "en-GB"
+  ],
+  "AM": [
+    "ru-RU"
+  ],
+  "AO": [
+    "pt-PT"
+  ],
+  "AQ": [
+    "en-GB"
+  ],
+  "AR": [
+    "es-MX"
+  ],
+  "AS": [
+    "en-US"
+  ],
+  "AT": [
+    "de-DE",
+    "hr-HR",
+    "sl-SI",
+    "hu-HU"
+  ],
+  "AU": [
+    "en-GB"
+  ],
+  "AW": [
+    "nl-NL"
+  ],
+  "AX": [
+    "sv-SE"
+  ],
+  "AZ": [
+    "en-GB"
+  ],
+  "BA": [
+    "hr-HR",
+    "sr-Latn-RS"
+  ],
+  "BB": [
+    "en-US"
+  ],
+  "BD": [
+    "en-GB"
+  ],
+  "BE": [
+    "nl-NL",
+    "fr-FR",
+    "de-DE"
+  ],
+  "BF": [
+    "fr-FR"
+  ],
+  "BG": [
+    "bg-BG"
+  ],
+  "BH": [
+    "ar-SA"
+  ],
+  "BI": [
+    "fr-FR",
+    "en-GB"
+  ],
+  "BJ": [
+    "fr-FR"
+  ],
+  "BL": [
+    "fr-FR"
+  ],
+  "BM": [
+    "en-US"
+  ],
+  "BN": [
+    "zh-TW"
+  ],
+  "BO": [
+    "es-MX"
+  ],
+  "BQ": [
+    "nl-NL"
+  ],
+  "BR": [
+    "pt-BR"
+  ],
+  "BS": [
+    "en-US"
+  ],
+  "BT": [
+    "en-GB"
+  ],
+  "BV": [
+    "en-GB"
+  ],
+  "BW": [
+    "en-GB"
+  ],
+  "BY": [
+    "ru-RU"
+  ],
+  "BZ": [
+    "en-US"
+  ],
+  "CA": [
+    "en-US",
+    "fr-CA"
+  ],
+  "CC": [
+    "en-GB"
+  ],
+  "CD": [
+    "fr-FR"
+  ],
+  "CF": [
+    "fr-FR"
+  ],
+  "CG": [
+    "fr-FR"
+  ],
+  "CH": [
+    "de-DE",
+    "fr-FR",
+    "it-IT"
+  ],
+  "CI": [
+    "fr-FR"
+  ],
+  "CK": [
+    "en-GB"
+  ],
+  "CL": [
+    "es-MX"
+  ],
+  "CM": [
+    "fr-FR",
+    "en-GB"
+  ],
+  "CN": [
+    "zh-CN",
+    "ko-KR"
+  ],
+  "CO": [
+    "es-MX"
+  ],
+  "CR": [
+    "es-MX"
+  ],
+  "CU": [
+    "es-MX"
+  ],
+  "CV": [
+    "pt-PT"
+  ],
+  "CW": [
+    "nl-NL"
+  ],
+  "CX": [
+    "en-GB"
+  ],
+  "CY": [
+    "el-GR",
+    "tr-TR"
+  ],
+  "CZ": [
+    "cs-CZ"
+  ],
+  "DE": [
+    "de-DE"
+  ],
+  "DJ": [
+    "fr-FR",
+    "ar-SA"
+  ],
+  "DK": [
+    "da-DK",
+    "de-DE"
+  ],
+  "DM": [
+    "en-US"
+  ],
+  "DO": [
+    "es-MX"
+  ],
+  "DZ": [
+    "ar-SA",
+    "fr-FR"
+  ],
+  "EC": [
+    "es-MX"
+  ],
+  "EE": [
+    "et-EE"
+  ],
+  "EG": [
+    "ar-SA"
+  ],
+  "EH": [
+    "ar-SA"
+  ],
+  "ER": [
+    "en-GB",
+    "ar-SA"
+  ],
+  "ES": [
+    "es-ES",
+    "ca-ES",
+    "gl-ES",
+    "eu-ES"
+  ],
+  "ET": [
+    "en-GB"
+  ],
+  "FI": [
+    "fi-FI",
+    "sv-SE"
+  ],
+  "FJ": [
+    "en-GB"
+  ],
+  "FK": [
+    "en-US"
+  ],
+  "FM": [
+    "en-US"
+  ],
+  "FO": [
+    "en-GB"
+  ],
+  "FR": [
+    "fr-FR"
+  ],
+  "GA": [
+    "fr-FR"
+  ],
+  "GB": [
+    "en-GB"
+  ],
+  "GD": [
+    "en-US"
+  ],
+  "GE": [
+    "ru-RU"
+  ],
+  "GF": [
+    "fr-FR"
+  ],
+  "GG": [
+    "en-GB"
+  ],
+  "GH": [
+    "en-GB"
+  ],
+  "GI": [
+    "en-GB"
+  ],
+  "GL": [
+    "da-DK"
+  ],
+  "GM": [
+    "en-GB"
+  ],
+  "GN": [
+    "fr-FR"
+  ],
+  "GP": [
+    "fr-FR"
+  ],
+  "GQ": [
+    "es-ES",
+    "fr-FR",
+    "pt-PT"
+  ],
+  "GR": [
+    "el-GR"
+  ],
+  "GS": [
+    "en-US"
+  ],
+  "GT": [
+    "es-MX"
+  ],
+  "GU": [
+    "en-US"
+  ],
+  "GW": [
+    "pt-PT"
+  ],
+  "GY": [
+    "en-US"
+  ],
+  "HK": [
+    "zh-TW",
+    "en-GB"
+  ],
+  "HM": [
+    "en-GB"
+  ],
+  "HN": [
+    "es-MX"
+  ],
+  "HR": [
+    "hr-HR",
+    "it-IT"
+  ],
+  "HT": [
+    "fr-FR"
+  ],
+  "HU": [
+    "hu-HU"
+  ],
+  "ID": [
+    "id-ID"
+  ],
+  "IE": [
+    "en-GB"
+  ],
+  "IL": [
+    "he-IL",
+    "ar-SA"
+  ],
+  "IM": [
+    "en-GB"
+  ],
+  "IN": [
+    "en-GB"
+  ],
+  "IO": [
+    "en-GB"
+  ],
+  "IQ": [
+    "ar-SA"
+  ],
+  "IR": [
+    "en-GB"
+  ],
+  "IS": [
+    "en-GB"
+  ],
+  "IT": [
+    "it-IT",
+    "fr-FR"
+  ],
+  "JE": [
+    "en-GB"
+  ],
+  "JM": [
+    "en-US"
+  ],
+  "JO": [
+    "ar-SA"
+  ],
+  "JP": [
+    "ja-JP"
+  ],
+  "KE": [
+    "en-GB"
+  ],
+  "KG": [
+    "ru-RU"
+  ],
+  "KH": [
+    "en-GB"
+  ],
+  "KI": [
+    "en-GB"
+  ],
+  "KM": [
+    "ar-SA",
+    "fr-FR"
+  ],
+  "KN": [
+    "en-US"
+  ],
+  "KP": [
+    "ko-KR"
+  ],
+  "KR": [
+    "ko-KR"
+  ],
+  "KW": [
+    "ar-SA"
+  ],
+  "KY": [
+    "en-US"
+  ],
+  "KZ": [
+    "ru-RU"
+  ],
+  "LA": [
+    "en-GB"
+  ],
+  "LB": [
+    "ar-SA"
+  ],
+  "LC": [
+    "en-US"
+  ],
+  "LI": [
+    "de-DE"
+  ],
+  "LK": [
+    "en-GB"
+  ],
+  "LR": [
+    "en-GB"
+  ],
+  "LS": [
+    "en-GB"
+  ],
+  "LT": [
+    "lt-LT"
+  ],
+  "LU": [
+    "fr-FR",
+    "de-DE"
+  ],
+  "LV": [
+    "lv-LV"
+  ],
+  "LY": [
+    "ar-SA"
+  ],
+  "MA": [
+    "ar-SA",
+    "fr-FR"
+  ],
+  "MC": [
+    "fr-FR"
+  ],
+  "MD": [
+    "ro-RO"
+  ],
+  "ME": [
+    "sr-Latn-RS"
+  ],
+  "MF": [
+    "fr-FR"
+  ],
+  "MG": [
+    "fr-FR",
+    "en-GB"
+  ],
+  "MH": [
+    "en-US"
+  ],
+  "MK": [
+    "tr-TR"
+  ],
+  "ML": [
+    "fr-FR"
+  ],
+  "MM": [
+    "en-GB"
+  ],
+  "MN": [
+    "en-GB"
+  ],
+  "MO": [
+    "zh-TW",
+    "pt-PT"
+  ],
+  "MP": [
+    "en-US"
+  ],
+  "MQ": [
+    "fr-FR"
+  ],
+  "MR": [
+    "ar-SA"
+  ],
+  "MS": [
+    "en-US"
+  ],
+  "MT": [
+    "en-GB"
+  ],
+  "MU": [
+    "fr-FR",
+    "en-GB"
+  ],
+  "MV": [
+    "en-GB"
+  ],
+  "MW": [
+    "en-GB"
+  ],
+  "MX": [
+    "es-MX"
+  ],
+  "MY": [
+    "en-GB"
+  ],
+  "MZ": [
+    "pt-PT"
+  ],
+  "NA": [
+    "en-GB"
+  ],
+  "NC": [
+    "fr-FR"
+  ],
+  "NE": [
+    "fr-FR"
+  ],
+  "NF": [
+    "en-GB"
+  ],
+  "NG": [
+    "en-GB"
+  ],
+  "NI": [
+    "es-MX"
+  ],
+  "NL": [
+    "nl-NL"
+  ],
+  "NO": [
+    "nb-NO"
+  ],
+  "NP": [
+    "en-GB"
+  ],
+  "NR": [
+    "en-GB"
+  ],
+  "NU": [
+    "en-GB"
+  ],
+  "NZ": [
+    "en-GB"
+  ],
+  "OM": [
+    "ar-SA"
+  ],
+  "PA": [
+    "es-MX"
+  ],
+  "PE": [
+    "es-MX"
+  ],
+  "PF": [
+    "fr-FR"
+  ],
+  "PG": [
+    "en-GB"
+  ],
+  "PH": [
+    "en-US"
+  ],
+  "PK": [
+    "en-GB"
+  ],
+  "PL": [
+    "pl-PL",
+    "de-DE",
+    "lt-LT"
+  ],
+  "PM": [
+    "fr-FR"
+  ],
+  "PN": [
+    "en-GB"
+  ],
+  "PR": [
+    "es-MX",
+    "en-US"
+  ],
+  "PS": [
+    "ar-SA"
+  ],
+  "PT": [
+    "pt-PT"
+  ],
+  "PW": [
+    "en-US"
+  ],
+  "PY": [
+    "es-MX"
+  ],
+  "QA": [
+    "ar-SA"
+  ],
+  "RE": [
+    "fr-FR"
+  ],
+  "RO": [
+    "ro-RO"
+  ],
+  "RS": [
+    "sr-Latn-RS",
+    "hu-HU",
+    "ro-RO",
+    "hr-HR",
+    "sk-SK",
+    "uk-UA"
+  ],
+  "RU": [
+    "ru-RU"
+  ],
+  "RW": [
+    "en-GB",
+    "fr-FR"
+  ],
+  "SA": [
+    "ar-SA"
+  ],
+  "SB": [
+    "en-GB"
+  ],
+  "SC": [
+    "fr-FR",
+    "en-GB"
+  ],
+  "SD": [
+    "en-GB",
+    "ar-SA"
+  ],
+  "SE": [
+    "sv-SE",
+    "fi-FI"
+  ],
+  "SG": [
+    "en-GB",
+    "zh-CN"
+  ],
+  "SH": [
+    "en-GB"
+  ],
+  "SI": [
+    "sl-SI"
+  ],
+  "SJ": [
+    "nb-NO"
+  ],
+  "SK": [
+    "sk-SK"
+  ],
+  "SL": [
+    "en-GB"
+  ],
+  "SM": [
+    "it-IT"
+  ],
+  "SN": [
+    "fr-FR"
+  ],
+  "SO": [
+    "ar-SA"
+  ],
+  "SR": [
+    "nl-NL"
+  ],
+  "SS": [
+    "en-GB"
+  ],
+  "ST": [
+    "pt-PT"
+  ],
+  "SV": [
+    "es-MX"
+  ],
+  "SX": [
+    "en-US",
+    "nl-NL"
+  ],
+  "SY": [
+    "ar-SA"
+  ],
+  "SZ": [
+    "en-GB"
+  ],
+  "TC": [
+    "en-US"
+  ],
+  "TD": [
+    "ar-SA",
+    "fr-FR"
+  ],
+  "TF": [
+    "fr-FR"
+  ],
+  "TG": [
+    "fr-FR"
+  ],
+  "TH": [
+    "th-TH"
+  ],
+  "TJ": [
+    "ru-RU"
+  ],
+  "TK": [
+    "en-GB"
+  ],
+  "TL": [
+    "pt-PT"
+  ],
+  "TM": [
+    "ru-RU"
+  ],
+  "TN": [
+    "ar-SA",
+    "fr-FR"
+  ],
+  "TO": [
+    "en-GB"
+  ],
+  "TR": [
+    "tr-TR"
+  ],
+  "TT": [
+    "en-US"
+  ],
+  "TV": [
+    "en-GB"
+  ],
+  "TW": [
+    "zh-TW"
+  ],
+  "TZ": [
+    "en-GB"
+  ],
+  "UA": [
+    "uk-UA",
+    "ru-RU"
+  ],
+  "UG": [
+    "en-GB"
+  ],
+  "UM": [
+    "en-US"
+  ],
+  "US": [
+    "en-US",
+    "es-MX"
+  ],
+  "UY": [
+    "es-MX"
+  ],
+  "UZ": [
+    "ru-RU"
+  ],
+  "VA": [
+    "it-IT"
+  ],
+  "VC": [
+    "en-US"
+  ],
+  "VE": [
+    "es-MX"
+  ],
+  "VG": [
+    "en-US"
+  ],
+  "VI": [
+    "en-US"
+  ],
+  "VN": [
+    "vi-VN"
+  ],
+  "VU": [
+    "en-GB",
+    "fr-FR"
+  ],
+  "WF": [
+    "fr-FR"
+  ],
+  "WS": [
+    "en-GB"
+  ],
+  "YE": [
+    "ar-SA"
+  ],
+  "YT": [
+    "fr-FR"
+  ],
+  "ZA": [
+    "en-GB"
+  ],
+  "ZM": [
+    "en-GB"
+  ],
+  "ZW": [
+    "en-GB"
+  ]
+}

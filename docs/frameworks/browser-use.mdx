@@ -1,0 +1,49 @@
+---
+title: "Browser Use"
+description: "Run Browser Use agents on a Driver browser by passing the session's cdpUrl."
+---
+
+[Browser Use](https://browser-use.com) runs autonomous agents on a Chromium it controls. Pass it a Driver session's `cdpUrl` and it drives real Chrome on a residential network instead.
+
+```bash
+pip install browser-use requests
+```
+
+```python Python
+import asyncio, os, requests
+from browser_use import Agent, Browser, ChatBrowserUse
+
+API = "https://api.driver.dev"
+headers = {"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"}
+
+
+async def main():
+    r = requests.post(
+        f"{API}/v1/browser/session", headers=headers, json={"country": "US", "duration": 900}
+    )
+    r.raise_for_status()
+    session = r.json()
+    try:
+        browser = Browser(cdp_url=session["cdpUrl"])
+        agent = Agent(
+            task="Find the current price of Bitcoin", llm=ChatBrowserUse(), browser=browser
+        )
+        result = await agent.run()
+        print(result)
+    finally:
+        requests.delete(
+            f"{API}/v1/browser/session", headers=headers, params={"sessionId": session["sessionId"]}
+        )
+
+
+asyncio.run(main())
+```
+
+`ChatBrowserUse` takes a Browser Use Cloud model key (`BROWSER_USE_API_KEY`). Any LangChain-style chat model works in its place.
+
+## Notes
+
+- Agents take many steps. Set `duration` to cover the task (up to 3600 seconds) and stop the session in `finally`.
+- Browser Use talks CDP directly, not through Playwright, so Patchright doesn't apply. The fingerprint problem is the same, and an agent framework issues more CDP commands than a plain script. Expect challenges on protected sites.
+- Pin the `browser-use` version you tested with. The `Browser` and `Agent` constructors have changed between releases. Passing `cdp_url` is what stops it from launching or downloading its own browser.
+- Watch the agent through the session's [live view](/docs/sessions/live-view). It's the fastest way to see where it goes wrong.

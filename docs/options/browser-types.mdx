@@ -1,0 +1,37 @@
+---
+title: "Browser types"
+description: "type picks the browser class: hosted by default, plus two stealth variants."
+---
+
+`type` on [create](/docs/sessions/create) picks which Chrome serves the session. Leave it out unless a site gives you a reason.
+
+| Type | What it is | When to use it |
+|---|---|---|
+| `hosted` (default) | Real Chrome on a hosted machine, native behaviour. | Almost everything. |
+| `hosted_stealth` | Same browser, conservative stealth policy. | A site challenges the default and you want the smallest change. |
+| `hosted_privacy` | Same browser, aggressive stealth policy. | Hostile targets. Try `hosted_stealth` first; more masking isn't always better. |
+
+<CodeGroup>
+```json Request
+{ "type": "hosted_stealth", "country": "GB" }
+```
+```typescript TypeScript
+const session = await createSession({ type: "hosted_stealth", country: "GB" });
+```
+```python Python
+session = create_session(type="hosted_stealth", country="GB")
+```
+</CodeGroup>
+
+## What "real Chrome" means here
+
+Consumer Chrome on real hardware with a real display, not a headless container. GPU, fonts, media devices and timing are what a person's machine shows, and the network is residential in the country you asked for. That's why [best practices](/docs/start/best-practices) say not to patch fingerprints from your script: the browser is already genuine, and patches make it less so.
+
+## Choosing between the stealth policies
+
+The policies change how the browser answers certain probes. `hosted_stealth` rarely breaks sites. `hosted_privacy` masks more and can change page behaviour on sites that use the masked APIs. Measure against your target instead of defaulting to the strongest one.
+
+## Related
+
+- [Location](/docs/options/location): country, timezone and language
+- [Proxies](/docs/options/proxies): your own egress

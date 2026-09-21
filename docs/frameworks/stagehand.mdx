@@ -1,0 +1,63 @@
+---
+title: "Stagehand"
+description: "Natural-language act and extract on a Driver browser: connect Stagehand v4 to the session's cdpUrl."
+---
+
+[Stagehand](https://docs.stagehand.dev) adds `act`, `extract` and `observe` on top of a browser it attaches to. With v4, connect it to a Driver session's `cdpUrl` through `localBrowser.connect`.
+
+```bash
+npm install @browserbasehq/stagehand zod@~4.4.3
+```
+
+```typescript TypeScript
+import { localBrowser, Stagehand } from "@browserbasehq/stagehand";
+import { z } from "zod/v4";
+
+const API = "https://api.driver.dev";
+const headers = {
+  Authorization: `Bearer ${process.env.DRIVER_API_KEY}`,
+  "Content-Type": "application/json",
+};
+
+const res = await fetch(`${API}/v1/browser/session`, {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ country: "US" }),
+});
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json().catch(() => ({}))).error ?? res.statusText}`);
+const session = await res.json();
+
+try {
+  // Attach to Driver's Chrome. Stagehand never launches or closes a browser it didn't start.
+  const browser = await localBrowser.connect({ cdpUrl: session.cdpUrl });
+  const stagehand = await Stagehand.create({
+    browser,
+    model: { modelName: "openai/gpt-5.6-sol", apiKey: process.env.OPENAI_API_KEY },
+  });
+
+  const [page] = await browser.context.pages(); // the tab the session opened with
+  await page.goto("https://example.com");
+
+  const data = await stagehand.extract(
+    "Extract the page title and main heading",
+    z.object({ title: z.string(), heading: z.string() }),
+  );
+  console.log(data);
+
+  await stagehand.close(); // ends the Stagehand connection; the session keeps running
+} finally {
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
+    method: "DELETE",
+    headers,
+  });
+}
+```
+
+Stagehand reads no environment variables. Pass the model provider key in `model.apiKey`.
+
+## Notes
+
+- This is the v4 API (`localBrowser.connect`, `Stagehand.create`). On 2.x the equivalent is `new Stagehand({ env: "LOCAL", localBrowserLaunchOptions: { cdpUrl } })`.
+- Stagehand injects scripts and drives the browser over CDP, which is what protected sites look for. On those sites use plain [Patchright](/docs/frameworks/patchright) with explicit selectors.
+- Pin the Stagehand version you tested with. The connect API changed between 2.x and v4.
+- Reuse the page from `browser.context.pages()` instead of opening a new one.
