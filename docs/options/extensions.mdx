@@ -1,0 +1,64 @@
+---
+title: "Extensions"
+description: "Upload your own Chrome extensions and load them into hosted sessions. Enabled per account."
+---
+
+<Note>
+Enabled per account. Without access the endpoints answer `403` (`Extensions API is not enabled for this account`); write to alex@driver.dev to request it. An upload without a file fails first with `No file uploaded. Send as multipart field "extension".`
+</Note>
+
+## Upload an extension
+
+Zip the directory containing `manifest.json` and upload it. Driver packs it as a CRX and returns an `extensionId` for create.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.driver.dev/v1/browser/extensions \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -F "extension=@my-extension.zip"
+# → { "extension": { "extensionId": "abc123def456", "crxExtensionId": "…",
+#                     "name": "…", "version": "1.2.0", … } }
+```
+```typescript TypeScript
+const form = new FormData();
+const zip = new Blob([await fs.promises.readFile("my-extension.zip")]);
+form.append("extension", zip, "my-extension.zip");
+const { extension } = await fetch("https://api.driver.dev/v1/browser/extensions", {
+  method: "POST",
+  headers: { Authorization: `Bearer ${process.env.DRIVER_API_KEY}` },
+  body: form,
+}).then((r) => r.json());
+```
+```python Python
+with open("my-extension.zip", "rb") as f:
+    extension = requests.post(
+        "https://api.driver.dev/v1/browser/extensions",
+        headers={"Authorization": f"Bearer {os.environ['DRIVER_API_KEY']}"},
+        files={"extension": f},
+    ).json()["extension"]
+```
+</CodeGroup>
+
+## Load it into a session
+
+Pass the internal `extensionId` (not `crxExtensionId`) in `extensionIds`. Works on every browser type.
+
+```json
+{ "extensionIds": ["abc123def456"] }
+```
+
+## Manage extensions
+
+| Call | What it does |
+|---|---|
+| `GET /v1/browser/extensions` | List your extensions. |
+| `GET /v1/browser/extensions/{extensionId}` | One extension. |
+| `PUT /v1/browser/extensions/{extensionId}` with a new zip | Replace the code; the id stays. |
+| `DELETE /v1/browser/extensions/{extensionId}` | Remove it. |
+
+The dashboard's **Extensions** page (shown once your account has access) does the same.
+
+## Notes
+
+- Manifest V3 is expected. `name` and `version` come from the manifest.
+- An extension that opens tabs, injects scripts everywhere or rewrites requests changes how the browser looks to sites. Keep it narrow, for the same reasons as [CDP hooks](/docs/start/best-practices#keep-cdp-hooks-narrow).

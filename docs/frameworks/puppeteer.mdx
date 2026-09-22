@@ -1,0 +1,60 @@
+---
+title: "Puppeteer"
+description: "puppeteer-core connects to Driver with browserWSEndpoint. Same detectability caveat as stock Playwright."
+---
+
+<Warning>
+Puppeteer makes the same fingerprintable CDP calls as stock Playwright. For protected sites use [Patchright](/docs/frameworks/patchright). If your code base is Puppeteer and the targets aren't hostile, this works.
+</Warning>
+
+Install `puppeteer-core`, not `puppeteer`. Driver provides the browser; nothing should be downloaded.
+
+```bash
+npm install puppeteer-core
+```
+
+```typescript TypeScript
+import puppeteer from "puppeteer-core";
+
+const API = "https://api.driver.dev";
+const headers = {
+  Authorization: `Bearer ${process.env.DRIVER_API_KEY}`,
+  "Content-Type": "application/json",
+};
+
+const res = await fetch(`${API}/v1/browser/session`, {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ country: "US" }),
+});
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json().catch(() => ({}))).error ?? res.statusText}`);
+const session = await res.json();
+
+try {
+  // defaultViewport: null keeps the window's real size. Puppeteer's default 800x600 viewport
+  // would undo the windowSize you set on create and mismatch outerWidth.
+  const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl, defaultViewport: null });
+  try {
+    const pages = await browser.pages();
+    const page = pages[0] ?? (await browser.newPage()); // reuse the open tab
+
+    await page.goto("https://example.com");
+    console.log(await page.title());
+  } finally {
+    await browser.disconnect(); // your connection only
+  }
+} finally {
+  await fetch(`${API}/v1/browser/session?sessionId=${session.sessionId}`, {
+    method: "DELETE",
+    headers,
+  });
+}
+```
+
+## Notes
+
+- End your connection with `browser.disconnect()`, then stop the session through the API. `browser.close()` tells the remote Chrome to quit, so the session record closes from the browser's side instead of by your stop call.
+- `browser.pages()` returns the tab the session opened with. Reuse it.
+- Connect with `defaultViewport: null` and set `windowSize` on create instead of `page.setViewport`. See [Window size](/docs/options/window-size).
+- Hooks to avoid, in Puppeteer's names: `page.setRequestInterception`, `page.evaluateOnNewDocument`, `page.exposeFunction`, `page.setUserAgent`, `page.emulateTimezone`, `page.emulate`. See [Best practices](/docs/start/best-practices).
+- Pin the `puppeteer-core` version you tested with. Each release targets a Chrome revision.

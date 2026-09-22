@@ -1,0 +1,64 @@
+---
+title: "Introduction"
+description: "Driver runs real Chrome on real hardware and gives you a CDP URL. Create a session, connect, do the work, stop it."
+---
+
+Driver is hosted browser infrastructure. A session is one real Chrome window on one real machine, on an ISP connection in the country you pick, reachable over the Chrome DevTools Protocol a few seconds after you ask for it. You write the automation; we run the browser.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/docs/start/quickstart">
+    Create a session, connect with Patchright, stop it. Five minutes.
+  </Card>
+  <Card title="For agents" icon="robot" href="/docs/start/for-agents">
+    Coding agent? Start here: the rules, the endpoints, the mistakes.
+  </Card>
+  <Card title="Best practices" icon="shield-check" href="/docs/start/best-practices">
+    How to stay unblocked: framework, CDP hygiene, cleanup.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/overview">
+    Every endpoint, generated from the live OpenAPI document.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Create a session">
+    `POST /v1/browser/session` with the options you need. You get a `sessionId` and a `cdpUrl`.
+  </Step>
+  <Step title="Connect over CDP">
+    Point your framework at `cdpUrl`. Use [Patchright](/docs/frameworks/patchright); stock Playwright and Puppeteer leave fingerprints that get sessions blocked.
+  </Step>
+  <Step title="Do the work">
+    Navigate, fill, click, extract. It's a normal Chrome: no headless quirks, no emulated hardware.
+  </Step>
+  <Step title="Stop the session">
+    `DELETE /v1/browser/session?sessionId=…`. You pay for bandwidth, so stop what you're done with.
+  </Step>
+</Steps>
+
+## What you get
+
+| | |
+|---|---|
+| **Real Chrome** | Consumer Chrome on real hardware, not a headless container. |
+| **ISP networks** | Sessions egress from ISP connections in the country you choose. Bring your own SOCKS5 proxy if you need to. |
+| **Profiles** | Save cookies and local state under a name and reuse them, so logins survive between sessions. |
+| **Browser pools** | Keep browsers warm with fixed options and take one in under a second. |
+| **CAPTCHA solving** | One flag loads our solver into the session. |
+| **Live view** | Watch and drive any running session from the dashboard or a viewer URL. |
+
+## Base URL and authentication
+
+Everything goes to `https://api.driver.dev` with your workspace API key as a bearer token. Keys are under **Settings → API keys** in the [dashboard](https://app.driver.dev).
+
+```bash
+Authorization: Bearer $DRIVER_API_KEY
+```
+
+## Next
+
+- [Quickstart](/docs/start/quickstart): create and stop a session end to end.
+- [Create a session](/docs/sessions/create#options): every field you can pass.
+- [Browser pools](/docs/sessions/pools): warm browsers, acquired in under a second.
+- [Frameworks](/docs/frameworks/patchright): connection code for Patchright, Playwright, Puppeteer, Browser Use, Stagehand and Crawl4AI.

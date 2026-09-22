@@ -1,0 +1,251 @@
+---
+title: "Browser pools"
+description: "Keep browsers warm and take one in under a second. Create a pool, acquire a lease, release or stop."
+---
+
+A pool keeps browsers running with the options you chose. Acquire hands you one in under a second as an ordinary session, and the pool warms a replacement. Use one when start-up latency matters (an agent loop, a request handler, a burst of short jobs) or when every job wants the same start page, profile or country. A nightly batch that can wait a few seconds per browser is fine with plain [create](/docs/sessions/create).
+
+Pools are also in the [dashboard](https://app.driver.dev/pools) under **Browsers → Browser pools**; **Launch browser** on the Overview can take one from any ready pool.
+
+## Create a pool
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.driver.dev/v1/browser/pools \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "checkout-us",
+    "size": 3,
+    "browser": { "country": "US", "url": "https://shop.example.com", "note": "checkout pool" },
+    "leaseTimeoutSeconds": 900,
+    "maxReadyAgeSeconds": 3600
+  }'
+```
+```typescript TypeScript
+const res = await fetch("https://api.driver.dev/v1/browser/pools", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({
+    name: "checkout-us",
+    size: 3,
+    browser: { country: "US", url: "https://shop.example.com", note: "checkout pool" },
+    leaseTimeoutSeconds: 900,
+    maxReadyAgeSeconds: 3600,
+  }),
+});
+if (!res.ok) throw new Error(`Driver ${res.status}: ${(await res.json().catch(() => ({}))).error ?? res.statusText}`);
+const pool = await res.json(); // pool.id is what the other calls take
+```
+```python Python
+r = requests.post(
+    "https://api.driver.dev/v1/browser/pools",
+    headers=headers,
+    json={
+        "name": "checkout-us",
+        "size": 3,
+        "browser": {"country": "US", "url": "https://shop.example.com", "note": "checkout pool"},
+        "leaseTimeoutSeconds": 900,
+        "maxReadyAgeSeconds": 3600,
+    },
+)
+r.raise_for_status()
+pool = r.json()  # pool["id"] is what the other calls take
+```
+</CodeGroup>
+
+Answers `201` at once with the pool `warming`; measured, it was `ready` two to five seconds later.
+
+```json
+{
+  "id": "pool_63e5b6af14d344a38921d097ac6b101b",
+  "name": "checkout-us",
+  "size": 3,
+  "status": "warming",
+  "ready": 0,
+  "starting": 0,
+  "leased": 0,
+  "browser": { "country": "US", "url": "https://shop.example.com", "note": "checkout pool" },
+  "leaseTimeoutSeconds": 900,
+  "maxReadyAgeSeconds": 3600,
+  "lastError": null,
+  "createdAt": "2026-09-20T15:56:56.877Z",
+  "updatedAt": "2026-09-20T15:56:56.877Z"
+}
+```
+
+### Fields
+
+| Field | Type | Default | What it does |
+|---|---|---|---|
+| `name` | string | required | 1 to 64 characters, unique in the workspace (`409` `A pool with that name already exists`). |
+| `size` | integer | required | Browsers to keep ready, at least 1. 30 warm per account across all pools, paused ones included (`409` `Pool capacity 32 exceeds your pool limit of 30`, also on a resize); write to support to raise it. |
+| `browser` | object | `{}` | The create options every browser starts with: `country`, `timezone`, `language`, `url`, `windowSize`, `displaySize`, `proxyUrl`, `profile`, `adblock`, `captchaSolver`, `extensionIds`, `nodeId`, `note`. Same meaning as on [Create a session](/docs/sessions/create#options). `type`, `duration` and `browserCheck` aren't accepted. |
+| `leaseTimeoutSeconds` | integer | `900` | How long an acquired browser may be held, 30 to 86400. The session is stopped when the lease expires. |
+| `maxReadyAgeSeconds` | integer | `3600` | How long a browser may sit ready before it's swapped for a fresh one, 30 to 86400. The swap takes two to three seconds, during which `ready` is one lower. |
+
+Unknown fields, top-level or inside `browser`, are a `400` (`bogus is not supported by this endpoint`), and so is a country the platform doesn't serve (`Unsupported country "ZZ"`). Pool responses echo the template with what the platform resolved for it (`timezone`, and a `proxyUrl` with the credentials redacted). `lastError` is set when browsers fail to start.
+
+`profile` works as on a session. Leave `persist` off (the default) so every browser loads it read-only; several browsers writing one profile would overwrite each other.
+
+## Status and counters
+
+| `status` | Meaning |
+|---|---|
+| `warming` | Just created or resumed; browsers are starting, none ready yet. |
+| `ready` | `ready` equals `size`. |
+| `degraded` | Fewer ready than `size`: normal right after an acquire, a flush or a lease expiring, while replacements start. A pool that can't start browsers stays here with `lastError` set. |
+| `paused` | Warm browsers stopped, none started. Acquire is refused. |
+| `deleting` | Being torn down. |
+
+`ready`, `starting` and `leased` count browsers in each state. Ready browsers aren't sessions yet: `GET /v1/browser/sessions` doesn't list them and they hold no concurrency slot until acquired.
+
+## Acquire a browser
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.driver.dev/v1/browser/pools/$POOL_ID/acquire" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "waitMs": 10000 }'
+```
+```typescript TypeScript
+const lease = await fetch(`https://api.driver.dev/v1/browser/pools/${poolId}/acquire`, {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ waitMs: 10000 }),
+}).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Driver ${r.status}`))));
+const { leaseId, session } = lease; // session.cdpUrl is live now
+```
+```python Python
+r = requests.post(
+    f"https://api.driver.dev/v1/browser/pools/{pool_id}/acquire", headers=headers, json={"waitMs": 10000}
+)
+r.raise_for_status()
+lease = r.json()
+lease_id, session = lease["leaseId"], lease["session"]
+```
+</CodeGroup>
+
+```json
+{
+  "poolId": "pool_63e5b6af14d344a38921d097ac6b101b",
+  "leaseId": "lease_ff68375dfc3b494299cc4a1d5ab0e36a",
+  "acquiredAt": "2026-09-20T15:57:01.132Z",
+  "expiresAt": "2026-09-20T16:12:01.132Z",
+  "session": {
+    "sessionId": "51b1815315c14580bb0fc7ab327999fe",
+    "status": "active",
+    "servedBy": "fresh-alien-program",
+    "createdAt": "2026-09-20T15:56:56.892Z",
+    "stoppedAt": null,
+    "cdpUrl": "wss://…",
+    "note": "checkout pool"
+  }
+}
+```
+
+`waitMs` (0 to 30000, default 0) is how long to wait when nothing is ready; a replacement warms in two to three seconds, so a few seconds is enough. The body is required: `{}` for no wait (no body is a `400` `Malformed JSON in request body`). Nothing ready in time: `409` `No browser is currently ready in this pool`. Paused pool: `409` `Pool is paused` at once. Treat the first like a create `503`: back off, cap, then fall back to a plain create or report.
+
+From here `session` is an ordinary session: listed, readable with `GET /v1/browser/session?sessionId=…`, counted as a running browser, watchable in the [live view](/docs/sessions/live-view). `createdAt` is when the browser was warmed, not when you acquired it, and the page is already on the pool's `url`. Connect with Patchright as usual:
+
+<CodeGroup>
+```typescript TypeScript
+import { chromium } from "patchright";
+
+const lease = await acquire(poolId, 10_000);
+try {
+  const browser = await chromium.connectOverCDP(lease.session.cdpUrl);
+  try {
+    const page = browser.contexts()[0].pages()[0]; // already on the pool's start URL
+    await page.goto("https://shop.example.com/cart");
+    console.log(await page.title());
+  } finally {
+    await browser.close();
+  }
+} finally {
+  await release(poolId, lease.leaseId);
+}
+```
+```python Python
+from patchright.sync_api import sync_playwright
+
+lease = acquire(pool_id, wait_ms=10000)
+try:
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp(lease["session"]["cdpUrl"])
+        page = browser.contexts[0].pages[0]  # already on the pool's start URL
+        page.goto("https://shop.example.com/cart")
+        print(page.title())
+        browser.close()
+finally:
+    release(pool_id, lease["leaseId"])
+```
+</CodeGroup>
+
+`acquire` and `release` are the two calls on this page; the [reference client](/docs/start/for-agents#reference-implementation) has both.
+
+## Release or stop
+
+A leased browser ends one of three ways; the pool warms a replacement each time.
+
+- **Release**: `POST /v1/browser/pools/{poolId}/release` with `{ "leaseId": "…" }`. Stops the session; answers `{ "poolId", "leaseId", "sessionId", "status": "ended", "returnedAt" }`. Do it in a `finally`.
+- **Stop** it with `DELETE /v1/browser/session?sessionId=…`. Same effect; the lease closes within a few seconds.
+- **Let the lease expire.** At `expiresAt` (`leaseTimeoutSeconds` after acquire) the session is stopped whether or not you're done. Pick a lease that covers the job.
+
+Release ends billing, like a stop. It's idempotent (same body twice); an unknown lease, or one from another pool, is `404` `Pool lease not found`. A browser is never handed back for another job; the next acquire gets a fresh one.
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.driver.dev/v1/browser/pools/$POOL_ID/release" \
+  -H "Authorization: Bearer $DRIVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{ \"leaseId\": \"$LEASE_ID\" }"
+```
+```typescript TypeScript
+await fetch(`https://api.driver.dev/v1/browser/pools/${poolId}/release`, {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ leaseId }),
+});
+```
+```python Python
+requests.post(
+    f"https://api.driver.dev/v1/browser/pools/{pool_id}/release", headers=headers, json={"leaseId": lease_id}
+)
+```
+</CodeGroup>
+
+## Manage a pool
+
+| Call | What it does |
+|---|---|
+| `GET /v1/browser/pools` | `{ "pools": [ … ] }`, every pool in the workspace with its counters. |
+| `GET /v1/browser/pools/{poolId}` | One pool. |
+| `PATCH /v1/browser/pools/{poolId}` | Change `name`, `size`, `browser`, `leaseTimeoutSeconds`, `maxReadyAgeSeconds` or `paused` (`true` stops the warm browsers and refuses acquires; `false` warms them again). Send only what changes. A new `browser` replaces the template as a whole and the warm browsers are replaced with ones built from it; a rename, resize or timeout change leaves the ready browsers alone (a resize up warms more, a resize down stops the surplus). |
+| `POST /v1/browser/pools/{poolId}/flush` | Stops every ready browser and warms fresh ones. Answers `{ "success": true, "stopped": n }`. Leased browsers are untouched. |
+| `DELETE /v1/browser/pools/{poolId}` | Stops the warm browsers and removes the pool. With leased browsers: `409` `Pool has active leases; pass force=true to stop them`; `?force=true` (literal `true`; `1` is a `400`) stops those sessions too. Afterwards the pool is `404`. |
+
+Pool ids go in the path. Session ids go in the query string.
+
+## Errors
+
+| Status | Body | Meaning |
+|---|---|---|
+| `400` | names the field | A missing or out-of-range field (`size: Too small: expected number to be >0`, `leaseTimeoutSeconds: Too small: expected number to be >=30`), or an unknown field. |
+| `404` | `Browser pool not found` | Unknown pool id, or one belonging to another workspace. |
+| `409` | `A pool with that name already exists` | Names are unique per workspace. |
+| `409` | `Pool capacity 32 exceeds your pool limit of 30` | The new size would put the account over its warm-browser cap. |
+| `409` | `No browser is currently ready in this pool` | Acquire waited `waitMs` and nothing became ready. Back off, cap, then fall back or report. |
+| `409` | `Pool has active leases; pass force=true to stop them` | Delete while browsers are leased. |
+| `503` | | The browser service is unavailable. Back off as for a create `503`. |
+
+## Cost and limits
+
+Warm browsers aren't sessions: not listed, not billed, no concurrency slot. Acquired, a browser is a session like any other: it counts toward the concurrency limit and its bandwidth is metered until release, stop or lease expiry. The 30-warm cap per account is separate from the concurrency limit.
+
+## Next
+
+- [Lifecycle](/docs/sessions/lifecycle): what you can do with the acquired session.
+- [Create a session](/docs/sessions/create#options): every option the `browser` template accepts.
+- [For agents](/docs/start/for-agents#reference-implementation): the reference client has `acquireFromPool` and `releaseLease`.

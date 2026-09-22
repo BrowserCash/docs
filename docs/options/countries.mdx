@@ -1,0 +1,260 @@
+---
+title: "Countries"
+description: "Every country you can pass on create, with the timezones and languages it accepts. Generated from the API's locale catalog."
+---
+
+`country` accepts any of the 249 codes below. `timezone` must be one of that country's timezones and `language` one of its languages, or the request is a `400`. Leave both out and you get the first-listed timezone (or a managed-network region where Driver has one) and the country's primary language. US sessions are always `en-US`. [Location](/docs/options/location) covers how the three stay coherent.
+
+Machine availability varies by country. No free machine in a country is a `503`.
+
+| Code | Country | Timezones | Languages |
+|---|---|---|---|
+| `AD` | Andorra | `Europe/Andorra` | `ca-ES` |
+| `AE` | United Arab Emirates | `Asia/Dubai` | `ar-SA` |
+| `AF` | Afghanistan | `Asia/Kabul` | `en-GB` |
+| `AG` | Antigua & Barbuda | `America/Antigua` | `en-US` |
+| `AI` | Anguilla | `America/Anguilla` | `en-US` |
+| `AL` | Albania | `Europe/Tirane` | `en-GB` |
+| `AM` | Armenia | `Asia/Yerevan` | `ru-RU` |
+| `AO` | Angola | `Africa/Luanda` | `pt-PT` |
+| `AQ` | Antarctica | `Antarctica/McMurdo`, `Antarctica/Casey`, `Antarctica/Davis`, `Antarctica/DumontDUrville`, `Antarctica/Mawson`, `Antarctica/Palmer`, `Antarctica/Rothera`, `Antarctica/Syowa`, `Antarctica/Troll`, `Antarctica/Vostok` | `en-GB` |
+| `AR` | Argentina | `America/Argentina/Buenos_Aires`, `America/Argentina/Cordoba`, `America/Argentina/Salta`, `America/Argentina/Jujuy`, `America/Argentina/Tucuman`, `America/Argentina/Catamarca`, `America/Argentina/La_Rioja`, `America/Argentina/San_Juan`, `America/Argentina/Mendoza`, `America/Argentina/San_Luis`, `America/Argentina/Rio_Gallegos`, `America/Argentina/Ushuaia` | `es-MX` |
+| `AS` | American Samoa | `Pacific/Pago_Pago` | `en-US` |
+| `AT` | Austria | `Europe/Vienna` | `de-DE`, `hr-HR`, `sl-SI`, `hu-HU` |
+| `AU` | Australia | `Australia/Lord_Howe`, `Antarctica/Macquarie`, `Australia/Hobart`, `Australia/Melbourne`, `Australia/Sydney`, `Australia/Broken_Hill`, `Australia/Brisbane`, `Australia/Lindeman`, `Australia/Adelaide`, `Australia/Darwin`, `Australia/Perth`, `Australia/Eucla` | `en-GB` |
+| `AW` | Aruba | `America/Aruba` | `nl-NL` |
+| `AX` | Åland Islands | `Europe/Mariehamn` | `sv-SE` |
+| `AZ` | Azerbaijan | `Asia/Baku` | `en-GB` |
+| `BA` | Bosnia & Herzegovina | `Europe/Sarajevo` | `hr-HR`, `sr-Latn-RS` |
+| `BB` | Barbados | `America/Barbados` | `en-US` |
+| `BD` | Bangladesh | `Asia/Dhaka` | `en-GB` |
+| `BE` | Belgium | `Europe/Brussels` | `nl-NL`, `fr-FR`, `de-DE` |
+| `BF` | Burkina Faso | `Africa/Ouagadougou` | `fr-FR` |
+| `BG` | Bulgaria | `Europe/Sofia` | `bg-BG` |
+| `BH` | Bahrain | `Asia/Bahrain` | `ar-SA` |
+| `BI` | Burundi | `Africa/Bujumbura` | `fr-FR`, `en-GB` |
+| `BJ` | Benin | `Africa/Porto-Novo` | `fr-FR` |
+| `BL` | St. Barthélemy | `America/St_Barthelemy` | `fr-FR` |
+| `BM` | Bermuda | `Atlantic/Bermuda` | `en-US` |
+| `BN` | Brunei | `Asia/Brunei` | `zh-TW` |
+| `BO` | Bolivia | `America/La_Paz` | `es-MX` |
+| `BQ` | Caribbean Netherlands | `America/Kralendijk` | `nl-NL` |
+| `BR` | Brazil | `America/Noronha`, `America/Belem`, `America/Fortaleza`, `America/Recife`, `America/Araguaina`, `America/Maceio`, `America/Bahia`, `America/Sao_Paulo`, `America/Campo_Grande`, `America/Cuiaba`, `America/Santarem`, `America/Porto_Velho`, `America/Boa_Vista`, `America/Manaus`, `America/Eirunepe`, `America/Rio_Branco` | `pt-BR` |
+| `BS` | Bahamas | `America/Nassau` | `en-US` |
+| `BT` | Bhutan | `Asia/Thimphu` | `en-GB` |
+| `BV` | Bouvet Island | `Europe/Oslo` | `en-GB` |
+| `BW` | Botswana | `Africa/Gaborone` | `en-GB` |
+| `BY` | Belarus | `Europe/Minsk` | `ru-RU` |
+| `BZ` | Belize | `America/Belize` | `en-US` |
+| `CA` | Canada | `America/St_Johns`, `America/Halifax`, `America/Glace_Bay`, `America/Moncton`, `America/Goose_Bay`, `America/Blanc-Sablon`, `America/Toronto`, `America/Iqaluit`, `America/Atikokan`, `America/Winnipeg`, `America/Resolute`, `America/Rankin_Inlet`, `America/Regina`, `America/Swift_Current`, `America/Edmonton`, `America/Cambridge_Bay`, `America/Inuvik`, `America/Vancouver`, `America/Creston`, `America/Dawson_Creek`, `America/Fort_Nelson`, `America/Whitehorse`, `America/Dawson` | `en-US`, `fr-CA` |
+| `CC` | Cocos (Keeling) Islands | `Indian/Cocos` | `en-GB` |
+| `CD` | Congo - Kinshasa | `Africa/Kinshasa`, `Africa/Lubumbashi` | `fr-FR` |
+| `CF` | Central African Republic | `Africa/Bangui` | `fr-FR` |
+| `CG` | Congo - Brazzaville | `Africa/Brazzaville` | `fr-FR` |
+| `CH` | Switzerland | `Europe/Zurich` | `de-DE`, `fr-FR`, `it-IT` |
+| `CI` | Côte d’Ivoire | `Africa/Abidjan` | `fr-FR` |
+| `CK` | Cook Islands | `Pacific/Rarotonga` | `en-GB` |
+| `CL` | Chile | `America/Santiago`, `America/Coyhaique`, `America/Punta_Arenas`, `Pacific/Easter` | `es-MX` |
+| `CM` | Cameroon | `Africa/Douala` | `fr-FR`, `en-GB` |
+| `CN` | China | `Asia/Shanghai`, `Asia/Urumqi` | `zh-CN`, `ko-KR` |
+| `CO` | Colombia | `America/Bogota` | `es-MX` |
+| `CR` | Costa Rica | `America/Costa_Rica` | `es-MX` |
+| `CU` | Cuba | `America/Havana` | `es-MX` |
+| `CV` | Cape Verde | `Atlantic/Cape_Verde` | `pt-PT` |
+| `CW` | Curaçao | `America/Curacao` | `nl-NL` |
+| `CX` | Christmas Island | `Indian/Christmas` | `en-GB` |
+| `CY` | Cyprus | `Asia/Nicosia`, `Asia/Famagusta` | `el-GR`, `tr-TR` |
+| `CZ` | Czechia | `Europe/Prague` | `cs-CZ` |
+| `DE` | Germany | `Europe/Berlin`, `Europe/Busingen` | `de-DE` |
+| `DJ` | Djibouti | `Africa/Djibouti` | `fr-FR`, `ar-SA` |
+| `DK` | Denmark | `Europe/Copenhagen` | `da-DK`, `de-DE` |
+| `DM` | Dominica | `America/Dominica` | `en-US` |
+| `DO` | Dominican Republic | `America/Santo_Domingo` | `es-MX` |
+| `DZ` | Algeria | `Africa/Algiers` | `ar-SA`, `fr-FR` |
+| `EC` | Ecuador | `America/Guayaquil`, `Pacific/Galapagos` | `es-MX` |
+| `EE` | Estonia | `Europe/Tallinn` | `et-EE` |
+| `EG` | Egypt | `Africa/Cairo` | `ar-SA` |
+| `EH` | Western Sahara | `Africa/El_Aaiun` | `ar-SA` |
+| `ER` | Eritrea | `Africa/Asmara` | `en-GB`, `ar-SA` |
+| `ES` | Spain | `Europe/Madrid`, `Africa/Ceuta`, `Atlantic/Canary` | `es-ES`, `ca-ES`, `gl-ES`, `eu-ES` |
+| `ET` | Ethiopia | `Africa/Addis_Ababa` | `en-GB` |
+| `FI` | Finland | `Europe/Helsinki` | `fi-FI`, `sv-SE` |
+| `FJ` | Fiji | `Pacific/Fiji` | `en-GB` |
+| `FK` | Falkland Islands | `Atlantic/Stanley` | `en-US` |
+| `FM` | Micronesia | `Pacific/Chuuk`, `Pacific/Pohnpei`, `Pacific/Kosrae` | `en-US` |
+| `FO` | Faroe Islands | `Atlantic/Faroe` | `en-GB` |
+| `FR` | France | `Europe/Paris` | `fr-FR` |
+| `GA` | Gabon | `Africa/Libreville` | `fr-FR` |
+| `GB` | United Kingdom | `Europe/London` | `en-GB` |
+| `GD` | Grenada | `America/Grenada` | `en-US` |
+| `GE` | Georgia | `Asia/Tbilisi` | `ru-RU` |
+| `GF` | French Guiana | `America/Cayenne` | `fr-FR` |
+| `GG` | Guernsey | `Europe/Guernsey` | `en-GB` |
+| `GH` | Ghana | `Africa/Accra` | `en-GB` |
+| `GI` | Gibraltar | `Europe/Gibraltar` | `en-GB` |
+| `GL` | Greenland | `America/Nuuk`, `America/Danmarkshavn`, `America/Scoresbysund`, `America/Thule` | `da-DK` |
+| `GM` | Gambia | `Africa/Banjul` | `en-GB` |
+| `GN` | Guinea | `Africa/Conakry` | `fr-FR` |
+| `GP` | Guadeloupe | `America/Guadeloupe` | `fr-FR` |
+| `GQ` | Equatorial Guinea | `Africa/Malabo` | `es-ES`, `fr-FR`, `pt-PT` |
+| `GR` | Greece | `Europe/Athens` | `el-GR` |
+| `GS` | South Georgia & South Sandwich Islands | `Atlantic/South_Georgia` | `en-US` |
+| `GT` | Guatemala | `America/Guatemala` | `es-MX` |
+| `GU` | Guam | `Pacific/Guam` | `en-US` |
+| `GW` | Guinea-Bissau | `Africa/Bissau` | `pt-PT` |
+| `GY` | Guyana | `America/Guyana` | `en-US` |
+| `HK` | Hong Kong SAR China | `Asia/Hong_Kong` | `zh-TW`, `en-GB` |
+| `HM` | Heard & McDonald Islands | `Indian/Kerguelen` | `en-GB` |
+| `HN` | Honduras | `America/Tegucigalpa` | `es-MX` |
+| `HR` | Croatia | `Europe/Zagreb` | `hr-HR`, `it-IT` |
+| `HT` | Haiti | `America/Port-au-Prince` | `fr-FR` |
+| `HU` | Hungary | `Europe/Budapest` | `hu-HU` |
+| `ID` | Indonesia | `Asia/Jakarta`, `Asia/Pontianak`, `Asia/Makassar`, `Asia/Jayapura` | `id-ID` |
+| `IE` | Ireland | `Europe/Dublin` | `en-GB` |
+| `IL` | Israel | `Asia/Jerusalem` | `he-IL`, `ar-SA` |
+| `IM` | Isle of Man | `Europe/Isle_of_Man` | `en-GB` |
+| `IN` | India | `Asia/Kolkata` | `en-GB` |
+| `IO` | British Indian Ocean Territory | `Indian/Chagos` | `en-GB` |
+| `IQ` | Iraq | `Asia/Baghdad` | `ar-SA` |
+| `IR` | Iran | `Asia/Tehran` | `en-GB` |
+| `IS` | Iceland | `Atlantic/Reykjavik` | `en-GB` |
+| `IT` | Italy | `Europe/Rome` | `it-IT`, `fr-FR` |
+| `JE` | Jersey | `Europe/Jersey` | `en-GB` |
+| `JM` | Jamaica | `America/Jamaica` | `en-US` |
+| `JO` | Jordan | `Asia/Amman` | `ar-SA` |
+| `JP` | Japan | `Asia/Tokyo` | `ja-JP` |
+| `KE` | Kenya | `Africa/Nairobi` | `en-GB` |
+| `KG` | Kyrgyzstan | `Asia/Bishkek` | `ru-RU` |
+| `KH` | Cambodia | `Asia/Phnom_Penh` | `en-GB` |
+| `KI` | Kiribati | `Pacific/Tarawa`, `Pacific/Kanton`, `Pacific/Kiritimati` | `en-GB` |
+| `KM` | Comoros | `Indian/Comoro` | `ar-SA`, `fr-FR` |
+| `KN` | St. Kitts & Nevis | `America/St_Kitts` | `en-US` |
+| `KP` | North Korea | `Asia/Pyongyang` | `ko-KR` |
+| `KR` | South Korea | `Asia/Seoul` | `ko-KR` |
+| `KW` | Kuwait | `Asia/Kuwait` | `ar-SA` |
+| `KY` | Cayman Islands | `America/Cayman` | `en-US` |
+| `KZ` | Kazakhstan | `Asia/Almaty`, `Asia/Qyzylorda`, `Asia/Qostanay`, `Asia/Aqtobe`, `Asia/Aqtau`, `Asia/Atyrau`, `Asia/Oral` | `ru-RU` |
+| `LA` | Laos | `Asia/Vientiane` | `en-GB` |
+| `LB` | Lebanon | `Asia/Beirut` | `ar-SA` |
+| `LC` | St. Lucia | `America/St_Lucia` | `en-US` |
+| `LI` | Liechtenstein | `Europe/Vaduz` | `de-DE` |
+| `LK` | Sri Lanka | `Asia/Colombo` | `en-GB` |
+| `LR` | Liberia | `Africa/Monrovia` | `en-GB` |
+| `LS` | Lesotho | `Africa/Maseru` | `en-GB` |
+| `LT` | Lithuania | `Europe/Vilnius` | `lt-LT` |
+| `LU` | Luxembourg | `Europe/Luxembourg` | `fr-FR`, `de-DE` |
+| `LV` | Latvia | `Europe/Riga` | `lv-LV` |
+| `LY` | Libya | `Africa/Tripoli` | `ar-SA` |
+| `MA` | Morocco | `Africa/Casablanca` | `ar-SA`, `fr-FR` |
+| `MC` | Monaco | `Europe/Monaco` | `fr-FR` |
+| `MD` | Moldova | `Europe/Chisinau` | `ro-RO` |
+| `ME` | Montenegro | `Europe/Podgorica` | `sr-Latn-RS` |
+| `MF` | St. Martin | `America/Marigot` | `fr-FR` |
+| `MG` | Madagascar | `Indian/Antananarivo` | `fr-FR`, `en-GB` |
+| `MH` | Marshall Islands | `Pacific/Majuro`, `Pacific/Kwajalein` | `en-US` |
+| `MK` | North Macedonia | `Europe/Skopje` | `tr-TR` |
+| `ML` | Mali | `Africa/Bamako` | `fr-FR` |
+| `MM` | Myanmar (Burma) | `Asia/Yangon` | `en-GB` |
+| `MN` | Mongolia | `Asia/Ulaanbaatar`, `Asia/Hovd` | `en-GB` |
+| `MO` | Macao SAR China | `Asia/Macau` | `zh-TW`, `pt-PT` |
+| `MP` | Northern Mariana Islands | `Pacific/Saipan` | `en-US` |
+| `MQ` | Martinique | `America/Martinique` | `fr-FR` |
+| `MR` | Mauritania | `Africa/Nouakchott` | `ar-SA` |
+| `MS` | Montserrat | `America/Montserrat` | `en-US` |
+| `MT` | Malta | `Europe/Malta` | `en-GB` |
+| `MU` | Mauritius | `Indian/Mauritius` | `fr-FR`, `en-GB` |
+| `MV` | Maldives | `Indian/Maldives` | `en-GB` |
+| `MW` | Malawi | `Africa/Blantyre` | `en-GB` |
+| `MX` | Mexico | `America/Mexico_City`, `America/Cancun`, `America/Merida`, `America/Monterrey`, `America/Matamoros`, `America/Chihuahua`, `America/Ciudad_Juarez`, `America/Ojinaga`, `America/Mazatlan`, `America/Bahia_Banderas`, `America/Hermosillo`, `America/Tijuana` | `es-MX` |
+| `MY` | Malaysia | `Asia/Kuala_Lumpur`, `Asia/Kuching` | `en-GB` |
+| `MZ` | Mozambique | `Africa/Maputo` | `pt-PT` |
+| `NA` | Namibia | `Africa/Windhoek` | `en-GB` |
+| `NC` | New Caledonia | `Pacific/Noumea` | `fr-FR` |
+| `NE` | Niger | `Africa/Niamey` | `fr-FR` |
+| `NF` | Norfolk Island | `Pacific/Norfolk` | `en-GB` |
+| `NG` | Nigeria | `Africa/Lagos` | `en-GB` |
+| `NI` | Nicaragua | `America/Managua` | `es-MX` |
+| `NL` | Netherlands | `Europe/Amsterdam` | `nl-NL` |
+| `NO` | Norway | `Europe/Oslo` | `nb-NO` |
+| `NP` | Nepal | `Asia/Kathmandu` | `en-GB` |
+| `NR` | Nauru | `Pacific/Nauru` | `en-GB` |
+| `NU` | Niue | `Pacific/Niue` | `en-GB` |
+| `NZ` | New Zealand | `Pacific/Auckland`, `Pacific/Chatham` | `en-GB` |
+| `OM` | Oman | `Asia/Muscat` | `ar-SA` |
+| `PA` | Panama | `America/Panama` | `es-MX` |
+| `PE` | Peru | `America/Lima` | `es-MX` |
+| `PF` | French Polynesia | `Pacific/Tahiti`, `Pacific/Marquesas`, `Pacific/Gambier` | `fr-FR` |
+| `PG` | Papua New Guinea | `Pacific/Port_Moresby`, `Pacific/Bougainville` | `en-GB` |
+| `PH` | Philippines | `Asia/Manila` | `en-US` |
+| `PK` | Pakistan | `Asia/Karachi` | `en-GB` |
+| `PL` | Poland | `Europe/Warsaw` | `pl-PL`, `de-DE`, `lt-LT` |
+| `PM` | St. Pierre & Miquelon | `America/Miquelon` | `fr-FR` |
+| `PN` | Pitcairn Islands | `Pacific/Pitcairn` | `en-GB` |
+| `PR` | Puerto Rico | `America/Puerto_Rico` | `es-MX`, `en-US` |
+| `PS` | Palestinian Territories | `Asia/Gaza`, `Asia/Hebron` | `ar-SA` |
+| `PT` | Portugal | `Europe/Lisbon`, `Atlantic/Madeira`, `Atlantic/Azores` | `pt-PT` |
+| `PW` | Palau | `Pacific/Palau` | `en-US` |
+| `PY` | Paraguay | `America/Asuncion` | `es-MX` |
+| `QA` | Qatar | `Asia/Qatar` | `ar-SA` |
+| `RE` | Réunion | `Indian/Reunion` | `fr-FR` |
+| `RO` | Romania | `Europe/Bucharest` | `ro-RO` |
+| `RS` | Serbia | `Europe/Belgrade` | `sr-Latn-RS`, `hu-HU`, `ro-RO`, `hr-HR`, `sk-SK`, `uk-UA` |
+| `RU` | Russia | `Europe/Kaliningrad`, `Europe/Moscow`, `Europe/Kirov`, `Europe/Volgograd`, `Europe/Astrakhan`, `Europe/Saratov`, `Europe/Ulyanovsk`, `Europe/Samara`, `Asia/Yekaterinburg`, `Asia/Omsk`, `Asia/Novosibirsk`, `Asia/Barnaul`, `Asia/Tomsk`, `Asia/Novokuznetsk`, `Asia/Krasnoyarsk`, `Asia/Irkutsk`, `Asia/Chita`, `Asia/Yakutsk`, `Asia/Khandyga`, `Asia/Vladivostok`, `Asia/Ust-Nera`, `Asia/Magadan`, `Asia/Sakhalin`, `Asia/Srednekolymsk`, `Asia/Kamchatka`, `Asia/Anadyr` | `ru-RU` |
+| `RW` | Rwanda | `Africa/Kigali` | `en-GB`, `fr-FR` |
+| `SA` | Saudi Arabia | `Asia/Riyadh` | `ar-SA` |
+| `SB` | Solomon Islands | `Pacific/Guadalcanal` | `en-GB` |
+| `SC` | Seychelles | `Indian/Mahe` | `fr-FR`, `en-GB` |
+| `SD` | Sudan | `Africa/Khartoum` | `en-GB`, `ar-SA` |
+| `SE` | Sweden | `Europe/Stockholm` | `sv-SE`, `fi-FI` |
+| `SG` | Singapore | `Asia/Singapore` | `en-GB`, `zh-CN` |
+| `SH` | St. Helena | `Atlantic/St_Helena` | `en-GB` |
+| `SI` | Slovenia | `Europe/Ljubljana` | `sl-SI` |
+| `SJ` | Svalbard & Jan Mayen | `Arctic/Longyearbyen` | `nb-NO` |
+| `SK` | Slovakia | `Europe/Bratislava` | `sk-SK` |
+| `SL` | Sierra Leone | `Africa/Freetown` | `en-GB` |
+| `SM` | San Marino | `Europe/San_Marino` | `it-IT` |
+| `SN` | Senegal | `Africa/Dakar` | `fr-FR` |
+| `SO` | Somalia | `Africa/Mogadishu` | `ar-SA` |
+| `SR` | Suriname | `America/Paramaribo` | `nl-NL` |
+| `SS` | South Sudan | `Africa/Juba` | `en-GB` |
+| `ST` | São Tomé & Príncipe | `Africa/Sao_Tome` | `pt-PT` |
+| `SV` | El Salvador | `America/El_Salvador` | `es-MX` |
+| `SX` | Sint Maarten | `America/Lower_Princes` | `en-US`, `nl-NL` |
+| `SY` | Syria | `Asia/Damascus` | `ar-SA` |
+| `SZ` | Eswatini | `Africa/Mbabane` | `en-GB` |
+| `TC` | Turks & Caicos Islands | `America/Grand_Turk` | `en-US` |
+| `TD` | Chad | `Africa/Ndjamena` | `ar-SA`, `fr-FR` |
+| `TF` | French Southern Territories | `Indian/Kerguelen` | `fr-FR` |
+| `TG` | Togo | `Africa/Lome` | `fr-FR` |
+| `TH` | Thailand | `Asia/Bangkok` | `th-TH` |
+| `TJ` | Tajikistan | `Asia/Dushanbe` | `ru-RU` |
+| `TK` | Tokelau | `Pacific/Fakaofo` | `en-GB` |
+| `TL` | Timor-Leste | `Asia/Dili` | `pt-PT` |
+| `TM` | Turkmenistan | `Asia/Ashgabat` | `ru-RU` |
+| `TN` | Tunisia | `Africa/Tunis` | `ar-SA`, `fr-FR` |
+| `TO` | Tonga | `Pacific/Tongatapu` | `en-GB` |
+| `TR` | Türkiye | `Europe/Istanbul` | `tr-TR` |
+| `TT` | Trinidad & Tobago | `America/Port_of_Spain` | `en-US` |
+| `TV` | Tuvalu | `Pacific/Funafuti` | `en-GB` |
+| `TW` | Taiwan | `Asia/Taipei` | `zh-TW` |
+| `TZ` | Tanzania | `Africa/Dar_es_Salaam` | `en-GB` |
+| `UA` | Ukraine | `Europe/Simferopol`, `Europe/Kyiv` | `uk-UA`, `ru-RU` |
+| `UG` | Uganda | `Africa/Kampala` | `en-GB` |
+| `UM` | U.S. Outlying Islands | `Pacific/Midway`, `Pacific/Wake` | `en-US` |
+| `US` | United States | `America/New_York`, `America/Detroit`, `America/Kentucky/Louisville`, `America/Kentucky/Monticello`, `America/Indiana/Indianapolis`, `America/Indiana/Vincennes`, `America/Indiana/Winamac`, `America/Indiana/Marengo`, `America/Indiana/Petersburg`, `America/Indiana/Vevay`, `America/Chicago`, `America/Indiana/Tell_City`, `America/Indiana/Knox`, `America/Menominee`, `America/North_Dakota/Center`, `America/North_Dakota/New_Salem`, `America/North_Dakota/Beulah`, `America/Denver`, `America/Boise`, `America/Phoenix`, `America/Los_Angeles`, `America/Anchorage`, `America/Juneau`, `America/Sitka`, `America/Metlakatla`, `America/Yakutat`, `America/Nome`, `America/Adak`, `Pacific/Honolulu` | `en-US` |
+| `UY` | Uruguay | `America/Montevideo` | `es-MX` |
+| `UZ` | Uzbekistan | `Asia/Samarkand`, `Asia/Tashkent` | `ru-RU` |
+| `VA` | Vatican City | `Europe/Vatican` | `it-IT` |
+| `VC` | St. Vincent & Grenadines | `America/St_Vincent` | `en-US` |
+| `VE` | Venezuela | `America/Caracas` | `es-MX` |
+| `VG` | British Virgin Islands | `America/Tortola` | `en-US` |
+| `VI` | U.S. Virgin Islands | `America/St_Thomas` | `en-US` |
+| `VN` | Vietnam | `Asia/Ho_Chi_Minh` | `vi-VN` |
+| `VU` | Vanuatu | `Pacific/Efate` | `en-GB`, `fr-FR` |
+| `WF` | Wallis & Futuna | `Pacific/Wallis` | `fr-FR` |
+| `WS` | Samoa | `Pacific/Apia` | `en-GB` |
+| `YE` | Yemen | `Asia/Aden` | `ar-SA` |
+| `YT` | Mayotte | `Indian/Mayotte` | `fr-FR` |
+| `ZA` | South Africa | `Africa/Johannesburg` | `en-GB` |
+| `ZM` | Zambia | `Africa/Lusaka` | `en-GB` |
+| `ZW` | Zimbabwe | `Africa/Harare` | `en-GB` |

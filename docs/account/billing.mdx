@@ -1,0 +1,58 @@
+---
+title: "Billing"
+description: "Sessions are metered by bandwidth against the workspace's credits. Two endpoints expose balance and plan."
+---
+
+Driver bills on **bandwidth**: bytes a session moves, metered per megabyte against the workspace's credits. A plan includes a monthly allowance and a concurrency limit; usage past the allowance draws on purchased credits. A session that moves no bytes costs nothing but holds a concurrency slot until it stops.
+
+| Plan | Price | Included bandwidth | Concurrent browsers |
+|---|---|---|---|
+| Free | $0 | 1,024 MB | 5 |
+| Advanced | $49 / month | 10,240 MB | 30 |
+| Scale | $129 / month | 51,200 MB | 100 |
+
+Bandwidth is $5.00 per 1,024 MB, and a plan's allowance is granted as credits at that rate: $5.00 on Free,
+$50.00 on Advanced, $250.00 on Scale. Scale's credits are worth more than its price, which is the volume deal.
+Included credits expire at the end of the period; purchased credits roll over.
+
+Cost control is short sessions, stopped when the job is done. `duration` on create caps what a forgotten session can cost. Warm browsers in a [pool](/docs/sessions/pools) aren't billed and hold no slot; a browser becomes a billed, counted session when acquired, and the lease timeout caps how long it can be held.
+
+[Dedicated IPs](/docs/options/proxies#dedicated-ips) are the one thing not paid in credits: a subscription line on
+your card at $5 per address per month. Adding one mid-month is charged right away, prorated; switching off Renews keeps
+it until the end of the paid month, with no refund. Bandwidth through them is metered like any other session.
+
+## Balance
+
+<CodeGroup>
+```bash cURL
+curl https://api.driver.dev/v1/account/balance -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+```typescript TypeScript
+const { balance } = await fetch("https://api.driver.dev/v1/account/balance", { headers })
+  .then((r) => r.json());
+```
+```python Python
+balance = requests.get("https://api.driver.dev/v1/account/balance", headers=headers).json()
+balance = balance["balance"]
+```
+</CodeGroup>
+
+```json
+{ "balance": { "balance_cents": 1250, "network_mb_remaining": 500, "status": "active" } }
+```
+
+`balance_cents` can go below zero. `network_mb_remaining` (allowance left this period) and `status` (the plan key, for example `free`) are present on workspace accounts and absent on legacy accounts. Sessions are refused with `402` once the balance is negative and the allowance is gone.
+
+## Billing details
+
+`GET /v1/account/billing` returns everything: `orgId`; `status` (`legacy` for an account not yet on workspace billing); the plan (`plan_key`, `display_name`, `price_monthly_cents`, `included_network_mb`, `overage_millicents_per_mb`, `concurrent_browsers`, `max_session_seconds`); the current period (`start_ms`, `end_ms`, `included_network_mb`, `network_mb_used`, `network_mb_remaining`); the wallet (`balance_cents`, can be negative, and `balance_millicents`); and the subscription if there is one (`subscription_id`, `provider`, `status`, `current_period_start`, `current_period_end`, `cancel_at_period_end`). `plan`, `period` and `subscription` are `null` on a legacy account. Fields ending in `_ms` and the subscription period bounds are Unix epoch milliseconds.
+
+```bash
+curl https://api.driver.dev/v1/account/billing -H "Authorization: Bearer $DRIVER_API_KEY"
+```
+
+Use it for usage in your own tooling, or to stop launching before you hit the limit. Amounts are cents; `millicents` fields are for exact arithmetic (1000 millicents = 1 cent).
+
+## Where to change things
+
+Plan changes, credits, auto top-up, invoices and the card on file are under **Billing** in the [dashboard](https://app.driver.dev/settings/billing). There's no API for payments.

@@ -1,0 +1,109 @@
+---
+title: "Best practices"
+description: "How to keep sessions unblocked and cheap: the right framework, no CDP noise, coherent location, reliable cleanup."
+---
+
+The browser is real and the network is real. Most blocks come from the automation side, and they're avoidable.
+
+## Keep the logic minimal
+
+The shortest script that gets the result is the best one. It's faster, it fails in obvious ways, and it gives sites the least to notice. Every retry loop, event listener, request interceptor, "stealth" helper or defensive wait is a place for bugs to hide and a signal that this isn't a person. Add a mechanism after a specific site has shown you that you need it, and add the smallest one that works.
+
+## Go fast, then verify
+
+Before writing browser steps, ask whether the result is reachable faster:
+
+- Go straight to the URL that has the result instead of clicking through navigation.
+- Do several pages in one session. Creating a session is the expensive step.
+- When start-up itself is the bottleneck (a request handler, an agent loop), keep a [browser pool](/docs/sessions/pools) warm and acquire from it.
+- Sign in once on a persisted [profile](/docs/options/profiles) and reuse it.
+- No fixed sleeps. Rely on the framework's auto-waiting and stop the session the moment you have the result.
+
+Then run it against the live target and check the result, not the exit code: the data is right, the action took effect, the session was stopped. The record under **Telemetry → Sessions** shows duration and bandwidth, which is how you know a run was actually fast.
+
+## Use Patchright
+
+Stock Playwright and Puppeteer enable CDP domains (`Runtime.enable`, console and binding hooks) that anti-bot vendors fingerprint. [Patchright](/docs/frameworks/patchright) is Playwright with those removed and the same API. Use it for every Driver integration. Use stock Playwright only if you've measured that your target doesn't care.
+
+## Keep the browser's defaults
+
+- Reuse `browser.contexts()[0]` and `context.pages()[0]`. The browser opened with a context and a tab already.
+- Keep the default viewport, user agent, locale, permissions and flags. Set [`windowSize`](/docs/options/window-size), [`country`, `timezone` and `language`](/docs/options/location) on the create call instead; Driver keeps them coherent with the network the session egresses from.
+- Don't add timeouts and navigation settings until a specific site needs them.
+
+## Never launch a browser
+
+Driver provides the browser. Connect to the returned `cdpUrl`. Not in a Driver integration:
+
+- `chromium.launch()`, `chromium.launchPersistentContext()`, `puppeteer.launch()`
+- `playwright install`, or any browser download
+- invented `localhost` CDP ports or CDP hosts Driver didn't return
+
+## Keep CDP hooks narrow
+
+Broad listeners, request routing and injected scripts make the browser behave unusually, and that's detectable. Use them only when the task genuinely needs them.
+
+Avoid by default (Playwright and Patchright names, Puppeteer equivalents in brackets):
+
+- `page.on(...)`, `context.on(...)`, `browser.on(...)`
+- `page.route(...)`, `context.route(...)` (`page.setRequestInterception(true)`)
+- `page.exposeBinding(...)`, `page.exposeFunction(...)` (`page.exposeFunction`)
+- `page.addInitScript(...)`, `context.addInitScript(...)` (`page.evaluateOnNewDocument`)
+- Puppeteer's `page.setUserAgent`, `page.emulateTimezone`, `page.emulate`, `page.setViewport`: fingerprint patches, see below
+
+Prefer direct actions and reads: `page.goto`, `page.click`, `page.fill`, `page.locator`, `page.title`, `page.textContent`.
+
+When a hook is unavoidable, listen for one event type, route one URL pattern, and remove it as soon as the step is done.
+
+## Don't patch fingerprints
+
+The point of Driver is that the browser is genuine. Overriding `navigator`, the user agent, WebGL, canvas, timezone or locale from your script makes a real browser look fake. If you need a different location, ask for it on the create call.
+
+## Debug with the live view first
+
+When a page behaves unexpectedly, open the session's [live view](/docs/sessions/live-view) and look before adding hooks or logging every event. You can take the mouse and keyboard yourself, which is often the fastest way to see what a site is doing.
+
+## Always stop sessions
+
+Wrap browser work in `try` / `finally` so the session is stopped even when navigation or extraction fails. Stopping releases the browser and ends billing.
+
+<CodeGroup>
+```typescript TypeScript
+const session = await createSession({ country: "US" });
+try {
+  // connect and automate
+} finally {
+  await stopSession(session.sessionId);
+}
+```
+```python Python
+session = create_session(country="US")
+try:
+    ...  # connect and automate
+finally:
+    stop_session(session["sessionId"])
+```
+</CodeGroup>
+
+Set a `duration` that matches the job. Sessions end on their own at the duration (an hour by default), which caps the cost of anything you forget. A browser from a [pool](/docs/sessions/pools) is released the same way, in the `finally`; its lease timeout plays the role of `duration`.
+
+## Reuse logins with profiles
+
+Signing in on every run is slow and looks suspicious. Sign in once under a named [profile](/docs/options/profiles) with `persist: true`, then start later sessions with the same name. They open signed in.
+
+## Handle the errors that matter
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `402` | Out of credits | Tell the user. Retrying won't help. |
+| `403` | Plan limit: concurrency or a feature not enabled | Wait for a session to finish, or upgrade. Don't loop. |
+| `429` | Rate limited | Back off and retry. |
+| `500` | Something failed on our side | Retry once. |
+| `503` | No browser capacity (`Retry-After: 2`) | Back off with jitter, cap the attempts, then tell the user. |
+| `504` | Browser didn't become reachable in time | Retry once. |
+
+Full list on [Errors](/docs/sessions/errors).
+
+## Label your sessions
+
+Pass `note` on create, or `PATCH` it later, with something a teammate would recognise ("nightly price check, client X"). It shows in the dashboard's session list and record.

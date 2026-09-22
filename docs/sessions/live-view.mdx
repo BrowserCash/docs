@@ -1,0 +1,40 @@
+---
+title: "Live view"
+description: "Watch a running session, take the controls, and read the record afterwards."
+---
+
+Watch a session while it runs, inspect it after it ends. Look before you add logging or hooks, and hand a login or CAPTCHA to a person mid-run.
+
+## In the dashboard
+
+**Telemetry → Sessions** in the [dashboard](https://app.driver.dev), pick a running session. You can scroll, click and type in it. The **Workbench** has the same view next to a script editor for trying options before writing code.
+
+## From a viewer URL
+
+```text
+https://viewer.driver.dev?ws=<cdpUrl>
+```
+
+Paste `cdpUrl` in as is, no encoding; the viewer reads everything after `ws=`. Print the URL as soon as the session exists so the person has time to open it. It shows the tab your script is driving.
+
+<CodeGroup>
+```typescript TypeScript
+const viewerUrl = `https://viewer.driver.dev?ws=${session.cdpUrl}`;
+```
+```python Python
+viewer_url = f"https://viewer.driver.dev?ws={session['cdpUrl']}"
+```
+</CodeGroup>
+
+| Parameter | Description |
+|---|---|
+| `ws` | The session's `cdpUrl`. |
+| `theme` | Optional: `light` or `dark`. |
+
+Anyone with the URL can drive the browser; treat it like the API key. It stops working when the session ends.
+
+## The session record
+
+After a session ends its dashboard page keeps: status and duration, bandwidth and cost, node and country, how it was started (type, profile, note, API key), timestamps. Log the `sessionId` so you can find a run later.
+
+The API keeps the essentials: [`GET /v1/browser/session`](/docs/sessions/lifecycle#get-a-session) has `status`, `stoppedAt` and `bandwidthBytes`; the [list](/docs/sessions/lifecycle#list-sessions) adds `type` and `country`. Cost, network and node details are dashboard-only.
