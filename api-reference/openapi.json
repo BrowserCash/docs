@@ -295,7 +295,7 @@
                   },
                   "proxyUrl": {
                     "type": "string",
-                    "description": "Explicit SOCKS5 or SOCKS5H URL for the session. A SOCKS URL supplied without language or timezone is geolocated before launch; Driver derives or validates country and uses the exit timezone. When omitted, the session egresses from Driver's ISP network in the requested country. HTTP proxies are not supported. Dedicated IPs are named here as dedicated://<ip>, dedicated://any or dedicated://any~country-XX; that form is accepted for sessions started from the dashboard today, and over this API from the next gateway release.",
+                    "description": "Explicit SOCKS5 or SOCKS5H URL for the session. A SOCKS URL supplied without language or timezone is geolocated before launch; Driver derives or validates country and uses the exit timezone. When omitted, the session egresses from Driver's ISP network in the requested country. HTTP proxies are not supported. One of the workspace's dedicated IPs is named here as dedicated://<ip>, dedicated://any or dedicated://any~country-XX; Driver resolves it to the address's own SOCKS URL and takes the country and timezone from it.",
                     "example": "socks5://user:pass@proxy.example.com:1080"
                   },
                   "windowSize": {

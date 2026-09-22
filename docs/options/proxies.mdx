@@ -43,12 +43,6 @@ Credentials travel in the create request only. They aren't stored on the session
 
 ## Dedicated IPs
 
-<Note>
-Reserving, renewing and releasing addresses works today, and so does using one for a session started from the
-dashboard. Naming an address over this API — `proxyUrl: "dedicated://…"` and `GET /v1/network/ips` — ships with
-the next gateway release; until then both answer `400` and `404`.
-</Note>
-
 A dedicated IP is a public address reserved to your workspace: no other customer can reserve or pin it, and your sessions can ask for it by address. Reserve
 them under **Browsers → Network** in the [dashboard](https://app.driver.dev/network): pick a country and a
 quantity, up to however many that country has free. The pool is 100 United States and 100 Canadian addresses.
@@ -82,8 +76,8 @@ any_us = create_session(proxyUrl="dedicated://any~country-US")
 
 The address decides the session's `country` and `timezone`. Leave them out; a `country` you pass has to match.
 
-`GET /v1/network/ips` lists your addresses with country, city, network type, label and status once the release
-above lands. Until then, copy an address from the Network page.
+`GET /v1/network/ips` lists your addresses with country, city, network type, label and status. Copy an
+address from there, or from the Network page.
 
 | Status | Code | Meaning |
 |---|---|---|

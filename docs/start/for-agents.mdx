@@ -80,7 +80,7 @@ Base URL `https://api.driver.dev`. Every call carries `Authorization: Bearer $DR
 | Use | `chromium.connectOverCDP(cdpUrl)` | From Patchright. Reuse the first context and page. |
 | Stop | `DELETE /v1/browser/session?sessionId=<id>` | Returns `{ success: true }`. |
 
-Also useful: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Every create option is on [Create a session](/docs/sessions/create#options). With a [pool](/docs/sessions/pools), `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path. Dedicated IPs are reserved and used from the dashboard today; the API takes them with the next gateway release.
+Also useful: `GET /v1/browser/session?sessionId=<id>` for status and bandwidth, `GET /v1/browser/sessions?status=active` to list, `PATCH /v1/browser/session?sessionId=<id>` with `{ "note": "…" }` to label a run. Every create option is on [Create a session](/docs/sessions/create#options). With a [pool](/docs/sessions/pools), `POST /v1/browser/pools/{poolId}/acquire` replaces the create call and `POST /v1/browser/pools/{poolId}/release` the stop; pool ids go in the path. Dedicated IPs are reserved in the dashboard and named on a create call as `proxyUrl: "dedicated://<ip>"`, or `dedicated://any` for whichever of yours is free.
 
 ## Reference implementation
 

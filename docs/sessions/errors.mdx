@@ -17,7 +17,7 @@ Common bodies: `401` `Unauthorized: Missing or invalid Authorization header` or 
 
 ## Status codes
 
-<Note>The dedicated-IP codes here (`invalid_spec`, `dedicated_ip_not_owned`, `no_dedicated_ip`, `dedicated_ip_unhealthy`) arrive with the next gateway release, alongside `dedicated://` in `proxyUrl`. The dashboard resolves the address before the create call, so Launch browser never returns them.</Note>
+<Note>The dedicated-IP codes here (`invalid_spec`, `dedicated_ip_not_owned`, `no_dedicated_ip`, `dedicated_ip_unhealthy`) come back when `proxyUrl` names a `dedicated://` address. The dashboard resolves the address before the create call, so Launch browser never returns them.</Note>
 
 | Status | Meaning | Retry? |
 |---|---|---|
