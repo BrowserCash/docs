@@ -252,7 +252,7 @@
   "paths": {
     "/v1/browser/session": {
       "post": {
-        "description": "Create a browser session and wait for CDP readiness. hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one. Hosted Canadian sessions without an explicit proxy use TCPerfect. Country defaults to US; omitted locale and proxy values are resolved coherently.",
+        "description": "Create a browser session and wait for CDP readiness. hosted, hosted_stealth, and hosted_privacy are hosted browsers; hosted_stealth applies the conservative stealth policy and hosted_privacy the aggressive one. Hosted Canadian sessions without an explicit proxy egress from Driver's Canadian ISP network. Country defaults to US; omitted locale and proxy values are resolved coherently.",
         "security": [
           {
             "Bearer": []
@@ -295,8 +295,8 @@
                   },
                   "proxyUrl": {
                     "type": "string",
-                    "description": "Explicit SOCKS5, SOCKS5H, or TCPerfect network URL for the session. A SOCKS URL supplied without language or timezone is geolocated before launch; Driver derives or validates country and uses the exit timezone. When omitted, hosted Canadian sessions use a uniformly selected public address from the production TCPerfect inventory.",
-                    "example": "tcperfect://user:password@206.223.186.11:1194/65.97.36.3"
+                    "description": "Explicit SOCKS5 or SOCKS5H URL for the session. A SOCKS URL supplied without language or timezone is geolocated before launch; Driver derives or validates country and uses the exit timezone. When omitted, the session egresses from Driver's ISP network in the requested country. HTTP proxies are not supported. Dedicated IPs are named here as dedicated://<ip>, dedicated://any or dedicated://any~country-XX; that form is accepted for sessions started from the dashboard today, and over this API from the next gateway release.",
+                    "example": "socks5://user:pass@proxy.example.com:1080"
                   },
                   "windowSize": {
                     "type": "string",

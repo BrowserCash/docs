@@ -1,9 +1,9 @@
 ---
 title: "Proxies"
-description: "Sessions egress from Driver's ISP networks by default. proxyUrl routes through your own SOCKS5 or TCPerfect endpoint, or one of your dedicated IPs."
+description: "Sessions egress from Driver's ISP networks by default. proxyUrl routes through your own SOCKS5 endpoint, or one of your dedicated IPs."
 ---
 
-Traffic leaves from an ISP connection in the requested country by default. Set `proxyUrl` when you need a specific egress: your own provider, a sticky IP, or a TCPerfect address.
+Traffic leaves from an ISP connection in the requested country by default. Set `proxyUrl` when you need a specific egress: your own provider, a sticky IP, or one of your dedicated addresses.
 
 <CodeGroup>
 ```json Request
@@ -23,7 +23,6 @@ session = create_session(proxyUrl="socks5://user:pass@proxy.example.com:1080")
 |---|---|
 | `socks5://user:pass@host:port` | DNS resolved on the session's machine. |
 | `socks5h://user:pass@host:port` | DNS resolved through the proxy. Use it when the proxy's location should decide DNS answers too. |
-| `tcperfect://user:pass@host:port/exit-ip` | Driver's TCPerfect network: proxied, with the machine's own TCP fingerprint kept intact. |
 | `dedicated://<ip>`, `dedicated://any` | One of the workspace's [dedicated IPs](#dedicated-ips). No credentials: Driver holds them. |
 
 The proxy must be reachable from Driver's machines. HTTP proxies aren't supported.
@@ -34,7 +33,7 @@ Given a SOCKS URL and no `timezone` or `language`, Driver geolocates the proxy's
 
 ## Canada
 
-Hosted sessions in Canada without a proxy egress through Driver's TCPerfect inventory. Nothing to configure.
+Hosted sessions in Canada without a proxy egress from Driver's Canadian ISP network. Nothing to configure.
 
 ## If the proxy cannot be reached
 
@@ -45,14 +44,15 @@ Credentials travel in the create request only. They aren't stored on the session
 ## Dedicated IPs
 
 <Note>
-API access to dedicated IPs ships with the next gateway release; the dashboard flow works today.
+Reserving, renewing and releasing addresses works today, and so does using one for a session started from the
+dashboard. Naming an address over this API — `proxyUrl: "dedicated://…"` and `GET /v1/network/ips` — ships with
+the next gateway release; until then both answer `400` and `404`.
 </Note>
 
 A dedicated IP is a public address reserved to your workspace: no other customer can reserve or pin it, and your sessions can ask for it by address. Reserve
 them under **Browsers → Network** in the [dashboard](https://app.driver.dev/network): pick a country and a
 quantity, up to however many that country has free. The pool is 100 United States and 100 Canadian addresses.
-There is no TCP fingerprint to choose: US addresses always shape their handshake to Windows 11, and Canadian
-addresses do not shape it at all. $5 per address per month, billed on your card as a subscription line. Adding an address mid-month is charged right away, prorated to your billing date.
+$5 per address per month, billed on your card as a subscription line. Adding an address mid-month is charged right away, prorated to your billing date.
 
 You never see the SOCKS5 URL behind an address. On session create, name the address:
 
@@ -79,12 +79,11 @@ any_us = create_session(proxyUrl="dedicated://any~country-US")
 | `dedicated://<ip>` | This address. |
 | `dedicated://any` | Any address you own, chosen at random. |
 | `dedicated://any~country-US` | Any of yours in that country. |
-| `…?tcp=<profile>` | API only, and US addresses only: override the TCP fingerprint profile for this session (`windows11`, `windows-65535`, `android-scale1`, `android-scale3`, `android-scale6`, `macos-scale6`, `macos-scale7`, `auto`). The default is `windows11`. Canadian addresses do not shape the handshake, so `?tcp=` on one answers `400 invalid_spec`. |
 
 The address decides the session's `country` and `timezone`. Leave them out; a `country` you pass has to match.
 
-`GET /v1/network/ips` lists your addresses with country, city, network type, the TCP profile in force, label and status. Copy an
-address from there, or from the Network page.
+`GET /v1/network/ips` lists your addresses with country, city, network type, label and status once the release
+above lands. Until then, copy an address from the Network page.
 
 | Status | Code | Meaning |
 |---|---|---|
