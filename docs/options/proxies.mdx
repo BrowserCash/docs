@@ -1,9 +1,9 @@
 ---
 title: "Proxies"
-description: "Sessions egress from Driver's residential network by default. proxyUrl routes through your own SOCKS5 or TCPerfect endpoint, or one of your dedicated IPs."
+description: "Sessions egress from Driver's ISP networks by default. proxyUrl routes through your own SOCKS5 or TCPerfect endpoint, or one of your dedicated IPs."
 ---
 
-Traffic leaves from a residential connection in the requested country by default. Set `proxyUrl` when you need a specific egress: your own provider, a sticky IP, or a TCPerfect address.
+Traffic leaves from an ISP connection in the requested country by default. Set `proxyUrl` when you need a specific egress: your own provider, a sticky IP, or a TCPerfect address.
 
 <CodeGroup>
 ```json Request
@@ -49,9 +49,10 @@ API access to dedicated IPs ships with the next gateway release; the dashboard f
 </Note>
 
 A dedicated IP is a public address reserved to your workspace: no other customer can reserve or pin it, and your sessions can ask for it by address. Reserve
-them under **Browsers → Network** in the [dashboard](https://app.driver.dev/network): pick a country, a quantity
-and, for US addresses, a TCP fingerprint profile (`windows11` by default). $5 per address per month, billed on your card as a
-subscription line. Adding an address mid-month is charged right away, prorated to your billing date.
+them under **Browsers → Network** in the [dashboard](https://app.driver.dev/network): pick a country and a
+quantity, up to however many that country has free. The pool is 100 United States and 100 Canadian addresses.
+There is no TCP fingerprint to choose: US addresses always shape their handshake to Windows 11, and Canadian
+addresses do not shape it at all. $5 per address per month, billed on your card as a subscription line. Adding an address mid-month is charged right away, prorated to your billing date.
 
 You never see the SOCKS5 URL behind an address. On session create, name the address:
 
@@ -78,11 +79,11 @@ any_us = create_session(proxyUrl="dedicated://any~country-US")
 | `dedicated://<ip>` | This address. |
 | `dedicated://any` | Any address you own, chosen at random. |
 | `dedicated://any~country-US` | Any of yours in that country. |
-| `…?tcp=<profile>` | Override the TCP fingerprint profile for this session (`windows11`, `windows-65535`, `android-scale1`, `android-scale3`, `android-scale6`, `macos-scale6`, `macos-scale7`, `auto`). Default is the profile set on the address. |
+| `…?tcp=<profile>` | API only, and US addresses only: override the TCP fingerprint profile for this session (`windows11`, `windows-65535`, `android-scale1`, `android-scale3`, `android-scale6`, `macos-scale6`, `macos-scale7`, `auto`). The default is `windows11`. Canadian addresses do not shape the handshake, so `?tcp=` on one answers `400 invalid_spec`. |
 
 The address decides the session's `country` and `timezone`. Leave them out; a `country` you pass has to match.
 
-`GET /v1/network/ips` lists your addresses with country, city, network type, profile, label and status. Copy an
+`GET /v1/network/ips` lists your addresses with country, city, network type, the TCP profile in force, label and status. Copy an
 address from there, or from the Network page.
 
 | Status | Code | Meaning |

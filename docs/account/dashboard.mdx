@@ -1,6 +1,6 @@
 ---
 title: "Dashboard"
-description: "Sessions and live view, the Workbench, profiles, pools, keys, members and billing."
+description: "Sessions and live view, the Workbench, profiles, pools, keys, members, your account and billing."
 ---
 
 The [dashboard](https://app.driver.dev) is the other half of the API. Everything is per workspace; switch at the top of the sidebar.
@@ -11,9 +11,11 @@ The [dashboard](https://app.driver.dev) is the other half of the API. Everything
 | **Workbench** | Script editor, live browser, output log. Pick a template, set the session options (the same fields as the create call), press Run. The options reach the script's session exactly as the API receives them, so what works here works in code. |
 | **Profiles** | The workspace's saved [profiles](/docs/options/profiles). Launch a session on one to sign in by hand. |
 | **Browser pools** | [Pools](/docs/sessions/pools) of warm browsers: size, country, profile, start URL, lease timeout. Pause, flush or delete them; see how many are ready and in use. **Launch browser** on the Overview can take a browser from any ready pool. |
-| **Network** | Reserve and manage [dedicated IPs](/docs/options/proxies#dedicated-ips): country, quantity, TCP profile, label; the Renews switch per address; launch a session on one. |
+| **Network** | Reserve and manage [dedicated IPs](/docs/options/proxies#dedicated-ips): country, quantity, label; the Renews switch per address; launch a session on one. |
 | **Sessions** (Telemetry) | Every session, filterable by status. Each record: live view while running, then node, country, bandwidth, cost and timestamps. Stop one, or stop all. |
-| **Workspace** | Name, members, invitations. Admins manage members, keys and billing. |
+| **Account** | Your own name, email address and password. Changing the email or the password asks for your current password first. If you signed up with Google you may never have set one: the page can email you a link to set a password instead, and Google sign-in keeps working either way. Changing your email sends a six-digit code to the new address to confirm it. |
+| **Audit records** | Admin-only: who did what in the workspace. |
+| **Workspace** | Name, members, invitations. Admins manage members, keys and billing. Admins can also change another member's role between Admin and Member. |
 | **API keys** | The root key and named keys: create, roll, delete. Also a ready-to-paste briefing for your coding agent. |
 | **Billing** | Plan, credits, auto top-up, credit history, and the billing portal for invoices and cards. |
 | **Support** | Book a call or write to the team. |

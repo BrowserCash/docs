@@ -194,10 +194,18 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/BrowserCash",
       "x": "https://x.com/driverdotdev",
       "linkedin": "https://www.linkedin.com/company/driverdev"
-    }
+    },
+    "links": [
+      {
+        "header": "Legal",
+        "items": [
+          { "label": "Terms and conditions", "href": "https://driver.dev/legal/terms-and-conditions" },
+          { "label": "Privacy policy", "href": "https://driver.dev/legal/privacy-policy" }
+        ]
+      }
+    ]
   },
   "redirects": [
     {

@@ -85,7 +85,7 @@ Session ids are opaque (32 hex characters today); don't validate the format. `cd
 | `url` | string | | Opened right after launch. |
 | `windowSize` | string | node default | Outer window size, `WIDTHxHEIGHT`. See [Window size](/docs/options/window-size). |
 | `displaySize` | string | | Virtual display size, `WIDTHxHEIGHT`. |
-| `proxyUrl` | string | Driver's network | Your own `socks5://`, `socks5h://` or `tcperfect://` URL. `dedicated://…` ships with the next gateway release; until then reserve and use dedicated IPs from the dashboard. `dedicated://…` ships with the next gateway release; until then reserve and use dedicated IPs from the dashboard. `dedicated://…` ships with the next gateway release; until then reserve and use dedicated IPs from the dashboard. `dedicated://…` ships with the next gateway release; until then reserve and use dedicated IPs from the dashboard. See [Proxies](/docs/options/proxies). |
+| `proxyUrl` | string | Driver's network | Your own `socks5://`, `socks5h://` or `tcperfect://` URL. `dedicated://…` is not accepted by the API yet; reserve and use dedicated IPs from the dashboard until the next gateway release. See [Proxies](/docs/options/proxies). |
 | `profile` | object | | `{ "name": "…", "persist": true }` loads and saves browser state. `persist` defaults to `false` (load only). See [Profiles](/docs/options/profiles). |
 | `captchaSolver` | boolean | `false` | Load Driver's CAPTCHA solver. |
 | `adblock` | boolean | `false` | Block ads. |
