@@ -58,6 +58,10 @@ const page = context.pages()[0] ?? (await context.newPage());
 
 Need more tabs? `context.newPage()` on the existing context.
 
+## Mouse and keyboard
+
+Your framework's `click`, `fill` and `type` work as usual. To drive the mouse and keyboard directly (move a cursor, press buttons and keys, scroll), send [native input](/docs/sessions/native-input) commands on the same connection.
+
 ## Disconnecting versus stopping
 
 `browser.close()` (Patchright, Playwright) and `browser.disconnect()` (Puppeteer) end your connection only. The session runs, and bills, until [`DELETE /v1/browser/session`](/docs/sessions/lifecycle#stop-a-session) or its `duration`. Reconnect to the same `cdpUrl` as often as you like while it's active.

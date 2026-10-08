@@ -1,0 +1,214 @@
+---
+title: "Native input"
+description: "Move a cursor, click, scroll and type in the session's browser, over the CDP connection you already have."
+---
+
+`NativeInput` is a CDP domain in every new session, [pool](/docs/sessions/pools) browsers included. There's nothing to turn on: connect to `cdpUrl`, open a page-level CDP session, send commands.
+
+It keeps its own cursor inside the browser: it doesn't move the machine's mouse or draw anything in the [live view](/docs/sessions/live-view).
+
+## Quickstart
+
+<CodeGroup>
+```typescript TypeScript
+import { chromium } from "patchright";
+
+const browser = await chromium.connectOverCDP(session.cdpUrl);
+const context = browser.contexts()[0];
+const page = context.pages()[0];
+// NativeInput isn't in the stock CDP typings, so the session is untyped here.
+const input: any = await context.newCDPSession(page);
+
+try {
+  const { state } = await input.send("NativeInput.getState");
+  await input.send("NativeInput.moveCursor", { x: state.width / 2, y: state.height / 2 });
+  await input.send("NativeInput.mouseDown", { button: "left" });
+  await input.send("NativeInput.mouseUp", { button: "left" });
+} finally {
+  await input.send("NativeInput.reset").catch(() => {});
+  await input.detach().catch(() => {});
+  await browser.close(); // your connection only; the session runs until you stop it
+}
+```
+```python Python
+from contextlib import suppress
+from patchright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(session["cdpUrl"])
+    context = browser.contexts[0]
+    page = context.pages[0]
+    input_session = context.new_cdp_session(page)
+
+    try:
+        state = input_session.send("NativeInput.getState")["state"]
+        input_session.send("NativeInput.moveCursor", {"x": state["width"] / 2, "y": state["height"] / 2})
+        input_session.send("NativeInput.mouseDown", {"button": "left"})
+        input_session.send("NativeInput.mouseUp", {"button": "left"})
+    finally:
+        with suppress(Exception):
+            input_session.send("NativeInput.reset")
+        with suppress(Exception):
+            input_session.detach()
+        browser.close()  # your connection only; the session runs until you stop it
+```
+</CodeGroup>
+
+Any CDP client works, no SDK needed: send the commands on a session attached to the page. The domain name is case-sensitive (`NativeInput`, not `nativeInput`) and there's no `enable` call. Input goes to the active tab; with several open, attach to the one you mean to drive. The examples below use the TypeScript `input` from the quickstart; in Python, `input_session.send` takes the same methods and parameters.
+
+## Mouse
+
+There's no single `click` command. Move, then press and release:
+
+```typescript
+await input.send("NativeInput.moveCursor", { x: 100, y: 120 });
+await input.send("NativeInput.mouseDown", { button: "left" });
+await input.send("NativeInput.mouseUp", { button: "left" });
+```
+
+| To | Send |
+|---|---|
+| Right-click | `button: "right"` on both down and up. Also `middle`, `back`, `forward`. |
+| Double-click | Two press/release pairs: `clickCount: 1` on the first `mouseDown`, `clickCount: 2` on the second. `clickCount: 2` alone is one click. |
+| Drag | `mouseDown`, several `moveCursor` steps, `mouseUp`. Keep one coordinate space throughout. |
+| Scroll | `moveCursor` over page content, then `scroll` with `deltaX` / `deltaY` in pixels, each between `-32767` and `32767`. Positive `deltaY` scrolls down. |
+
+```typescript
+// Drag, then scroll down
+await input.send("NativeInput.moveCursor", { x: 100, y: 120 });
+await input.send("NativeInput.mouseDown", { button: "left" });
+await input.send("NativeInput.moveCursor", { x: 160, y: 150 });
+await input.send("NativeInput.moveCursor", { x: 220, y: 180 });
+await input.send("NativeInput.mouseUp", { button: "left" });
+
+await input.send("NativeInput.scroll", { deltaX: 0, deltaY: 240 });
+```
+
+Always move before pressing a button or scrolling, especially after attaching or reconnecting. Coordinates in these examples are placeholders: pick points from the page, not fixed values.
+
+## Keyboard
+
+### Text
+
+Click into a field, then insert the text in one call. It goes to the focused text control as typed text, not as a DOM value or one key event per character. Any Unicode works, up to 16,384 UTF-8 bytes.
+
+```typescript
+await input.send("NativeInput.moveCursor", { x: 140, y: 180 });
+await input.send("NativeInput.mouseDown", { button: "left" });
+await input.send("NativeInput.mouseUp", { button: "left" });
+await input.send("NativeInput.insertText", { text: "Hello — 你好 👋" });
+```
+
+Release any held keys or buttons first; `insertText` refuses to run with a modifier down.
+
+### Keys and shortcuts
+
+Keys are physical DOM codes: `KeyA`, `Digit1`, `Enter`, `Tab`, `Escape`, `ArrowLeft`, `ShiftLeft`, `ControlLeft`. Every `keyDown` needs its `keyUp`, and left and right modifiers are separate keys.
+
+```typescript
+// Select all, replace, submit
+await input.send("NativeInput.keyDown", { code: "ControlLeft" });
+await input.send("NativeInput.keyDown", { code: "KeyA" });
+await input.send("NativeInput.keyUp", { code: "KeyA" });
+await input.send("NativeInput.keyUp", { code: "ControlLeft" });
+await input.send("NativeInput.insertText", { text: "Replacement text" });
+await input.send("NativeInput.keyDown", { code: "Enter" });
+await input.send("NativeInput.keyUp", { code: "Enter" });
+```
+
+- Keys follow a US layout plus the modifiers you hold. Pass `key` to override the character, for example `{ code: "KeyA", key: "ä" }`. Use `insertText` for emoji.
+- A key repeats only when you send another `keyDown`, never on a timer.
+- Shortcuts reach Chrome's own UI too: `ControlLeft` + `KeyL` focuses the address bar. Release the chord before inserting a URL, and wait for the navigation separately.
+- CapsLock is tracked per session and cleared by `reset`. NumLock, ScrollLock and IME or dead-key composition aren't supported.
+
+## Coordinates and state
+
+Every command answers `{ state }`. `getState` reads it without changing anything.
+
+```json
+{
+  "x": 100,
+  "y": 120,
+  "hasPosition": true,
+  "coordinateSpace": "viewport",
+  "width": 1280,
+  "height": 640,
+  "buttons": [],
+  "keys": [],
+  "capsLock": false,
+  "ownsControl": true,
+  "backend": "chromium-ui"
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `x`, `y`, `hasPosition` | Where the cursor is. `hasPosition` is `false` until the first move. |
+| `coordinateSpace` | `viewport` (the default): the page content. `window`: the whole browser client area, Chrome's toolbar included. |
+| `width`, `height` | Size of that surface in device-independent pixels. Points must sit inside it: `0 <= x < width`, `0 <= y < height`. |
+| `buttons`, `keys`, `capsLock` | What's held down right now. |
+| `ownsControl` | Whether this connection is the one sending input. |
+
+Read `width` and `height` rather than assuming them, and read them again after a resize ([window size](/docs/options/window-size) sets the starting size). `window` coordinates aren't screen coordinates, and screenshot pixels or CSS pixels under zoom or device emulation aren't necessarily the same units.
+
+To show the cursor in your own viewer, place your indicator from the returned `x` and `y`, not your local mouse. If your image covers the same surface scaled but uncropped, that's `x * imageWidth / width` and `y * imageHeight / height`. State isn't pushed: read it from command responses or call `getState`.
+
+## One controller at a time
+
+Each browser window takes input from one connection. The first command that sends input takes control; other connections can still call `getState` and see the same state with `ownsControl: false`.
+
+To hand over, call `NativeInput.reset` on the current controller or detach it. Reset releases anything held, clears CapsLock and gives up control, but keeps the cursor where it is: move again before the next click. Disconnecting does the same cleanup. Reset before moving a controlled tab to another window.
+
+Send commands one at a time and await each. A response means the input was dispatched, not that the page reacted: wait for navigation or elements with your framework's usual waits.
+
+<Warning>
+A timeout doesn't mean the input never arrived. Don't retry clicks or text blindly; reconnect, check the page and `getState`, then decide what's left to do.
+</Warning>
+
+## Raw CDP
+
+On the browser-level WebSocket, find the page with `Target.getTargets`, attach with `Target.attachToTarget` and `flatten: true`, and put the returned session ID on each command:
+
+```json
+{
+  "id": 10,
+  "sessionId": "PAGE_CDP_SESSION_ID",
+  "method": "NativeInput.moveCursor",
+  "params": { "x": 100, "y": 120 }
+}
+```
+
+The reply carries the same `id` and `sessionId`, with the state in `result.state`; check for `error` first. On a WebSocket opened straight to the page target, leave `sessionId` out. This CDP session ID is not the Driver `sessionId` you use with the API.
+
+## Commands
+
+| Command | Parameters |
+|---|---|
+| `NativeInput.getState` | `{}` |
+| `NativeInput.moveCursor` | `{ x, y, coordinateSpace?: "viewport" \| "window" }` |
+| `NativeInput.mouseDown` | `{ button, clickCount?: 1 \| 2 \| 3 }` |
+| `NativeInput.mouseUp` | `{ button }` |
+| `NativeInput.scroll` | `{ deltaX, deltaY }` |
+| `NativeInput.keyDown` | `{ code, key? }` |
+| `NativeInput.keyUp` | `{ code }` |
+| `NativeInput.insertText` | `{ text }` |
+| `NativeInput.reset` | `{}` |
+
+`button` is `left`, `middle`, `right`, `back` or `forward`. `clickCount` defaults to `1`.
+
+## Troubleshooting
+
+| Error or symptom | Fix |
+|---|---|
+| `Method not found` | Send on a page-level CDP session, not the browser target, and spell it `NativeInput`. |
+| `Feature disabled` | The session started before native input shipped. Create a new one. |
+| `Attach NativeInput to an active browser page` | Attach to the active top-level tab, not a background or closed one. |
+| `This browser window already has an input owner` | Another connection holds control. `reset` or detach it first. |
+| Button or scroll needs a position | Send `moveCursor` first. |
+| `Precise scrolling requires the page viewport` | Move the cursor over page content, not the toolbar. |
+| Text insertion fails | Click an editable field first, and release held keys or buttons. |
+| A key or button is refused as not held, or already held | Pair every down with an up. Check `getState`, and `reset` your own controller if it's out of step. |
+| Cursor lands in the wrong place | Check the coordinate space, scaling, cropping and the current `width` and `height`. |
+| Timeout, or the page went away | Stop sending, reconnect, check the page and state before retrying. |
+
+Native input drives the browser only, not the machine's desktop. Native OS dialogs such as file pickers, pointer lock and raw relative mouse movement aren't covered, and it isn't guaranteed to look like physical hardware input to every site or widget.
