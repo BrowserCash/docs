@@ -84,7 +84,7 @@ await input.send("NativeInput.mouseUp", { button: "left" });
 await input.send("NativeInput.scroll", { deltaX: 0, deltaY: 240 });
 ```
 
-Always move before pressing a button or scrolling, especially after attaching or reconnecting. Coordinates in these examples are placeholders: pick points from the page, not fixed values.
+Always move before pressing a button or scrolling, especially after attaching or reconnecting. Viewport coordinates are the CSS pixels `getBoundingClientRect()` reports at default zoom, so an element's center is a click target; the numbers in these examples are placeholders.
 
 ## Keyboard
 
@@ -119,6 +119,7 @@ await input.send("NativeInput.keyUp", { code: "Enter" });
 - Keys follow a US layout plus the modifiers you hold. Pass `key` to override the character, for example `{ code: "KeyA", key: "ä" }`. Use `insertText` for emoji.
 - A key repeats only when you send another `keyDown`, never on a timer.
 - Shortcuts reach Chrome's own UI too: `ControlLeft` + `KeyL` focuses the address bar. Release the chord before inserting a URL, and wait for the navigation separately.
+- Keys and text go wherever Chrome's focus is. After `Ctrl+L` or a click on the toolbar, focus stays in the address bar until you click into the page.
 - CapsLock is tracked per session and cleared by `reset`. NumLock, ScrollLock and IME or dead-key composition aren't supported.
 
 ## Coordinates and state
@@ -155,7 +156,7 @@ To show the cursor in your own viewer, place your indicator from the returned `x
 
 ## One controller at a time
 
-Each browser window takes input from one connection. The first command that sends input takes control; other connections can still call `getState` and see the same state with `ownsControl: false`.
+State belongs to the browser window, not your connection: a new connection starts from the last cursor position, coordinate space and focus. Each window takes input from one connection. The first command that sends input takes control; other connections can still call `getState` and see the same state with `ownsControl: false`.
 
 To hand over, call `NativeInput.reset` on the current controller or detach it. Reset releases anything held, clears CapsLock and gives up control, but keeps the cursor where it is: move again before the next click. Disconnecting does the same cleanup. Reset before moving a controlled tab to another window.
 
@@ -178,7 +179,7 @@ On the browser-level WebSocket, find the page with `Target.getTargets`, attach w
 }
 ```
 
-The reply carries the same `id` and `sessionId`, with the state in `result.state`; check for `error` first. On a WebSocket opened straight to the page target, leave `sessionId` out. This CDP session ID is not the Driver `sessionId` you use with the API.
+The reply carries the same `id` and `sessionId`, with the state in `result.state`; check for `error` first. On a WebSocket opened straight to the page target (`cdpUrl` with `/devtools/browser/<id>` replaced by `/devtools/page/<targetId>`), leave `sessionId` out. This CDP session ID is not the Driver `sessionId` you use with the API.
 
 ## Commands
 

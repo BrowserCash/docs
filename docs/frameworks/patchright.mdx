@@ -120,6 +120,8 @@ asyncio.run(main())
 ```
 </CodeGroup>
 
+`page.evaluate` runs in an isolated world, one of the things that keeps Patchright quiet: it sees the DOM but not the page's own JavaScript variables. Read what you need from the DOM.
+
 ## Migrating from Playwright
 
 Change the import. That's the whole migration.
