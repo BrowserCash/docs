@@ -69,7 +69,7 @@ await input.send("NativeInput.mouseUp", { button: "left" });
 | To | Send |
 |---|---|
 | Right-click | `button: "right"` on both down and up. Also `middle`, `back`, `forward`. |
-| Double-click | Two press/release pairs: `clickCount: 1` on the first `mouseDown`, `clickCount: 2` on the second. `clickCount: 2` alone is one click. |
+| Double-click | Two press/release pairs: `clickCount: 1` on the first `mouseDown`, `clickCount: 2` on the second. A single pair with `clickCount: 2` fires `dblclick` without the first click, which pages that count clicks will notice. |
 | Drag | `mouseDown`, several `moveCursor` steps, `mouseUp`. Keep one coordinate space throughout. |
 | Scroll | `moveCursor` over page content, then `scroll` with `deltaX` / `deltaY` in pixels, each between `-32767` and `32767`. Positive `deltaY` scrolls down. |
 
@@ -144,7 +144,7 @@ Every command answers `{ state }`. `getState` reads it without changing anything
 | Field | Meaning |
 |---|---|
 | `x`, `y`, `hasPosition` | Where the cursor is. `hasPosition` is `false` until the first move. |
-| `coordinateSpace` | `viewport` (the default): the page content. `window`: the whole browser client area, Chrome's toolbar included. |
+| `coordinateSpace` | The space of the last move. `viewport` (the default): the page content. `window`: the whole browser client area, Chrome's toolbar included. |
 | `width`, `height` | Size of that surface in device-independent pixels. Points must sit inside it: `0 <= x < width`, `0 <= y < height`. |
 | `buttons`, `keys`, `capsLock` | What's held down right now. |
 | `ownsControl` | Whether this connection is the one sending input. |
@@ -198,16 +198,19 @@ The reply carries the same `id` and `sessionId`, with the state in `result.state
 
 ## Troubleshooting
 
-| Error or symptom | Fix |
+| Error | Fix |
 |---|---|
-| `Method not found` | Send on a page-level CDP session, not the browser target, and spell it `NativeInput`. |
-| `Feature disabled` | The session started before native input shipped. Create a new one. |
+| `'NativeInput.getState' wasn't found` | Send on a page-level CDP session, not the browser target, and spell it `NativeInput`. On a session that started before native input shipped, create a new one. |
 | `Attach NativeInput to an active browser page` | Attach to the active top-level tab, not a background or closed one. |
 | `This browser window already has an input owner` | Another connection holds control. `reset` or detach it first. |
-| Button or scroll needs a position | Send `moveCursor` first. |
+| `moveCursor is required before mouse buttons` | Send `moveCursor` first. |
+| `Scroll needs a cursor position and bounded finite deltas` | Move first, and keep each delta between `-32767` and `32767`. |
 | `Precise scrolling requires the page viewport` | Move the cursor over page content, not the toolbar. |
-| Text insertion fails | Click an editable field first, and release held keys or buttons. |
-| A key or button is refused as not held, or already held | Pair every down with an up. Check `getState`, and `reset` your own controller if it's out of step. |
+| `Cursor coordinates are outside the input surface` | Keep `0 <= x < width` and `0 <= y < height` for the space you're using; read them again after a resize. |
+| `Focus an editable Chromium control before insertText` | Click an editable field first. |
+| `Release held modifiers/buttons before insertText` | Finish the shortcut or drag first. |
+| `Text must be valid nonempty UTF-8, at most 16384 bytes` | Split long text across several calls. |
+| `This connection does not hold that key`, `Mouse button is already in the requested state` | Pair every down with an up. Check `getState`, and `reset` your own controller if it's out of step. |
 | Cursor lands in the wrong place | Check the coordinate space, scaling, cropping and the current `width` and `height`. |
 | Timeout, or the page went away | Stop sending, reconnect, check the page and state before retrying. |
 
